@@ -22,10 +22,6 @@
 
 </div>
 
-> **Early days (v0.1.0).** The `qsokufile` format and the command line may still
-> change without notice in a future release. `go install ...@latest` currently
-> resolves to `v0.1.0`.
-
 **qsoku** writes a repository's own command shortcuts into a `qsokufile`, so
 anyone (or anything) in that repository can run `qsoku <name>` from
 anywhere inside it.

@@ -15,8 +15,9 @@ qsoku/
 ◯                          設定が壊れていないかは.github/workflows/ci.yml の
 ◯                          goreleaserジョブ（make goreleaser-check）が毎pushで確認
 ◯ README.md / README_ja.md 看板（ロゴ・バッジ・目次・特徴・デモ・実行例・インストール・
-                            tour/reference/examplesへのリンク）。冒頭に開発初期の注意書きを
-                            残す（Step 9で作成、v0.1.0公開後に「映え対応」で作り直し）
+                            tour/reference/examplesへのリンク）。Step 9で作成、v0.1.0公開後に
+                            「映え対応」で作り直した。冒頭の「開発初期」の注意書きはv0.1.0公開
+                            後に外した（人間の判断）
 ◯ qsokufile                このリポジトリ自身の近道（`build`・`test`、`//`でルートへ戻って
                             `go build`・`go test`を呼ぶ）。看板READMEのデモGIF録画用に新設
                             したが、実際に使える本物の近道として残す（ドッグフーディング）
