@@ -17,13 +17,20 @@ func TestRun_version(t *testing.T) {
 	}
 }
 
-func TestRun_noArgsOrDotCommandIsUnimplemented(t *testing.T) {
-	tests := [][]string{nil, {".init"}, {".help"}}
-	for _, args := range tests {
-		var stdout, stderr bytes.Buffer
-		if got := Run(args, nil, &stdout, &stderr); got != 1 {
-			t.Errorf("Run(%v) = %d, want 1", args, got)
-		}
+func TestRun_shellIsNotImplementedYet(t *testing.T) {
+	var stdout, stderr bytes.Buffer
+	if got := Run([]string{".shell", "bash"}, nil, &stdout, &stderr); got != 1 {
+		t.Errorf("Run(.shell bash) = %d, want 1", got)
+	}
+}
+
+func TestRun_unknownDotCommand(t *testing.T) {
+	var stdout, stderr bytes.Buffer
+	if got := Run([]string{".foo"}, nil, &stdout, &stderr); got != 2 {
+		t.Errorf("Run(.foo) = %d, want 2", got)
+	}
+	if stderr.Len() == 0 {
+		t.Error("Run(.foo) wrote nothing to stderr")
 	}
 }
 
@@ -88,4 +95,13 @@ func writeQsokufile(t *testing.T, dir, content string) {
 	if err := os.WriteFile(path, []byte(content), 0o600); err != nil {
 		t.Fatal(err)
 	}
+}
+
+func readTestFile(t *testing.T, path string) string {
+	t.Helper()
+	data, err := os.ReadFile(path) //nolint:gosec // path is one writeQsokufile just built under t.TempDir()
+	if err != nil {
+		t.Fatal(err)
+	}
+	return string(data)
 }

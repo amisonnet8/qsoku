@@ -27,12 +27,17 @@ qsoku/
 △                            tour/・examples/は**実装完了後**に作る。英語版＋`*_ja.md`
 ◯ cmd/qsoku/main.go        エントリポイント。引数を渡すだけ
 ◯ internal/cli/             実装本体。`.`で始まらない名前は実際に見つけて実行する
-◯                            （`internal/qsokufile`・`internal/run`を呼ぶ）。`.version`も
-◯                            実装済み。管理用コマンド（`.init`〜`.help`、引数なし）は
-◯                            Step 6まで`not implemented yet`で終了コード1の仮のまま
+◯                            （`internal/qsokufile`・`internal/run`を呼ぶ）。管理用コマンド
+◯                            （`.version`・`.init`・`.add`・`.rm`・`.list`・`.names`・
+◯                            `.edit`・`.where`・`.help`／引数なし）も実装済み、1コマンド
+◯                            1ファイル（mtqgの`internal/cli/`に倣う）。`.shell`だけ
+◯                            Step 7まで`not implemented yet`の仮のまま。未知の`.foo`は
+◯                            終了コード2
 ◯ internal/qsokufile/        qsokufileの探索（`Find`）と解析（`Parse`）、両方をまとめた
 ◯                            `Load`、名前引き（`Lookup`）、`//`の置き換え（`Substitute`・
-◯                            `SubstituteArg`）。`internal/cli`・`internal/run`を知らない層
+◯                            `SubstituteArg`）、書き込み（`SetEntry`・`RemoveEntry`。
+◯                            対象の行だけ最小限に書き換え、コメント・並び順は崩さない）。
+◯                            `internal/cli`・`internal/run`を知らない層
 ◯ internal/run/               `sh`を実際に起動するだけの層（`Execute`）。qsokufileが
 ◯                            何かは知らない。居場所の持ち帰り・終了コードの素通しを担う
 ◯                            （`internal/qsokufile`・`internal/cli`のどちらも知らない。

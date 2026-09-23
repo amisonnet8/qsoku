@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"path/filepath"
-	"strings"
 
 	"github.com/amisonnet8/qsoku/internal/qsokufile"
 	"github.com/amisonnet8/qsoku/internal/run"
@@ -15,15 +14,43 @@ import (
 // Run executes qsoku's command line (the arguments after "qsoku" itself) and
 // returns the process exit code.
 func Run(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
-	if len(args) == 1 && args[0] == ".version" {
-		_, _ = fmt.Fprintln(stdout, buildVersion())
-		return 0
+	if len(args) == 0 {
+		return runHelp(stdout, stderr)
 	}
-	// Management commands (Step 6) and no-args .help are not implemented
-	// yet.
-	if len(args) == 0 || strings.HasPrefix(args[0], ".") {
+
+	switch args[0] {
+	case ".version":
+		if len(args) != 1 {
+			_, _ = fmt.Fprintln(stderr, "usage: qsoku .version")
+			return exitCommandLine
+		}
+		_, _ = fmt.Fprintln(stdout, buildVersion())
+		return exitOK
+	case ".init":
+		return runInit(args[1:], stdout, stderr)
+	case ".add":
+		return runAdd(args[1:], stderr)
+	case ".rm":
+		return runRm(args[1:], stderr)
+	case ".list":
+		return runList(args[1:], stdout, stderr)
+	case ".names":
+		return runNames(args[1:], stdout, stderr)
+	case ".edit":
+		return runEdit(args[1:], stdin, stdout, stderr)
+	case ".where":
+		return runWhere(args[1:], stdout, stderr)
+	case ".help":
+		return runHelp(stdout, stderr)
+	case ".shell":
+		// Shell integration and completion (Step 7): not implemented yet.
 		_, _ = fmt.Fprintln(stderr, "qsoku: not implemented yet")
-		return 1
+		return exitNotFound
+	}
+
+	if args[0] != "" && args[0][0] == '.' {
+		_, _ = fmt.Fprintf(stderr, "qsoku: unknown command %q\n", args[0])
+		return exitCommandLine
 	}
 	return runName(args[0], args[1:], stdin, stdout, stderr)
 }
@@ -33,12 +60,7 @@ func Run(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 func runName(name string, args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 	f, err := qsokufile.Load(".")
 	if err != nil {
-		if errors.Is(err, qsokufile.ErrNotFound) {
-			_, _ = fmt.Fprintln(stderr, "qsoku: no qsokufile found; run qsoku .init")
-			return exitNotFound
-		}
-		_, _ = fmt.Fprintf(stderr, "qsoku: %v\n", err)
-		return exitNotFound
+		return reportLoadError(err, stderr)
 	}
 
 	entry, ok := f.Lookup(name)
@@ -62,9 +84,26 @@ func runName(name string, args []string, stdin io.Reader, stdout, stderr io.Writ
 	return code
 }
 
+// reportFindError and reportLoadError print a qsokufile.Find/Load error the
+// way every management command that needs an existing qsokufile does, and
+// return the exit code to use.
+func reportFindError(err error, stderr io.Writer) int {
+	if errors.Is(err, qsokufile.ErrNotFound) {
+		_, _ = fmt.Fprintln(stderr, "qsoku: no qsokufile found; run qsoku .init")
+		return exitNotFound
+	}
+	_, _ = fmt.Fprintf(stderr, "qsoku: %v\n", err)
+	return exitNotFound
+}
+
+func reportLoadError(err error, stderr io.Writer) int {
+	return reportFindError(err, stderr)
+}
+
 // qsoku's own exit codes (docs/reference/cli.md "Exit codes"). Anything
 // past this point is the command's own exit code, returned unchanged.
 const (
+	exitOK          = 0
 	exitNotFound    = 1 // qsoku could not do what was asked
 	exitCommandLine = 2 // the command line is wrong
 )
