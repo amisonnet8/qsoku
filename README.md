@@ -114,6 +114,9 @@ See [docs/tour/](docs/tour/) for a longer, hands-on walk-through.
 
 ## Learn more
 
+- [Interactive guide](https://notebook.google.com/notebook/7ae8788d-2942-4c0c-a1cf-6587cec9428e) —
+  ask questions about qsoku and explore it conversationally (built with
+  Gemini/NotebookLM)
 - [docs/tour/](docs/tour/) — a hands-on walk through qsoku, from an empty
   `qsokufile` to shell integration and completion
 - [docs/reference/](docs/reference/) — the formal specification of the

@@ -105,6 +105,8 @@ hello: echo "hello, $1"
 
 ## もっと知る
 
+- [対話形式のガイド](https://notebook.google.com/notebook/7ae8788d-2942-4c0c-a1cf-6587cec9428e) —
+  質問しながらqsokuを調べられる（Gemini/NotebookLM製）
 - [docs/tour/](docs/tour/) — 空の`qsokufile`からシェル連携・補完までを
   手を動かしながら追う入門
 - [docs/reference/](docs/reference/) — `qsokufile`の書式と`qsoku`
