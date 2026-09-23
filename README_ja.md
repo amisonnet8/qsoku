@@ -45,8 +45,11 @@
 ## デモ
 
 <div align="center">
-  <img src="docs/assets/demo.svg" alt="qsoku .init から .add・.list までの実行例" width="640">
+  <img src="docs/assets/demo.gif" alt="internal/cli から qsoku .list・qsoku testを実行し、//でリポジトリのルートに戻る様子" width="640">
 </div>
+
+このリポジトリ自身に対して録画したもの：`qsoku test`は`(cd //; go test ./...)`——
+`internal/cli/`から実行しても、`//`が必ずリポジトリのルートを見つける。
 
 ## 例
 

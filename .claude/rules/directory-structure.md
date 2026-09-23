@@ -17,14 +17,19 @@ qsoku/
 ◯ README.md / README_ja.md 看板（ロゴ・バッジ・目次・特徴・デモ・実行例・インストール・
                             tour/reference/examplesへのリンク）。冒頭に開発初期の注意書きを
                             残す（Step 9で作成、v0.1.0公開後に「映え対応」で作り直し）
+◯ qsokufile                このリポジトリ自身の近道（`build`・`test`、`//`でルートへ戻って
+                            `go build`・`go test`を呼ぶ）。看板READMEのデモGIF録画用に新設
+                            したが、実際に使える本物の近道として残す（ドッグフーディング）
 ◯ Makefile                ビルド・テストの入口（`make build`・`make check`など）
 ◯ go.mod                   `go.sum`はまだ無い（依存が無いため）
 ◯ docs/
-◯ ├── assets/               看板READMEが使うSVG（`logo.svg`・`demo.svg`）。手書きのSVGに
+◯ ├── assets/               看板READMEが使う画像。`logo.svg`（手書きのSVG。
 ◯ │                          `@media (prefers-color-scheme: dark)`を埋め込み、ラスター画像は
-◯ │                          置かない（devcontainerに画像生成ツールが無いため）。`demo.svg`は
-◯ │                          実際に検証済みの出力（`.init`〜`.list`）を使った擬似ターミナルで、
-◯ │                          本物の録画の代わりの仮置き
+◯ │                          置かない）と`demo.gif`（`vhs`で録画した本物のターミナル操作。
+◯ │                          このリポジトリ自身の`qsokufile`を`internal/cli/`から実行し、
+◯ │                          `//`でルートに戻って`go test ./...`が走る様子。録画の手順は
+◯ │                          `docs/design/history.md`参照、リポジトリには残さない一回限りの
+◯ │                          セットアップ）
 ◯ ├── design/              設計判断と理由の記録（日本語）。README.md
 ◯ │   ├── README.md         このディレクトリの位置づけと索引
 ◯ │   ├── note.md           最初の設計メモ（原文のまま。qsokuとは何か、`//`の規則など）

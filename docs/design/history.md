@@ -200,3 +200,13 @@ v0.1.0の正式リリース後、唯一保留にしていたトップの`README.
 **開発中の注記の扱い：** v0.1.0を公開した後も、「`qsokufile`の書式やコマンドはまだ変わりうる」という警告文言自体は残した（タグを打った＝安定した、ではないため）。「バージョンが無い」という文だけを、`go install ...@latest`が今`v0.1.0`を指すという事実に合わせて書き換えた。
 
 **確認したこと：** リンク切れチェック（既存のスクリプト。プレースホルダーの`xxx.md`以外に問題なし）、`TestDocExamplesAreMarkedAndMatch`（英日で例の数・コマンド文が一致）、`make docs-examples`→`TestDocExamples`（新設した折りたたみ内の例も含め全緑、2回目の実行で差分なし）、`make check`・`make test`・`make race`・`make shellcheck`。SVG 2つは`python3`の`xml.dom.minidom`で構文の妥当性を確認した（ブラウザでの見た目そのものはこの環境では確認できていない）。
+
+## 2026-09-23　デモGIFへの差し替え（vhs）
+
+看板READMEの「デモ」節を、静止画のSVG（`docs/assets/demo.svg`、実測済み出力を使った擬似ターミナル）から、`vhs`（charmbracelet/vhs）で録画した本物のGIF（`docs/assets/demo.gif`）に差し替えた。手順は人間が別プロジェクト（san-db-ox）で詰まった際にまとめた個人メモ`/home/vscode/vhs-setup-notes.md`にそのまま沿った：`ttyd`（GitHub Releasesの静的バイナリ）・`ffmpeg`・ヘッドレスChromium用共有ライブラリ・`xvfb`をaptで導入、`vhs`は`@latest`（v0.12.0、GIFを生成しない既知の回帰バグがある）ではなく`v0.11.0`を明示指定、実行は`VHS_NO_SANDBOX=true timeout 90 xvfb-run -a vhs demo.tape`（`--no-sandbox`だけではヘッドレスChromiumがハングする）。このセットアップ自体はdevcontainerの再構築で消える一回限りのもので、`.claude/rules/`には入れていない（vhs-setup-notes.md自身の方針どおり）。
+
+**録画内容は人間の指示で2回作り直した：** 最初は「近道を足す一連の流れ」（`.init`→`.add`→`.list`）を考えたが、①「実践的で`//`を使う場面がよい」、②「録画に`make`を出さないほうがよい」（`qsoku`が`make`の薄いラッパーに見え、「makeの真似をしない」というqsoku自身の立ち位置と矛盾して見えるため）との指摘を受け、最終的に**このリポジトリ自身に本物の`qsokufile`（`build: (cd //; go build ./...)` / `test: (cd //; go test ./...)`）を新設し、それをドッグフーディングとして録画に使う**形にした。`internal/cli/`という2階層下のディレクトリから`qsoku test`を実行し、`//`がリポジトリのルートを見つけて`go test ./...`（3パッケージぶんの`ok`）が実際に走るところを見せる——`//`の一番実用的な使い方をそのまま実演する。この`qsokufile`は録画用の小道具ではなく、このリポジトリで今後も使える本物の近道としてコミットに残した。
+
+**目視確認できた：** SVGのときはこの環境に画像レンダリング手段が無く構文チェックしかできなかったが、今回は`ffmpeg`でGIFから複数時点のフレームをPNGとして抜き出し、**Readツールで実際に画像として見て**、文字が読める・レイアウトが崩れていないことを確認した。最初の録画は`Set Height`が短すぎて上端が見切れていたため、高さを調整して録り直した。
+
+**確認したこと：** `ffmpeg -i demo.gif`で長さ（約4.8秒）・解像度を確認、ファイルサイズは約77KB。`make check`・`make test`・既存のリンク切れチェックスクリプトが、新設した`qsokufile`・差し替えたGIFの影響を受けず緑のまま。tapeファイル自体はリポジトリに残していない。

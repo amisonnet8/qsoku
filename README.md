@@ -51,8 +51,12 @@ anywhere inside it.
 ## Demo
 
 <div align="center">
-  <img src="docs/assets/demo.svg" alt="qsoku from .init through .add and .list" width="640">
+  <img src="docs/assets/demo.gif" alt="qsoku .list and qsoku test run from internal/cli, using // to reach the repository root" width="640">
 </div>
+
+Recorded against this very repository: `qsoku test` is `(cd //; go test ./...)`,
+run from `internal/cli/` — `//` always finds its way back to the root, no
+matter where you call it from.
 
 ## Example
 

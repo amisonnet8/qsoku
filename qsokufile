@@ -1,0 +1,2 @@
+build: (cd //; go build ./...)
+test: (cd //; go test ./...)
