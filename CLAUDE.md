@@ -80,9 +80,7 @@
 
 初期構成にわざと入れていない。作業の中で必要になった時点で作る。各項目が何のためのものかは`.claude/rules/directory-structure.md`（ツリー全体と`docs/`の4つの違い）を見ること。
 
-- `Makefile`、`go.mod`／`go.sum`、`cmd/qsoku/`、`internal/`、`e2e/`
-- `.github/workflows/`（CI）
-- `.claude/hooks/`（ビルドの自動フック。`Makefile`ができてから）
+- `go.sum`（依存ができてから）、`e2e/`
 - `docs/tour/`・`docs/examples/`、看板としてのREADME（実装完了後）
 
 ## ルール・スキルの提案

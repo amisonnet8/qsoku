@@ -12,8 +12,8 @@ qsoku/
 ◯ trivy.yaml               依存の脆弱性・ライセンス検査の設定
 ◯ README.md / README_ja.md 未完成の間の注意書き（「開発中でまだ使えません」だけ）
                             看板としてのREADME（売り文句・使い方）は実装完了後に作る
-△ Makefile                ビルド・テストの入口（`make build`・`make check`など）
-△ go.mod / go.sum
+◯ Makefile                ビルド・テストの入口（`make build`・`make check`など）
+◯ go.mod                   `go.sum`はまだ無い（依存が無いため）
 ◯ docs/
 ◯ ├── design/              設計判断と理由の記録（日本語）。README.md
 ◯ │   ├── README.md         このディレクトリの位置づけと索引
@@ -25,18 +25,19 @@ qsoku/
 △ │                          追える読み物（README.mdの「使い方」の詳しい版）
 △ └── examples/             実例。実際のqsokufileと、そのまま動く使い方の例
 △                            tour/・examples/は**実装完了後**に作る。英語版＋`*_ja.md`
-△ cmd/qsoku/main.go        エントリポイント。引数を渡すだけ
-△ internal/                 実装本体（qsokufileの解析・`//`の置き換え・`sh`の起動・
-△                            管理用コマンド）。層への分け方は実装しながら決めてよい。
-△                            層を決めたら`.golangci.yaml`にdepguardのルールを足す
+◯ cmd/qsoku/main.go        エントリポイント。引数を渡すだけ
+◯ internal/cli/             実装本体。今は`Run`（`.version`だけ実装、ほかは仮に
+◯                            `not implemented yet`で終了コード1）と`buildVersion`のみ。
+◯                            層への分け方はStep 3〜6で決める。決めたら`.golangci.yaml`に
+◯                            depguardのルールを足す
 △ e2e/                      本物のバイナリと本物のシェル（bash・zsh・fish）で動かすテスト
 ◯ .devcontainer/           devcontainer.json・postCreate.sh
-△ .github/workflows/        CI（3OSマトリクスなど）
+◯ .github/workflows/        CI（Linux・macOSのマトリクス）
 ◯ .claude/
-◯ ├── settings.json         権限（deny/ask）。人間が管理する
+◯ ├── settings.json         権限（deny/ask）とビルドフックの設定。人間が管理する
 ◯ ├── rules/                 このファイルを含む、育てていくルール
-△ └── hooks/                 `Makefile`ができたら、`.go`編集後に`make build`する
-△                            フックを置ける（mtqgの`.claude/hooks/build.sh`が参考になる）
+◯ └── hooks/                 build.sh：`.go`・`go.mod`・`go.sum`編集後に`make build`する
+◯                            （mtqgの`.claude/hooks/build.sh`と同じ）
 ```
 
 ## `docs/`の4つの違い（迷いやすいので明記）

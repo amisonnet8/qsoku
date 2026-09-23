@@ -49,3 +49,14 @@ PJの計画（mtqgのtodo、9ステップ）のStep 1として、`note.md`の内
 - **仕様のこの版には、qsokuの出力例（エラー文言など）は載せていない。** 実装後、Step 8で実測して確かめたものを載せる決まり（`docs/reference/README.md`「実行例と出力例は実際に動かして確かめたもの」）のため
 
 **この会話で決めた運用（`.claude/rules/mtqg.md`にも反映）：** 人間に何かを尋ねたら、回答を受けたその場で`q add`→`q add <id> <回答>`→`q done`まで行い、ターンを返さずに続ける。`mtqg q list`を対話中の決定の完全な記録にするため（人間の指示、2026-09-23）。
+
+## 2026-09-23　足場（Step 2）
+
+mtqgのtodo（9ステップ）のStep 2として、ビルド・検査・CIの入口をmtqg本体（`/home/vscode/mtqg`）の段階1 Step 1に倣って作った。
+
+- **決めたこと（mtqgのquestionで確認）：** `.claude/hooks/build.sh`（`.go`・`go.mod`・`go.sum`編集後に`make build`を走らせ、失敗をClaude Codeに返す）を入れ、`.claude/settings.json`（本来は人間が管理）へのフック追記もClaude Codeが行ってよい
+- `go.mod`（`github.com/amisonnet8/qsoku`、`go 1.27`）、`cmd/qsoku/main.go`（引数を渡すだけ）、`internal/cli`（`Run`は`.version`だけ実装、それ以外は`qsoku: not implemented yet`で終了コード1という仮の振る舞い。Step 3〜7で本実装に置き換える）、`Makefile`（mtqg本体と同じターゲット構成）、`.github/workflows/ci.yml`（Linux・macOSのマトリクス。Windowsの`choco install make`はqsokuには無いので外した）
+- **`e2e/`がまだ無いため、`make test`は`if [ -d e2e ]`で存在確認してから実行するよう仮のガードを入れた。** Step 8で`e2e/`ができたらガードを外す（`.mtqg`のtodo fd80a62a28）
+- バージョンは`runtime/debug.ReadBuildInfo`のみに頼る形にした（mtqgの`version.go`にある`-ldflags`用の変数は、qsokuにはまだリリースビルドの仕組みが無いため今回は入れていない。要れば`distribution.md`のGoReleaser検討時に足す）
+- `.claude/rules/directory-structure.md`・`CLAUDE.md`「まだ無いもの」を更新。◯になったもの：`Makefile`・`go.mod`・`cmd/qsoku/`・`internal/cli/`・`.github/workflows/`・`.claude/hooks/`
+- **手元で確かめたこと：** `make build`・`make check`・`make race`・`make trivy`・`make shellcheck`（対象ファイル無し）が通る。`golangci-lint config verify`が通る。フックはわざと構文エラーを入れて失敗を検知することを確認済み。`./qsoku .version`が`v0.0.0-<日時>-<コミットハッシュ>+dirty`を出し終了コード0、未実装の名前は終了コード1
