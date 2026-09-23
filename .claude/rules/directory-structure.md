@@ -14,11 +14,17 @@ qsoku/
 ◯                          v*タグをpushしたとき（.github/workflows/release.yml）だけ。
 ◯                          設定が壊れていないかは.github/workflows/ci.yml の
 ◯                          goreleaserジョブ（make goreleaser-check）が毎pushで確認
-◯ README.md / README_ja.md 看板（売り文句・実行例・インストール・tour/reference/examples
-                            へのリンク）。冒頭に未完成の間の注意書きを残す（Step 9）
+◯ README.md / README_ja.md 看板（ロゴ・バッジ・目次・特徴・デモ・実行例・インストール・
+                            tour/reference/examplesへのリンク）。冒頭に開発初期の注意書きを
+                            残す（Step 9で作成、v0.1.0公開後に「映え対応」で作り直し）
 ◯ Makefile                ビルド・テストの入口（`make build`・`make check`など）
 ◯ go.mod                   `go.sum`はまだ無い（依存が無いため）
 ◯ docs/
+◯ ├── assets/               看板READMEが使うSVG（`logo.svg`・`demo.svg`）。手書きのSVGに
+◯ │                          `@media (prefers-color-scheme: dark)`を埋め込み、ラスター画像は
+◯ │                          置かない（devcontainerに画像生成ツールが無いため）。`demo.svg`は
+◯ │                          実際に検証済みの出力（`.init`〜`.list`）を使った擬似ターミナルで、
+◯ │                          本物の録画の代わりの仮置き
 ◯ ├── design/              設計判断と理由の記録（日本語）。README.md
 ◯ │   ├── README.md         このディレクトリの位置づけと索引
 ◯ │   ├── note.md           最初の設計メモ（原文のまま。qsokuとは何か、`//`の規則など）

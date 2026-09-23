@@ -184,3 +184,19 @@ Step 9完了後、人間から「正式公開する、基本的に今はやら�
 **`note.md`のチェック修正：** 「未決事項」の同名チェック項目が、Step 9で実施済みにもかかわらず`[ ]`のままだったので`[x]`に直した。
 
 **手元で確かめたこと：** `make check`・`make test`・`make race`・`make shellcheck`・`make trivy`・新設の`make goreleaser-check`がすべて緑。`gh repo view --json description,repositoryTopics`でGitHub側の反映を確認。git tagは一切作っていない・pushしていない。
+
+## 2026-09-23　看板READMEの作り直し（v0.1.0公開後）
+
+v0.1.0の正式リリース後、唯一保留にしていたトップの`README.md`/`README_ja.md`を作り直した。人間から「映え対応」の具体的な指示（ヘッダー画像・バッジ・視覚コンテンツ・絵文字付き特徴一覧・折りたたみ・目次＋フッター）を受け、日本語版から作って完成させ、その後に英語版を作った。
+
+**画像はすべて手書きのSVGにした：** devcontainerにラスター画像生成ツール（ImageMagick・PIL等）もvhs/asciinemaも無いことを確認済み。GitHubはREADME内のSVGをそのまま描画するため、`docs/assets/logo.svg`（ヘッダーのロゴ＋タグライン）と`docs/assets/demo.svg`（擬似ターミナルウィンドウ）の2つを新設した。どちらも`<style>`に`@media (prefers-color-scheme: dark)`を埋め込み、GitHubのライト/ダークどちらのテーマでも読める配色にした（ファイルを2本用意する`<picture>`方式より軽い）。
+
+**`demo.svg`は「録画の代わりの仮置き」：** 本物のターミナル録画（GIF）は用意できないため、`docs/reference/cli.md`ですでに`make docs-examples`が実測・確認済みの`.init`→`.add`→`.list`の出力をそのまま使った静止画のSVGにした。中身は事実（検証済みの出力）そのものだが、実際の録画ではないという意味で人間の指示どおり「ダミー」として最後に作った。
+
+**バッジ（Shields.io・pkg.go.dev）：** CI・最新リリース・ライセンス・Goバージョン・pkg.go.devの5つ。実装前に`curl`で全URLが200を返すことを確認した。
+
+**折りたたみ（`<details>`）の中身も実測にした：** 「近道を足す一連の流れ」（`.init`→`.add`×2→`.list`）を新しく`<!-- qsoku:example dir=none -->`で印を付け、`docs/tour/`の同じ例と同一内容にした——README内のコード出力も手で書かない、という既存の方針をここにも適用した。
+
+**開発中の注記の扱い：** v0.1.0を公開した後も、「`qsokufile`の書式やコマンドはまだ変わりうる」という警告文言自体は残した（タグを打った＝安定した、ではないため）。「バージョンが無い」という文だけを、`go install ...@latest`が今`v0.1.0`を指すという事実に合わせて書き換えた。
+
+**確認したこと：** リンク切れチェック（既存のスクリプト。プレースホルダーの`xxx.md`以外に問題なし）、`TestDocExamplesAreMarkedAndMatch`（英日で例の数・コマンド文が一致）、`make docs-examples`→`TestDocExamples`（新設した折りたたみ内の例も含め全緑、2回目の実行で差分なし）、`make check`・`make test`・`make race`・`make shellcheck`。SVG 2つは`python3`の`xml.dom.minidom`で構文の妥当性を確認した（ブラウザでの見た目そのものはこの環境では確認できていない）。

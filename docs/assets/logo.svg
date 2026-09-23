@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 160" role="img" aria-label="qsoku">
+  <title>qsoku</title>
+  <style>
+    text {
+      font-family: ui-monospace, SFMono-Regular, "Cascadia Code", Menlo, Consolas, monospace;
+    }
+    .qsoku-fg { fill: #0f172a; }
+    .qsoku-muted { fill: #64748b; }
+    .qsoku-accent { fill: #059669; }
+    .qsoku-icon-fg { fill: #f8fafc; }
+    @media (prefers-color-scheme: dark) {
+      .qsoku-fg { fill: #f1f5f9; }
+      .qsoku-muted { fill: #94a3b8; }
+      .qsoku-accent { fill: #34d399; }
+      .qsoku-icon-fg { fill: #052e1f; }
+    }
+  </style>
+
+  <!-- A small "terminal prompt" mark: qsoku always runs a name through sh. -->
+  <rect class="qsoku-accent" x="20" y="30" width="100" height="100" rx="22"/>
+  <text class="qsoku-icon-fg" x="70" y="97" font-size="42" font-weight="700" text-anchor="middle">&gt;_</text>
+
+  <text class="qsoku-fg" x="142" y="88" font-size="58" font-weight="700">qsoku</text>
+  <text class="qsoku-muted" x="144" y="122" font-size="19">per-repository command shortcuts</text>
+</svg>
