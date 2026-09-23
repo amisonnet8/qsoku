@@ -1,0 +1,7 @@
+# Built binary (root only: a bare "qsoku" would also ignore cmd/qsoku/)
+/qsoku
+/qsoku.exe
+/dist/
+
+# Personal Claude Code settings
+/.claude/settings.local.json

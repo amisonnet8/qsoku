@@ -1,0 +1,49 @@
+# golangci-lint v2 configuration. Check this file with: golangci-lint config verify
+version: "2"
+
+run:
+  # The end-to-end tests will be built with this tag (mirrors mtqg's Makefile).
+  build-tags:
+    - e2e
+
+linters:
+  # errcheck, govet, ineffassign, staticcheck, unused
+  default: standard
+  enable:
+    # The core returns structured errors; wrapping must use errors.Is/As.
+    - errorlint
+    # qsoku writes files (qsokufile) that other people commit and read, and
+    # runs commands built from qsokufile text (G204 is qsoku's own job, not
+    # a mistake -- do not silence it without writing down why it is safe).
+    - gosec
+    # Comments, commit messages and CLI output are English.
+    - misspell
+    # Every //nolint must name the linter and say why.
+    - nolintlint
+    - nilerr
+    - unconvert
+    - usestdlibvars
+
+  # depguard (layer boundaries) and forbidigo (user-facing text confined to
+  # one layer) are not configured yet: internal/ has no layers until the
+  # implementation decides them. Add both once that structure exists
+  # (.claude/rules/directory-structure.md).
+
+  settings:
+    nolintlint:
+      require-explanation: true
+      require-specific: true
+
+    misspell:
+      locale: US
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  settings:
+    gofmt:
+      simplify: true
+    goimports:
+      local-prefixes:
+        - github.com/amisonnet8/qsoku
