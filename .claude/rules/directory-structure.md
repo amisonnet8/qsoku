@@ -29,8 +29,9 @@ qsoku/
 ◯ internal/cli/             実装本体。今は`Run`（`.version`だけ実装、ほかは仮に
 ◯                            `not implemented yet`で終了コード1）と`buildVersion`のみ
 ◯ internal/qsokufile/        qsokufileの探索（`Find`）と解析（`Parse`）、両方をまとめた
-◯                            `Load`。`internal/cli`を知らない層（`.golangci.yaml`の
-◯                            depguardで強制）。層への分け方は引き続きStep 4〜6で足していく
+◯                            `Load`、`//`の置き換え（`Substitute`・`SubstituteArg`）。
+◯                            `internal/cli`を知らない層（`.golangci.yaml`のdepguardで
+◯                            強制）。層への分け方は引き続きStep 5〜6で足していく
 △ e2e/                      本物のバイナリと本物のシェル（bash・zsh・fish）で動かすテスト
 ◯ .devcontainer/           devcontainer.json・postCreate.sh
 ◯ .github/workflows/        CI（Linux・macOSのマトリクス）
