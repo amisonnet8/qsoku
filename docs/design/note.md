@@ -172,4 +172,4 @@ __status=$?; pwd > "$QSOKU_CWD_FILE"; exit $__status' qsoku "$@"
 
 ## 未決事項
 
-- [ ] 公開の直前に、同名チェックをもう一度（GitHub、Goのパッケージ、npm）。`qsoku`は2026-09-22の時点で衝突なし
+- [x] 公開の直前に、同名チェックをもう一度（GitHub、Goのパッケージ、npm）。`qsoku`は2026-09-22の時点で衝突なし（2026-09-23、Step 9で再確認。結果は変わらず衝突なし。`docs/design/history.md`参照）

@@ -40,6 +40,11 @@ wget -qO - https://raw.githubusercontent.com/golangci/golangci-lint/HEAD/install
 go install golang.org/x/tools/gopls@latest
 go install golang.org/x/tools/cmd/goimports@latest
 
+# goreleaser: builds and validates the release (.goreleaser.yaml,
+# distribution.md, "make goreleaser-check"). Same version .github/workflows/
+# pins, so a local check matches CI.
+go install github.com/goreleaser/goreleaser/v2@v2.18.2
+
 # mtqg is NOT installed here. Clone github.com/amisonnet8/mtqg yourself, build
 # it (go build ./cmd/mtqg), and put the binary on the PATH. This repository
 # uses mtqg to record its own development (CLAUDE.md, .claude/rules/mtqg.md).

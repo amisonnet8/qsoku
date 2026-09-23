@@ -1,7 +1,7 @@
 # Entry points for building and checking qsoku (.claude/rules/testing.md).
 # The recipes assume a POSIX shell (Git Bash on Windows).
 
-.PHONY: build fmt vet lint unit check test docs-examples race trivy shellcheck
+.PHONY: build fmt vet lint unit check test docs-examples race trivy shellcheck goreleaser-check
 
 # Compile every package first: a package that cmd/qsoku does not import yet
 # would otherwise be skipped, and so would its build errors.
@@ -44,3 +44,11 @@ trivy:
 
 shellcheck:
 	git ls-files '*.sh' '*.bash' | xargs -r shellcheck
+
+# Validates .goreleaser.yaml and does a real build of every release target
+# (distribution.md), without publishing anything (--skip=publish) or
+# needing a tag (--snapshot). release.yml runs the real thing, only when a
+# human pushes a version tag.
+goreleaser-check:
+	goreleaser check
+	goreleaser release --snapshot --clean --skip=publish

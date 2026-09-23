@@ -10,6 +10,10 @@ qsoku/
 ◯ .gitattributes          `* text=auto eol=lf`（Windowsでの改行コード変換による誤検知を防ぐ）
 ◯ .golangci.yaml          lintの設定
 ◯ trivy.yaml               依存の脆弱性・ライセンス検査の設定
+◯ .goreleaser.yaml         バイナリ配布の設定（distribution.md）。動くのは人間が
+◯                          v*タグをpushしたとき（.github/workflows/release.yml）だけ。
+◯                          設定が壊れていないかは.github/workflows/ci.yml の
+◯                          goreleaserジョブ（make goreleaser-check）が毎pushで確認
 ◯ README.md / README_ja.md 看板（売り文句・実行例・インストール・tour/reference/examples
                             へのリンク）。冒頭に未完成の間の注意書きを残す（Step 9）
 ◯ Makefile                ビルド・テストの入口（`make build`・`make check`など）
@@ -58,7 +62,11 @@ qsoku/
 ◯                            Step 8で作り、Step 9でREADME・tour/にも対象を広げた）
 ◯ └── testdata/examples/     ↑の例が使うfixture（言語非依存。英日どちらの文書からも参照）
 ◯ .devcontainer/           devcontainer.json・postCreate.sh
-◯ .github/workflows/        CI（Linux・macOSのマトリクス）
+◯ .github/workflows/
+◯ ├── ci.yml                 CI（Linux・macOSのマトリクス。check・race・shellcheck・
+◯ │                            trivy・goreleaser（make goreleaser-checkの安全網）の5系統）
+◯ └── release.yml            v*タグのpushだけで動く。goreleaser-actionで実際に
+◯                            ビルド・GitHub Releaseの公開まで行う
 ◯ .claude/
 ◯ ├── settings.json         権限（deny/ask）とビルドフックの設定。人間が管理する
 ◯ ├── rules/                 このファイルを含む、育てていくルール

@@ -1,0 +1,33 @@
+version: 2
+
+project_name: qsoku
+
+builds:
+  - id: qsoku
+    main: ./cmd/qsoku
+    binary: qsoku
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w -X github.com/amisonnet8/qsoku/internal/cli.version={{.Tag}}
+
+archives:
+  - id: qsoku
+    formats: [tar.gz]
+
+checksum:
+  name_template: "checksums.txt"
+
+changelog:
+  sort: asc
+
+release:
+  github:
+    owner: amisonnet8
+    name: qsoku

@@ -168,3 +168,19 @@ Step 7で前倒しした`e2e/`の土台に、残り2つを足した：本物の�
 **手元で確かめたこと：** `make check`・`make test`・`make race`・`make shellcheck`・`make trivy`がすべて緑。`make docs-examples`を2回連続で実行し、2回目で差分が出ない。変異確認：`README.md`の出力を1行書き換えたら`TestDocExamples`が落ちる、`docs/examples/go/qsokufile`に`:`の無い行を足したら`TestDocsExamplesQsokufilesParse`が落ちる、両方確認して復元。実バイナリ・本物のbashで`docs/tour/`の手順（`.init`〜補完）を頭から1回手でなぞり、`src/`からの実行・TAB補完を含めて記載どおりであることを確認
 
 **mtqg本体への報告：** `/home/vscode/mtqg-report.md`に書いた（人間の指示、q&a `c5dd00dfa8`。qsokuリポジトリにはコミットしない）
+
+## 2026-09-23　正式公開の準備（GoReleaser・GitHubメタデータ）
+
+Step 9完了後、人間から「正式公開する、基本的に今はやらないは無い、全部やる。トップのREADMEだけちゃんと考えて後で作る」との指示を受け、公開直前チェックリストのうち、トップの`README.md`/`README_ja.md`の内容変更を除く全項目を実施した（タグ付け自体は`distribution.md`の方針どおり人間の判断のまま）。
+
+**GoReleaserの導入：** `.goreleaser.yaml`（新設）でlinux・darwinのamd64・arm64向けにクロスコンパイルする設定を書いた。**Windowsは対象外**——`testing.md`のCI検証OSの判断、`qsokufile`が`sh`実行前提でWindowsではGit Bash/WSLが要るという既存の判断と揃えた。`CGO_ENABLED=0`（distribution.mdの「純粋なGoにする」のまま）。アーカイブの中身は`LICENSE`・`README.md`・`README_ja.md`——GoReleaserの既定globに任せた（明示的な`files:`指定は書いていない）。実際にこの中身が入ることは、この会話のシェルへ`go install github.com/goreleaser/goreleaser/v2@v2.18.2`して`goreleaser release --snapshot --clean --skip=publish`を実行し、4アーキテクチャ分のtar.gzを展開して確認した（`dist/`はビルド後に削除、`.gitignore`済みでコミットはされない）。
+
+**バージョンの埋め込み：** `internal/cli/version.go`にmtqg本体の`internal/cli/version.go`と同じ形で`var version string`を足し、`-ldflags`で埋め込まれていればそれを最優先、空なら従来どおり`debug.ReadBuildInfo()`に落ちる、という順にした。`go install`側の挙動（`ReadBuildInfo`に頼る理由）は変えていない。スナップショットビルドで`.version`が`v0.0.0`（GoReleaserがタグ無し状態に振る仮のタグ）を返すことを実機で確認した。`version_test.go`を新設し、`version`変数を設定した場合に`buildVersion()`がそれを返すことを確認する小テストを足した。
+
+**CIの安全網：** `.github/workflows/ci.yml`に`goreleaser`ジョブを足し、通常のpush・PRのたびに`make goreleaser-check`（`goreleaser check`＋`--snapshot --skip=publish`のビルド）を実行するようにした。**タグを打つ前に設定の壊れを検知できる**——`.github/workflows/release.yml`（新設、`v*`タグのpushだけで動く）が実際に公開するのはタグを打った後なので、それより先にCIで気づけるようにする狙い（e2e/docs-examplesと同じ「実測で確かめる」方針を配布設定にも適用した）。`goreleaser-action`のバージョンは、実装時点の最新リリース（`gh api repos/goreleaser/goreleaser-action/releases/latest`で確認、`v7.2.3`）に合わせて`@v7`、CLI本体は`v2.18.2`に固定した（golangci-lint-action・setup-trivyと同じ「アクション本体はメジャー版タグ、中のツールは正確なバージョンを固定」という既存の流儀）。`Makefile`に`goreleaser-check`ターゲットを足し、`postCreate.sh`にも`goreleaser`のインストールを足した（次回のコンテナ再構築から手元でも使える）。
+
+**GitHubリポジトリのメタデータ：** `gh repo edit`でdescription（"Per-repository command shortcuts: define them once in a qsokufile, run qsoku <name> from anywhere in the repo."）とTopics（`note.md`の下書き一覧12個：`cli`・`go`・`shell`・`bash`・`zsh`・`fish`・`developer-tools`・`productivity`・`shortcuts`・`command-runner`・`task-runner`・`dotfiles`）を設定した。`ai-agents`は`note.md`の元の判断どおり見送った（AIエージェント向けの機能・説明が実際にできてから足す）。
+
+**`note.md`のチェック修正：** 「未決事項」の同名チェック項目が、Step 9で実施済みにもかかわらず`[ ]`のままだったので`[x]`に直した。
+
+**手元で確かめたこと：** `make check`・`make test`・`make race`・`make shellcheck`・`make trivy`・新設の`make goreleaser-check`がすべて緑。`gh repo view --json description,repositoryTopics`でGitHub側の反映を確認。git tagは一切作っていない・pushしていない。

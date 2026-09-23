@@ -1,0 +1,31 @@
+name: Release
+
+# Runs only when a human pushes a version tag (never on an ordinary push;
+# distribution.md -- tagging is a human decision, since a version pushed to
+# proxy.golang.org can never be taken back). The ci.yml "goreleaser" job
+# validates .goreleaser.yaml on every push instead, so a broken config is
+# caught long before anyone tags a release.
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  goreleaser:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # goreleaser's changelog needs the tag history
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+      - uses: goreleaser/goreleaser-action@v7
+        with:
+          version: v2.18.2
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
