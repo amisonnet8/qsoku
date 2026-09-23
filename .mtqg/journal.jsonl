@@ -93,3 +93,5 @@
 {"id":"213740c79cd848bbae75a511f5e89c28","op":"create","type":"todo","status":"open","text":"[検証用] 並行記録シナリオの確認用todo(mtqg review実地確認、Step 9)","v":0,"ts":"2026-09-23T11:46:46Z","author":{"kind":"ai","name":"claude-code"}}
 {"id":"213740c79cd848bbae75a511f5e89c28","op":"edit","text":"[検証用] 並行記録シナリオの確認用todo(mtqg review実地確認、Step 9、mainから文言変更)","v":0,"ts":"2026-09-23T11:47:12Z","author":{"kind":"ai","name":"claude-code"}}
 {"id":"056b5cd8f96c402cad84b1b127199b08","op":"create","type":"glossary","word":"qsokufile","text":"[main] リポジトリ直下からの相対で場所を決めるコマンド定義ファイル(意図的に別の言い回しで再定義、review検証用)","v":0,"ts":"2026-09-23T11:47:12Z","author":{"kind":"ai","name":"claude-code"}}
+{"id":"213740c79cd848bbae75a511f5e89c28","op":"status","from":"open","status":"done","v":0,"ts":"2026-09-23T11:47:07Z","author":{"kind":"ai","name":"claude-code"}}
+{"id":"db2dfd4989cb40008127c1fc16a81f34","op":"create","type":"glossary","word":"qsokufile","text":"[worktree] シェル固有の書き方をしないリポジトリのコマンド一覧ファイル(意図的に別の言い回しで再定義、review検証用)","v":0,"ts":"2026-09-23T11:47:07Z","author":{"kind":"ai","name":"claude-code"}}
