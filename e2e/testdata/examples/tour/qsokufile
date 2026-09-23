@@ -1,0 +1,3 @@
+build: echo "building the project"
+test: (cd //; echo "testing from $QSOKU_ROOT")
+run: echo "running with arg: $1"

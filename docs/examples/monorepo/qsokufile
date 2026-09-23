@@ -1,0 +1,18 @@
+# Copy this file into the root of a multi-package repository, and adjust
+# the package directories under "//packages/". See docs/tour/ for a
+# walk-through, docs/reference/ for the format.
+
+# Without parentheses: running this actually moves you into packages/api,
+# which is handy when you're about to keep working there.
+api: cd //packages/api
+
+# With parentheses: the cd stays inside the subshell, so build/test/lint
+# never move you, no matter where you ran them from.
+build-api: (cd //packages/api; go build ./...)
+test-api: (cd //packages/api; go test ./...)
+
+build-web: (cd //packages/web; npm run build)
+test-web: (cd //packages/web; npm test)
+
+build: (cd //; qsoku build-api && qsoku build-web)
+test: (cd //; qsoku test-api && qsoku test-web)

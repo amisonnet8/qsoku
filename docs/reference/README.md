@@ -11,7 +11,9 @@
   その出力をブロックへ書き込む。fixtureは`e2e/testdata/examples/`（`none`は
   qsokufileの無い空ディレクトリ）。各`$ `行は`qsoku`で始まるものに限る（任意の
   シェルセッションではなく、qsoku自身の出力を見せるため）。`make test`が
-  `TestDocExamples`で文書と実際の出力の食い違いを検知する
+  `TestDocExamples`で文書と実際の出力の食い違いを検知する。この仕組みは
+  `docs/reference/`だけでなく`README.md`・`docs/tour/`の実行例にも使う
+  （`e2e/examples_test.go`の`documentPairs`が対象文書の一覧）
 - **実装しながら育てる文書。** 実装と仕様がずれたらここを更新する。設計判断を変えるときは、まずここを更新してから着手する
 
 ## ファイル

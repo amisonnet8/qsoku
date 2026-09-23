@@ -2,11 +2,11 @@
 
 package e2e
 
-// The examples in docs/reference/{cli,qsokufile}.md and their _ja
-// counterparts are run against the built qsoku binary, and what they show
-// has to be what qsoku actually prints. Every example is a code block that
-// starts with "$ qsoku ...", and the line before it says which fixture to
-// run it against:
+// The examples in the documents documentPairs lists (docs/reference/,
+// README.md, docs/tour/, and their _ja counterparts) are run against the
+// built qsoku binary, and what they show has to be what qsoku actually
+// prints. Every example is a code block that starts with "$ qsoku ...",
+// and the line before it says which fixture to run it against:
 //
 //	<!-- qsoku:example dir=basic -->
 //
@@ -36,10 +36,27 @@ import (
 	"testing"
 )
 
-var update = flag.Bool("update", false, "write what qsoku prints into the examples of docs/reference/ (make docs-examples)")
+var update = flag.Bool("update", false, "write what qsoku prints into the documents that hold examples (make docs-examples)")
 
-// documents are the files of docs/reference/ that hold examples, English first.
-var documents = []string{"cli.md", "cli_ja.md", "qsokufile.md", "qsokufile_ja.md"}
+// documentPairs are the documents that hold examples, as paths relative to
+// the repository root: the English document, then its _ja counterpart.
+var documentPairs = [][2]string{
+	{"docs/reference/cli.md", "docs/reference/cli_ja.md"},
+	{"docs/reference/qsokufile.md", "docs/reference/qsokufile_ja.md"},
+	{"README.md", "README_ja.md"},
+	{"docs/tour/README.md", "docs/tour/README_ja.md"},
+}
+
+// documents flattens documentPairs into the list TestDocExamples walks.
+var documents = flattenPairs(documentPairs)
+
+func flattenPairs(pairs [][2]string) []string {
+	all := make([]string, 0, len(pairs)*2)
+	for _, p := range pairs {
+		all = append(all, p[0], p[1])
+	}
+	return all
+}
 
 // placeholderPath is what every copy's absolute path is replaced with in an
 // example's output, so the document does not depend on where the test ran.
@@ -79,7 +96,7 @@ type document struct {
 
 func loadDocument(t *testing.T, name string) *document {
 	t.Helper()
-	data, err := os.ReadFile(filepath.Join("..", "docs", "reference", name)) //nolint:gosec // name is one of the fixed "documents" this file lists, not user input
+	data, err := os.ReadFile(filepath.Join("..", name)) //nolint:gosec // name is one of the fixed "documents" this file lists, not user input
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -248,7 +265,7 @@ func TestDocExamplesAreMarkedAndMatch(t *testing.T) {
 		docs[name] = d
 	}
 
-	for _, pair := range [][2]string{{"cli.md", "cli_ja.md"}, {"qsokufile.md", "qsokufile_ja.md"}} {
+	for _, pair := range documentPairs {
 		en, ja := docs[pair[0]], docs[pair[1]]
 		if len(en.examples) != len(ja.examples) {
 			t.Fatalf("%s has %d examples and %s has %d: a change to one has to be made to the other", en.name, len(en.examples), ja.name, len(ja.examples))
@@ -324,7 +341,7 @@ func (d *document) apply(t *testing.T, edits []edit) {
 	for _, e := range edits {
 		out = slices.Concat(out[:e.start], e.with, out[e.end:])
 	}
-	path := filepath.Join("..", "docs", "reference", d.name)
+	path := filepath.Join("..", d.name)
 	if err := os.WriteFile(path, []byte(strings.Join(out, "\n")), 0o600); err != nil {
 		t.Fatal(err)
 	}

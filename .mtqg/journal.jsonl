@@ -99,3 +99,6 @@
 {"id":"db2dfd4989cb40008127c1fc16a81f34","op":"delete","v":0,"ts":"2026-09-23T11:47:38Z","author":{"kind":"human","name":"amisonnet8"}}
 {"id":"056b5cd8f96c402cad84b1b127199b08","op":"delete","v":0,"ts":"2026-09-23T11:47:38Z","author":{"kind":"human","name":"amisonnet8"}}
 {"id":"213740c79cd848bbae75a511f5e89c28","op":"delete","v":0,"ts":"2026-09-23T11:47:42Z","author":{"kind":"human","name":"amisonnet8"}}
+{"id":"f266c02fd7fe44fbbf790ecdad97c18a","op":"create","type":"memo","text":"Step 9: 利用者向け文書(看板README英日・docs/tour/・docs/examples/)を作成。e2e/examples_test.goのdocumentsをdocs/reference/固定からdocumentPairs(リポジトリルート相対の英日ペア一覧)に一般化し、README.md/docs/tour/README.mdの実行例も実測で確かめる対象にした。docs/examples/のqsokufile(go/node/monorepo)はgo・npmなど本リポジトリが依存しないツールを呼ぶため実行はせず、TestDocsExamplesQsokufilesParseでqsoku .listの成功(解析できること)だけを確かめる","v":0,"ts":"2026-09-23T11:53:11Z","author":{"kind":"ai","name":"claude-code"}}
+{"id":"6d651b3a914646d5b3a316fb246c198e","op":"create","type":"memo","text":"Step 9: 公開直前の同名チェック(GitHub search repos qsoku→自分のみ、npm registry→404で空き、pkg.go.dev search→0件)。紛らわしい先客なし、qsokuのまま進めた","v":0,"ts":"2026-09-23T11:53:11Z","author":{"kind":"ai","name":"claude-code"}}
+{"id":"22149444c7884b7db30301323ffa80da","op":"status","from":"open","status":"done","v":0,"ts":"2026-09-23T11:54:12Z","author":{"kind":"ai","name":"claude-code"}}

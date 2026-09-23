@@ -196,3 +196,27 @@ func TestRunCwdHandoffNotWrittenOnQsokuOwnError(t *testing.T) {
 		t.Errorf("QSOKU_CWD_FILE was written on qsoku's own error: err = %v", err)
 	}
 }
+
+// TestDocsExamplesQsokufilesParse checks that every qsokufile under
+// docs/examples/ (the ones the README and tour link to, meant to be copied
+// into a real repository) actually parses: qsoku .list must succeed run
+// from that directory. It does not run any of their entries (some call
+// real tools like npm or go that this repository does not depend on).
+func TestDocsExamplesQsokufilesParse(t *testing.T) {
+	dirs, err := filepath.Glob(filepath.Join("..", "docs", "examples", "*", "qsokufile"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(dirs) == 0 {
+		t.Fatal("no docs/examples/*/qsokufile found")
+	}
+	for _, qf := range dirs {
+		dir := filepath.Dir(qf)
+		t.Run(filepath.Base(dir), func(t *testing.T) {
+			_, stderr, code := runBinary(t, dir, nil, ".list")
+			if code != 0 {
+				t.Errorf(".list in %s: code = %d, stderr = %q", dir, code, stderr)
+			}
+		})
+	}
+}

@@ -150,3 +150,21 @@ Step 7で前倒しした`e2e/`の土台に、残り2つを足した：本物の�
 **gosecの扱い：** mtqg本体は`.golangci.yaml`で`_test.go$`全体からgosecを除外しているが、qsokuは既存方針（G204などをサイトごとに`//nolint:gosec`で理由付きにする、`.golangci.yaml`のコメント参照）を踏襲し、**除外ルールは追加せず**、`e2e/examples_test.go`・`e2e/run_test.go`の該当箇所に理由付きの`//nolint:gosec`を個別に付けた
 
 **手元で確かめたこと：** `go test ./... `・`go test -tags e2e ./e2e/...`・`make check`・`make race`・`make shellcheck`がすべて緑。`make docs-examples`を2回連続で実行し、2回目で差分が出ない（出力が安定している）ことを確認
+
+## 2026-09-23　仕上げと報告（Step 9）
+
+実装の最後のステップとして、利用者向けの文書（看板README英日・`docs/tour/`・`docs/examples/`）、公開前の同名チェック、mtqgの「並行した状態変更の表示」の実地確認、そしてmtqg本体への報告を行った。
+
+**公開前の同名チェック（2026-09-23）：** GitHub（`gh search repos qsoku`）は自分のリポジトリのみ、npm（`registry.npmjs.org/qsoku`）は404で空き、Go（`pkg.go.dev/search?q=qsoku`）は0件。紛らわしい先客がないことを確認し、`qsoku`のまま進めた
+
+**並行した状態変更の表示の実地確認：** 前回（Step 3〜4の頃、memo `eca203d5a1`）はブランチとmainで別々の記録に触れただけで、`mtqg review`は何も検知しなかった。今回は意図的に、同じtodo（worktree側で`done`、main側で`edit`）と、既存のglossary語`qsokufile`（worktree側・main側でそれぞれ別の定義文を`g add`）という**同じ記録**を両側で変更してから`git merge --no-ff`した。結果：glossaryの重複定義は`mtqg review`の「Duplicate glossary definitions」にそのまま検知され、3つの定義が並んで表示された。一方、**同じtodoへの並行した変更（statusとedit）自体には、`mtqg review`・`mtqg status`のどちらにも印が付かない**——`mtqg show`で履歴を読んで初めて、2つの変更が別々の枝から来たかもしれないと気づける。journalのマージ自体は`.gitattributes`の`merge=union`どおり衝突なく自動マージされた。詳細はmemo `2b4deeb094`。実験用の記録（重複定義・検証用todo）は`mtqg delete`で片付けた（journalと履歴には残る）
+
+**docs/reference/の実測の仕組みを広げた：** `e2e/examples_test.go`の`documents`（`docs/reference/`固定の4ファイル）を`documentPairs`（リポジトリルートからの相対パスの英日ペアの一覧）に一般化し、`README.md`/`README_ja.md`・`docs/tour/README.md`/`README_ja.md`を対象に追加した。仕組み自体（印・`qsoku`始まりの限定・パス置き換え）はStep 8のまま変えていない
+
+**`docs/tour/`の構成：** 「何もない状態から始める」（`.init`）→「近道を足す」（`.add`・`.list`）→「実行する」（引数）→「`//`」→「どのサブディレクトリからでも」→「居場所を持ち帰る」（シェル連携の説明、非実行）→「シェル連携と補完」（非実行、cli.mdへリンク）→「直す・場所を確かめる」（`.where`・`.rm`）→「コミットする」の順。新しいfixture`tour`（`build`・`test`・`run`の3項目、`src/`つき）を使い、`.init`直後の2例だけは既存の`none`fixtureを再利用した
+
+**`docs/examples/`の実例：** `go`・`node`・`monorepo`の3つ。`go`・`node`はよくある近道の一覧、`monorepo`は「括弧なしで意図的に移動する項目」と「括弧つきで移動しない項目」の対比、および`qsoku`から`qsoku`を呼ぶ項目を含む。これらは`go`・`npm`のような、このリポジトリ自身が依存しないツールを呼ぶため、**実行はしない**——`e2e/run_test.go`に`TestDocsExamplesQsokufilesParse`を足し、各ディレクトリで`qsoku .list`が終了コード0であること（解析できること）だけを確かめる
+
+**手元で確かめたこと：** `make check`・`make test`・`make race`・`make shellcheck`・`make trivy`がすべて緑。`make docs-examples`を2回連続で実行し、2回目で差分が出ない。変異確認：`README.md`の出力を1行書き換えたら`TestDocExamples`が落ちる、`docs/examples/go/qsokufile`に`:`の無い行を足したら`TestDocsExamplesQsokufilesParse`が落ちる、両方確認して復元。実バイナリ・本物のbashで`docs/tour/`の手順（`.init`〜補完）を頭から1回手でなぞり、`src/`からの実行・TAB補完を含めて記載どおりであることを確認
+
+**mtqg本体への報告：** `/home/vscode/mtqg-report.md`に書いた（人間の指示、q&a `c5dd00dfa8`。qsokuリポジトリにはコミットしない）

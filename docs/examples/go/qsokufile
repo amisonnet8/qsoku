@@ -1,0 +1,12 @@
+# Copy this file into a Go module's repository root and adjust the package
+# paths. See docs/tour/ for a walk-through, docs/reference/ for the format.
+
+build: go build ./...
+test: go test ./...
+race: CGO_ENABLED=1 go test -race ./...
+lint: golangci-lint run
+run: go run ./cmd/app "$@"
+
+# "//" always means the qsokufile's own directory, so this works the same
+# whether you're at the repository root or three directories down.
+tidy: (cd //; go mod tidy)

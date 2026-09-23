@@ -1,0 +1,11 @@
+# Copy this file into a Node.js project's repository root. See docs/tour/
+# for a walk-through, docs/reference/ for the format.
+
+install: npm install
+build: npm run build
+test: npm test
+lint: npm run lint
+dev: npm run dev
+
+# Move to the repository root first, so this works from any subdirectory.
+clean: (cd //; rm -rf dist node_modules)
