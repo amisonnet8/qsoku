@@ -45,9 +45,15 @@ qsoku/
 ◯                            （`internal/qsokufile`・`internal/cli`のどちらも知らない。
 ◯                            `.golangci.yaml`のdepguardで3層の依存の向きを強制）
 ◯ e2e/                      本物のバイナリと本物のシェル（bash・zsh・fish）で動かすテスト
-◯                            （`e2e_test.go`が`TestMain`でバイナリを1回ビルド）。予定より
-◯                            前倒しでStep 7に作った（`.mtqg`のhistory参照）。docsの例の
-◯                            確認の仕組みはまだ無い（Step 8）
+◯                            （`e2e_test.go`が`TestMain`でバイナリを1回ビルド）。土台は
+◯                            予定より前倒しでStep 7に作った（`.mtqg`のhistory参照）。
+◯ ├── shell_test.go          シェル連携・補完（Step 7）
+◯ ├── run_test.go            本物のバイナリを直接実行（終了コードの素通し・シグナル・
+◯                            `//`置き換え・`QSOKU_CWD_FILE`の受け渡し。Step 8）
+◯ ├── examples_test.go       docs/reference/の実行例を実測で確かめる（`make docs-examples`
+◯                            で出力を文書へ書き込む。mtqgの`e2e/examples_test.go`の簡素化
+◯                            版。Step 8）
+◯ └── testdata/examples/     ↑の例が使うfixture（言語非依存。英日どちらの文書からも参照）
 ◯ .devcontainer/           devcontainer.json・postCreate.sh
 ◯ .github/workflows/        CI（Linux・macOSのマトリクス）
 ◯ .claude/

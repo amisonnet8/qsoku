@@ -1,0 +1,5 @@
+show: echo "$1"
+root: cd //src
+url: echo http://example.com
+grepq: grep "//" main.go
+echoq: echo '//' is a comment

@@ -51,6 +51,24 @@ For the file format itself, see [qsokufile.md](qsokufile.md).
      does.
 3. `sh` is located via `PATH`, like any other subprocess.
 
+### Example
+
+<!-- qsoku:example dir=basic -->
+```
+$ qsoku hello world
+hello, world
+$ qsoku nope
+qsoku: "nope" is not defined in /home/you/project/qsokufile
+```
+
+Looked up from a subdirectory, the same `qsokufile` (found by walking up) still applies:
+
+<!-- qsoku:example dir=basic cwd=src -->
+```
+$ qsoku hello everyone
+hello, everyone
+```
+
 ### Environment passed to the command
 
 | Variable | Value |
@@ -116,6 +134,27 @@ user's own names.
   the middle of typing a command never interrupts the line with an error
   (see [Shell completion](#shell-completion)). Every other management
   command reports such problems normally.
+
+### Example
+
+<!-- qsoku:example dir=none -->
+```
+$ qsoku .init
+Created /home/you/project/qsokufile
+$ qsoku .add build 'go build ./...'
+$ qsoku .add test 'go test ./...'
+$ qsoku .list
+build: go build ./...
+test: go test ./...
+$ qsoku .names
+build
+test
+$ qsoku .where
+/home/you/project
+$ qsoku .rm test
+$ qsoku .list
+build: go build ./...
+```
 
 ## Shell integration
 

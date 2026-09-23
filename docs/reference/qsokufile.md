@@ -39,6 +39,14 @@ This document specifies its format. For the `qsoku` command line itself, see
   file and line number and exits (code 1) without running anything.
 - There is no line continuation; each entry is exactly one line.
 
+### Example: a bad line
+
+<!-- qsoku:example dir=broken -->
+```
+$ qsoku ok
+qsoku: /home/you/project/qsokufile: line 2: no ':' found (expected "name: command")
+```
+
 ## Names
 
 - Allowed characters: ASCII letters and digits, `.`, `_`, `-`.
@@ -53,6 +61,14 @@ This document specifies its format. For the `qsoku` command line itself, see
   name already defined earlier is an error (both line numbers are reported;
   exit code 1). `qsoku .add` never creates this situation: adding a name that
   already exists replaces that line instead (see [cli.md](cli.md)).
+
+### Example: a duplicate name
+
+<!-- qsoku:example dir=dup -->
+```
+$ qsoku build
+qsoku: /home/you/project/qsokufile: line 2: name "build" already defined at line 1
+```
 
 ## `//`: the qsokufile's location
 
@@ -88,6 +104,30 @@ and is never affected by this rule.
 - Implementation note: recognizing quotes needs only to track whether the
   lexer is inside single quotes, double quotes, or after a backslash — full
   shell grammar is not required.
+
+### Substituting, and not
+
+Run against a `qsokufile` with `show: echo "$1"`, `url: echo http://example.com`,
+`grepq: grep "//" main.go` (a file containing the line `// see docs`) and
+`echoq: echo '//' is a comment`:
+
+<!-- qsoku:example dir=slashes -->
+```
+$ qsoku url
+http://example.com
+$ qsoku grepq
+// see docs
+$ qsoku echoq
+// is a comment
+$ qsoku show //src
+/home/you/project/src
+```
+
+`url` and `echoq` print their `//` back unchanged (not at the start of a
+word, and inside single quotes, respectively). `grepq`'s `grep "//" main.go`
+still finds the literal `//` in `main.go` — proof it wasn't substituted
+inside the double quotes. `show //src`, an argument typed by the user, is
+substituted to the fixture's own directory.
 
 ## Example
 

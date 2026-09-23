@@ -128,3 +128,25 @@ mtqgのtodo（9ステップ）のStep 2として、ビルド・検査・CIの入
 - **fishの補完はドットファイル扱い**：fishは、補完候補が`.`で始まる場合、打っている語自体が`.`で始まるまで隠す（パス補完のドットファイル規則が、ファイルかどうかに関わらず先頭文字だけで適用される）。qsokuの管理用コマンドは全部`.`始まりなので、**fishでは`qsoku <TAB>`で管理用コマンドが出ない**——`qsoku .<TAB>`まで打って初めて出る。これはqsoku側のバグではなくfish自体の仕様。テストを`qsoku `と`qsoku .`の2ケースに分け、`cli.md`「Shell completion」に注意書きを追記した
 
 **手元で確かめたこと：** `go test ./internal/cli/... -v`（`.shell`の埋め込み・引数検証）が緑。`make test`（`e2e`タグ、今回から実体化）で6つのテスト（bash・zsh・fishそれぞれの居場所の持ち帰り・補完。fishは名前と管理用コマンドで別ケース）がすべて緑。`make check`・`make race`・`make shellcheck`が通る（`qsoku.bash`のSC2164・SC2207を修正）。実バイナリを本物のbash・zsh・fishに`eval`させ、`qsoku`関数の居場所の持ち帰りと補完候補を手で確認
+
+## 2026-09-23　e2eの残りと、docs/reference/の例を実測で確かめる仕組み（Step 8）
+
+Step 7で前倒しした`e2e/`の土台に、残り2つを足した：本物のバイナリを直接実行するテスト（`e2e/run_test.go`）と、`docs/reference/`の実行例を実測で確かめる仕組み（`e2e/examples_test.go`、`make docs-examples`）。手本はmtqg本体の`e2e/examples_test.go`と`make docs-examples`
+
+**`run_test.go`が要る理由：** `internal/cli`の単体テストは`cli.Run`をプロセス内で呼ぶだけなので、「ビルドした実バイナリの終了コード・シグナル・`QSOKU_CWD_FILE`の受け渡し」はまだ本物のプロセス境界を越えたことが無かった。終了コードの素通し（`sh -c "exit 7"`→7）・シグナル（`kill -TERM $$`→143）・qsokufile未発見/解析エラー/未定義名/引数の数違いの終了コード（1/1/2/2）・引数への`//`置き換え・`QSOKU_CWD_FILE`と標準出力が混ざらないこと・qsoku自身のエラーでは何も書かれないこと、を表テストで押さえた
+
+**`examples_test.go`はmtqgの仕組みを簡素化して移植した：**
+- **プロセス内実行の経路は作らなかった。** mtqgは`cli.Run`をプロセス内で呼ぶ経路（時計・環境を差し替えられる）と、実バイナリの経路の両方を持ち、`binary`オプションで両者の出力が一致することも確かめる。qsokuの`Run`は時計や環境の差し替え口をそもそも持たず、出力も時刻に依存しないので、**実バイナリだけで足りる**と判断した（比較対象が無いので`binary=`オプション自体も無い）
+- **パスの置き換えは常時オン。** mtqgは`path=`オプションで選択制だが、qsokuの例は`.where`・`.init`・エラー文で絶対パスが出るものが大半なので、**すべての例で一時ディレクトリのパスを`/home/you/project`へ常に置き換える**ことにした
+- **`$ `行は`qsoku`で始まるものだけに制限した。** mtqgは`git | mtqg`のようなパイプや`>/dev/null`も許すが、qsokuの例にはその必要が無いので、`checkInvocation`で単純に絞った
+- **fixtureは言語非依存にした。** mtqgは`_ja`サフィックス付きのfixtureを別に持つ（記録の中身が日本語だとJSON Linesがそのまま日本語を含むため）。qsokuのfixture（qsokufile・付随ファイル）は中身が英語のコメント程度なので、英日どちらの文書からも同じfixtureを指す
+
+**印の形式：** `<!-- qsoku:example dir=<fixture> [cwd=<subdir>] [skip="理由"] -->`（mtqgの`mtqg:example`と同じ形だが、`repo=`ではなく`dir=`、`ids=any`・`author=`はqsoku自身に該当する概念が無いので無し）。`TestDocExamplesAreMarkedAndMatch`が印の無い例・宙に浮いた印を検知し、英語版と`_ja`版で例の数・コマンド行が一致することを確かめる
+
+**書き足した例：** `cli.md`「Running a name」（`qsoku hello world`・未定義名のエラー・サブディレクトリからの探索）「Management commands」（`.init`→`.add`×2→`.list`→`.names`→`.where`→`.rm`→`.list`の一続き）、`qsokufile.md`「Format」「Names」（`:`の無い行・名前の重複のエラー）「`//`」（表の実演：`url`・`grepq`・`echoq`で置き換わらないこと、`show //src`で引数が置き換わること）。出力はすべて`make docs-examples`が書き込んだもので、手では書いていない
+
+**変異確認：** 文書の出力を1行わざと書き換えたら`TestDocExamples`が落ちる、印を1つ消したら`TestDocExamplesAreMarkedAndMatch`が落ちる（英語版とjaの例数が食い違うところまで検知する）ことを確認し、元に戻した
+
+**gosecの扱い：** mtqg本体は`.golangci.yaml`で`_test.go$`全体からgosecを除外しているが、qsokuは既存方針（G204などをサイトごとに`//nolint:gosec`で理由付きにする、`.golangci.yaml`のコメント参照）を踏襲し、**除外ルールは追加せず**、`e2e/examples_test.go`・`e2e/run_test.go`の該当箇所に理由付きの`//nolint:gosec`を個別に付けた
+
+**手元で確かめたこと：** `go test ./... `・`go test -tags e2e ./e2e/...`・`make check`・`make race`・`make shellcheck`がすべて緑。`make docs-examples`を2回連続で実行し、2回目で差分が出ない（出力が安定している）ことを確認

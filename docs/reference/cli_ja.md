@@ -28,6 +28,24 @@ qsoku <名前> [引数...]
    - **qsokufileの項目自身は`exit`を呼んではいけない**：2行目はその**同じスクリプト**に足されるので、項目のコマンドの中で`exit`を呼ぶと、qsoku自身の行に届く前にスクリプト全体がそこで終わってしまう。成否は、項目の最後のコマンド自身の終了コードに委ねること（`make`のレシピや、普通のシェルスクリプトと同じ考え方）。下の例の`cd //src && make build`もそうしている。
 3. `sh`はほかの子プロセスと同じく`PATH`から探す。
 
+### 例
+
+<!-- qsoku:example dir=basic -->
+```
+$ qsoku hello world
+hello, world
+$ qsoku nope
+qsoku: "nope" is not defined in /home/you/project/qsokufile
+```
+
+サブディレクトリから調べても、同じ`qsokufile`が（上へたどって）見つかって使われる：
+
+<!-- qsoku:example dir=basic cwd=src -->
+```
+$ qsoku hello everyone
+hello, everyone
+```
+
 ### コマンドに渡す環境変数
 
 | 変数 | 値 |
@@ -67,6 +85,27 @@ qsoku <名前> [引数...]
 - `.add`の書き換えは最小限：変わるのはその1行だけ（末尾に足す、またはその場で置き換える）。手で書いたコメントや、ほかの項目の並び順は一切崩さない。
 - `.edit`・`.where`は、今の`qsokufile`が解析できない状態（不正な行、名前の重複）でも動く——直すために必要だから。
 - `.names`だけは特に**決して失敗しない**：`qsokufile`が無い、読めない、解析エラーがある、いずれの場合も何も出さず終了コード0で、標準エラー出力にも何も出さない。コマンドを打っている途中でTABを押したときに、エラーで行が壊れないようにするため（[シェル補完](#シェル補完)参照）。ほかの管理用コマンドはこうした問題を通常どおり報告する。
+
+### 例
+
+<!-- qsoku:example dir=none -->
+```
+$ qsoku .init
+Created /home/you/project/qsokufile
+$ qsoku .add build 'go build ./...'
+$ qsoku .add test 'go test ./...'
+$ qsoku .list
+build: go build ./...
+test: go test ./...
+$ qsoku .names
+build
+test
+$ qsoku .where
+/home/you/project
+$ qsoku .rm test
+$ qsoku .list
+build: go build ./...
+```
 
 ## シェル連携
 

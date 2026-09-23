@@ -21,6 +21,14 @@
 - 空行・コメント行でない行に`:`が無ければエラーで、qsokuはファイル名と行番号を示して終了する（終了コード1）。何も実行しない。
 - 行の継続は無い。1つの項目は必ず1行。
 
+### 例：不正な行
+
+<!-- qsoku:example dir=broken -->
+```
+$ qsoku ok
+qsoku: /home/you/project/qsokufile: line 2: no ':' found (expected "name: command")
+```
+
 ## 名前
 
 - 使える文字：英数字（ASCII）、`.`、`_`、`-`。
@@ -28,6 +36,14 @@
 - 名前の先頭を`-`に**してもよい**。qsokuは自分自身のコマンドラインオプションを持たない（`qsoku`の後の引数はすべて名前として調べられる）ので、区別すべき曖昧さが無い。
 - 名前は大文字・小文字を区別する。
 - 1つの`qsokufile`に同じ名前は1回までしか出せない。すでに定義済みの名前を2度目に定義する行はエラー（両方の行番号を示す。終了コード1）。`qsoku .add`はこの状況を作らない：すでにある名前を足そうとすると、その行を置き換える（[cli_ja.md](cli_ja.md)を参照）。
+
+### 例：名前の重複
+
+<!-- qsoku:example dir=dup -->
+```
+$ qsoku build
+qsoku: /home/you/project/qsokufile: line 2: name "build" already defined at line 1
+```
 
 ## `//`：qsokufileの置いてある場所
 
@@ -49,6 +65,24 @@
 - **逃がし方**：`//`をそのまま使いたい（URLやコメントの中など）ときは、シングルクォートかダブルクォートでくくるか、コメントの中に書く——新しい記号は作らない。引用符の中でqsokufileの場所を使いたいときは、`$QSOKU_ROOT`を直接書く。
 - **打たれた引数**：`qsoku cd //src`は、（利用者自身のシェルが引用符を取り除いた後の）`//src`を、`cd`の項目のコマンドへの引数として渡す。qsokuは同じ規則で置き換えるので、qsokufileのコマンドの中の`$1`は`/qsokufileのあるディレクトリの絶対パス/src`を受け取る。
 - 実装上の注意：引用符の認識には、字句解析がシングルクォートの中・ダブルクォートの中・バックスラッシュの直後のどれにいるかを追うだけで足り、シェルの文法をすべて実装する必要はない。
+
+### 置き換わる／置き換わらないの実演
+
+`show: echo "$1"`、`url: echo http://example.com`、`grepq: grep "//" main.go`（`// see docs`という行を持つファイル）、`echoq: echo '//' is a comment`を持つqsokufileで実行する：
+
+<!-- qsoku:example dir=slashes -->
+```
+$ qsoku url
+http://example.com
+$ qsoku grepq
+// see docs
+$ qsoku echoq
+// is a comment
+$ qsoku show //src
+/home/you/project/src
+```
+
+`url`・`echoq`は`//`をそのまま出す（それぞれ単語の先頭ではない・シングルクォートの中）。`grepq`の`grep "//" main.go`は、ダブルクォートの中で置き換わっていない証拠として、`main.go`の中の文字どおりの`//`を実際に見つける。利用者が打った引数である`show //src`は、fixture自身のディレクトリへ置き換わる。
 
 ## 例
 
