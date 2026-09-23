@@ -170,7 +170,19 @@ writes to standard error, so an outdated, missing, or currently-broken
 `qsokufile` never interrupts typing.
 
 Management commands (`.init`, `.add`, and so on) are also completed, since
-they are valid names to type after `qsoku`.
+they are valid names to type after `qsoku`. They are the one part of
+completion that **is** a fixed list, written directly into each shell's
+script rather than fetched from `qsoku`: unlike the defined names, that list
+only changes with a new qsoku release, and the script is embedded in, and
+shipped with, that same release, so there is no version to fall out of sync
+with.
+
+- **fish**: candidates starting with `.` are hidden until the word being
+  typed itself starts with `.` — the same rule fish applies to dotfiles in
+  path completion, applied here too since it goes by the leading character,
+  not by whether a candidate is a file. So `qsoku <TAB>` on fish offers only
+  the defined names; `qsoku .<TAB>` is needed to see the management
+  commands. bash and zsh have no such rule and offer both at once.
 
 ## Exit codes
 

@@ -17,13 +17,6 @@ func TestRun_version(t *testing.T) {
 	}
 }
 
-func TestRun_shellIsNotImplementedYet(t *testing.T) {
-	var stdout, stderr bytes.Buffer
-	if got := Run([]string{".shell", "bash"}, nil, &stdout, &stderr); got != 1 {
-		t.Errorf("Run(.shell bash) = %d, want 1", got)
-	}
-}
-
 func TestRun_unknownDotCommand(t *testing.T) {
 	var stdout, stderr bytes.Buffer
 	if got := Run([]string{".foo"}, nil, &stdout, &stderr); got != 2 {

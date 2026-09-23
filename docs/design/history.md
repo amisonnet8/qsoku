@@ -113,3 +113,18 @@ mtqgのtodo（9ステップ）のStep 2として、ビルド・検査・CIの入
 **テストを書いていて見つけた、実装とは無関係の落とし穴：** `.edit`のテストで、サブテスト名に`"runs $EDITOR on the qsokufile in use"`と書いたところ、Goの`t.TempDir()`がテスト名をほぼそのままディレクトリ名に使うため、生成されたパスの中に文字どおり`$EDITOR`という文字列が混入した。そのパスを（`.edit`の実装どおり）引用符なしで`sh -c`のスクリプト文字列に埋め込んだところ、`sh`がパス中の`$EDITOR`を本物のシェル変数として展開してしまい、パスが壊れて「not found」エラーになった。**実装のバグではなくテストの命名が原因**——サブテスト名に`$`・`` ` ``などシェルで特別な意味を持つ文字を含めない、という教訓。`.edit`が`$EDITOR`の値をそのまま（エスケープせず）スクリプトに埋め込む設計自体は正しい（現実の`$EDITOR`は普通のパスやコマンド名で、任意のシェル構文を意図的に許すのが仕様）
 
 **手元で確かめたこと：** `go test ./internal/qsokufile/... -v`（`SetEntry`5パターン・`RemoveEntry`3パターン・パーミッション保持）と`go test ./internal/cli/... -v`（各コマンドごとの正常系・異常系）がすべて緑。`make check`・`make race`が通る。ビルドしたバイナリで`.init`→`.add`×2→`.list`→`.names`→`.where`→`.edit`（`EDITOR=cat`）→`.rm`→`.help`（引数なし）→未知の`.foo`を一通り手で実行し、期待どおりの出力・終了コードを確認
+
+## 2026-09-23　シェル連携と補完（Step 7）
+
+`docs/reference/cli.md`「Shell integration」「Shell completion」を実装した。`internal/cli/shells/`に3つのシェルスクリプト（`qsoku.bash`・`qsoku.zsh`・`qsoku.fish`。`go:embed`）を置き、`qsoku .shell <shell>`がそれを出す。
+
+**e2e/をこの段階で前倒しした判断：** 元の計画ではe2e/はStep 8の担当だが、Step 7のtodo自体が「本物のbash・zsh・fishで確かめる」ことを要求しており、これにはStep 8が用意する予定の土台（本物にビルドしたバイナリ・本物の外部シェルプロセス）がそのまま要る。Step 5・6と同じ理由で、**e2e/の骨組み（`TestMain`でバイナリを1回ビルド。mtqg本体の`e2e/e2e_test.go`と同じ形）をStep 7で作った**。`Makefile`の`test`ターゲットから`[ -d e2e ]`ガードを外し、`vet`に`go vet -tags e2e ./e2e/...`を足した（`golangci-lint run`は`.golangci.yaml`の`run.build-tags: [e2e]`で元から見ていた）。Step 8はここに、名前の実行とdocsの例の確認を足すだけになる
+
+**補完の情報源の按分：** mtqgは`candidates`という専用コマンドを新設して全補完を動的化したが、qsokuは「独自の決まりを増やさない」方針から、**管理用コマンドの固定一覧は3つのシェルスクリプトに直接書き、qsokufileの名前だけ`qsoku .names`で動的に取る**ことにした。スクリプトはバイナリに埋め込まれ一緒に配られるので、mtqgが動的化で避けた「スクリプトと本体の食い違い」はそもそも起きない。3つのスクリプトで一覧を手で揃える必要があるが、10個程度で滅多に変わらないため許容する
+
+**実装中に見つけた、本物のシェルでしか出ない不具合（すべてe2eで検知→直した）：**
+- **zshの`status`変数**：`qsoku()`関数のローカル変数名に`status`を使うと、zshは`$status`を`$?`の別名として予約しており、`local status`での上書きが「read-only variable」エラーになる（bashでは問題ない）。`qsoku_status`に変更した
+- **zshの`compdef`**：`qsoku.zsh`の末尾は`$funcstack[1]`が`_qsoku`かどうかで分岐するが、単に`eval`しただけではその条件は常に偽になり`compdef`を呼ぶ。`compinit`を読み込んでいないシェルでは`compdef: command not found`になる——mtqg本体の同じ形のzshスクリプトも同じ構造で、mtqgのe2eは`compdef() { :; }`とスタブ化して確かめている。qsokuのe2eも同じやり方にした（実運用では`.zshrc`に元々`compinit`があるので、この問題はテスト環境固有）
+- **fishの補完はドットファイル扱い**：fishは、補完候補が`.`で始まる場合、打っている語自体が`.`で始まるまで隠す（パス補完のドットファイル規則が、ファイルかどうかに関わらず先頭文字だけで適用される）。qsokuの管理用コマンドは全部`.`始まりなので、**fishでは`qsoku <TAB>`で管理用コマンドが出ない**——`qsoku .<TAB>`まで打って初めて出る。これはqsoku側のバグではなくfish自体の仕様。テストを`qsoku `と`qsoku .`の2ケースに分け、`cli.md`「Shell completion」に注意書きを追記した
+
+**手元で確かめたこと：** `go test ./internal/cli/... -v`（`.shell`の埋め込み・引数検証）が緑。`make test`（`e2e`タグ、今回から実体化）で6つのテスト（bash・zsh・fishそれぞれの居場所の持ち帰り・補完。fishは名前と管理用コマンドで別ケース）がすべて緑。`make check`・`make race`・`make shellcheck`が通る（`qsoku.bash`のSC2164・SC2207を修正）。実バイナリを本物のbash・zsh・fishに`eval`させ、`qsoku`関数の居場所の持ち帰りと補完候補を手で確認

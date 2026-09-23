@@ -15,6 +15,7 @@ fmt:
 
 vet:
 	go vet ./...
+	go vet -tags e2e ./e2e/...
 
 lint:
 	golangci-lint run
@@ -24,15 +25,10 @@ unit:
 
 check: vet lint unit
 
-# End-to-end tests: the real qsoku binary against a real sh (e2e/, built
-# with the tag e2e, so make check does not run them). e2e/ does not exist
-# yet (added in Step 8 of the implementation plan; .mtqg todo fd80a62a28).
+# End-to-end tests: the real qsoku binary against real shells (e2e/, built
+# with the tag e2e, so make check does not run them).
 test:
-	@if [ -d e2e ]; then \
-		go test -tags e2e -count=1 ./e2e/...; \
-	else \
-		echo "e2e/ does not exist yet; nothing to run"; \
-	fi
+	go test -tags e2e -count=1 ./e2e/...
 
 # -race needs cgo, which the container turns off (.claude/rules/testing.md).
 race:

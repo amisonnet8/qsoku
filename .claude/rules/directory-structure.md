@@ -29,10 +29,12 @@ qsoku/
 ◯ internal/cli/             実装本体。`.`で始まらない名前は実際に見つけて実行する
 ◯                            （`internal/qsokufile`・`internal/run`を呼ぶ）。管理用コマンド
 ◯                            （`.version`・`.init`・`.add`・`.rm`・`.list`・`.names`・
-◯                            `.edit`・`.where`・`.help`／引数なし）も実装済み、1コマンド
-◯                            1ファイル（mtqgの`internal/cli/`に倣う）。`.shell`だけ
-◯                            Step 7まで`not implemented yet`の仮のまま。未知の`.foo`は
+◯                            `.edit`・`.where`・`.shell`・`.help`／引数なし）を1コマンド
+◯                            1ファイルで実装（mtqgの`internal/cli/`に倣う）。未知の`.foo`は
 ◯                            終了コード2
+◯ internal/cli/shells/        `qsoku.bash`・`qsoku.zsh`・`qsoku.fish`（`go:embed`。
+◯                            mtqgの`internal/cli/completions/`に相当）。居場所を持ち帰る
+◯                            `qsoku`関数と、そのシェルの補完を1本にまとめて持つ
 ◯ internal/qsokufile/        qsokufileの探索（`Find`）と解析（`Parse`）、両方をまとめた
 ◯                            `Load`、名前引き（`Lookup`）、`//`の置き換え（`Substitute`・
 ◯                            `SubstituteArg`）、書き込み（`SetEntry`・`RemoveEntry`。
@@ -42,7 +44,10 @@ qsoku/
 ◯                            何かは知らない。居場所の持ち帰り・終了コードの素通しを担う
 ◯                            （`internal/qsokufile`・`internal/cli`のどちらも知らない。
 ◯                            `.golangci.yaml`のdepguardで3層の依存の向きを強制）
-△ e2e/                      本物のバイナリと本物のシェル（bash・zsh・fish）で動かすテスト
+◯ e2e/                      本物のバイナリと本物のシェル（bash・zsh・fish）で動かすテスト
+◯                            （`e2e_test.go`が`TestMain`でバイナリを1回ビルド）。予定より
+◯                            前倒しでStep 7に作った（`.mtqg`のhistory参照）。docsの例の
+◯                            確認の仕組みはまだ無い（Step 8）
 ◯ .devcontainer/           devcontainer.json・postCreate.sh
 ◯ .github/workflows/        CI（Linux・macOSのマトリクス）
 ◯ .claude/
@@ -67,5 +72,5 @@ qsoku/
 
 - **`internal/`**：Goの仕組みとして、リポジトリの外からimportできない。外との約束は、配布物（`go install`で入るバイナリ）とデータ形式（`qsokufile`の書式）だけ
 - **配布物（ビルド済みバイナリ）はコミットしない**（`.gitignore`にルート直下限定で`/qsoku`・`/qsoku.exe`・`/dist/`）
-- **シェル連携・補完のスクリプト**は、埋め込み（`go:embed`）で配る想定（mtqgの`internal/cli/completions/`と同じやり方が参考になる）。対応シェルはbash・zsh・fish（PowerShellは対象外）
+- **シェル連携・補完のスクリプト**は`internal/cli/shells/`に埋め込み（`go:embed`）で配る（mtqgの`internal/cli/completions/`と同じやり方）。対応シェルはbash・zsh・fish（PowerShellは対象外）
 - **看板としてのREADMEは最後に作る**（今あるのは注意書きだけの版）。`tour/`・`examples/`も同じタイミング（実装完了後）

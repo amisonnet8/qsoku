@@ -43,9 +43,7 @@ func Run(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 	case ".help":
 		return runHelp(stdout, stderr)
 	case ".shell":
-		// Shell integration and completion (Step 7): not implemented yet.
-		_, _ = fmt.Fprintln(stderr, "qsoku: not implemented yet")
-		return exitNotFound
+		return runShell(args[1:], stdout, stderr)
 	}
 
 	if args[0] != "" && args[0][0] == '.' {
