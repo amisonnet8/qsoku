@@ -10,6 +10,9 @@ linters:
   # errcheck, govet, ineffassign, staticcheck, unused
   default: standard
   enable:
+    # Layer boundaries (directory-structure.md): internal/qsokufile must not
+    # depend on internal/cli.
+    - depguard
     # The core returns structured errors; wrapping must use errors.Is/As.
     - errorlint
     # qsoku writes files (qsokufile) that other people commit and read, and
@@ -24,12 +27,22 @@ linters:
     - unconvert
     - usestdlibvars
 
-  # depguard (layer boundaries) and forbidigo (user-facing text confined to
-  # one layer) are not configured yet: internal/ has no layers until the
-  # implementation decides them. Add both once that structure exists
-  # (.claude/rules/directory-structure.md).
+  # forbidigo (user-facing text confined to the cli layer) is not configured
+  # yet: internal/qsokufile has no user-facing text to confine. Add it if a
+  # layer that could gain one shows up (directory-structure.md).
 
   settings:
+    depguard:
+      rules:
+        # Dependency direction is cli -> qsokufile, never the reverse.
+        qsokufile:
+          list-mode: lax
+          files:
+            - "**/internal/qsokufile/**"
+          deny:
+            - pkg: github.com/amisonnet8/qsoku/internal/cli
+              desc: the qsokufile layer must not depend on an entry point
+
     nolintlint:
       require-explanation: true
       require-specific: true

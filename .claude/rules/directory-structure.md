@@ -27,9 +27,10 @@ qsoku/
 △                            tour/・examples/は**実装完了後**に作る。英語版＋`*_ja.md`
 ◯ cmd/qsoku/main.go        エントリポイント。引数を渡すだけ
 ◯ internal/cli/             実装本体。今は`Run`（`.version`だけ実装、ほかは仮に
-◯                            `not implemented yet`で終了コード1）と`buildVersion`のみ。
-◯                            層への分け方はStep 3〜6で決める。決めたら`.golangci.yaml`に
-◯                            depguardのルールを足す
+◯                            `not implemented yet`で終了コード1）と`buildVersion`のみ
+◯ internal/qsokufile/        qsokufileの探索（`Find`）と解析（`Parse`）、両方をまとめた
+◯                            `Load`。`internal/cli`を知らない層（`.golangci.yaml`の
+◯                            depguardで強制）。層への分け方は引き続きStep 4〜6で足していく
 △ e2e/                      本物のバイナリと本物のシェル（bash・zsh・fish）で動かすテスト
 ◯ .devcontainer/           devcontainer.json・postCreate.sh
 ◯ .github/workflows/        CI（Linux・macOSのマトリクス）

@@ -60,3 +60,16 @@ mtqgのtodo（9ステップ）のStep 2として、ビルド・検査・CIの入
 - バージョンは`runtime/debug.ReadBuildInfo`のみに頼る形にした（mtqgの`version.go`にある`-ldflags`用の変数は、qsokuにはまだリリースビルドの仕組みが無いため今回は入れていない。要れば`distribution.md`のGoReleaser検討時に足す）
 - `.claude/rules/directory-structure.md`・`CLAUDE.md`「まだ無いもの」を更新。◯になったもの：`Makefile`・`go.mod`・`cmd/qsoku/`・`internal/cli/`・`.github/workflows/`・`.claude/hooks/`
 - **手元で確かめたこと：** `make build`・`make check`・`make race`・`make trivy`・`make shellcheck`（対象ファイル無し）が通る。`golangci-lint config verify`が通る。フックはわざと構文エラーを入れて失敗を検知することを確認済み。`./qsoku .version`が`v0.0.0-<日時>-<コミットハッシュ>+dirty`を出し終了コード0、未実装の名前は終了コード1
+
+## 2026-09-23　qsokufileの探索と解析（Step 3）
+
+`internal/qsokufile`パッケージを作り、`docs/reference/qsokufile.md`の「置き場所と探し方」「書式」「名前」を実装した（`//`の置き換えはStep 4）。`internal/`が初めて2パッケージになったので、`.golangci.yaml`にdepguardを足した（依存の向きは`cli`→`qsokufile`、逆はしない。mtqg本体の`journal`/`model`ルールと同じ形）。実際に`internal/cli`をimportさせてlintがdenyすることを確認してから戻した。
+
+**仕様に明記が無く、実装時に決めた判断（history.mdに記録。仕様自体は変えない、Step 1の「自明な延長」の扱いを踏襲）：**
+- **`qsokufile`という名前の**ディレクトリ**があった場合**：無いものとして扱い、親へ探索を続ける（エラーにしない）。迷ったら緩い方を選んだ。大文字小文字を区別しないファイルシステムの注意（`qsokufile.md`）と同じく、実運用で起こりうる紛れ込みに対して落ちないようにする判断
+- `Find`が`os.Stat`で権限エラーなどそれ以外のエラーに遭遇したら、探索を続けずその場でエラーを返す（黙って親へ進むと、本当は読めるはずの`qsokufile`を見落とす恐れがあるため）
+- `Parse`は最初に見つかった不正行で止まる（仕様の「エラーで終了する」の文言どおり、複数エラーをまとめて報告する仕組みは作らない）
+
+**mtqg本体との比較：** `internal/journal/find.go`の`locate`は`.git`境界で止まる（qsokufileは境界で止まらない仕様なので実装はより単純）。「見つからない」ケースのテストは、mtqg自身も`t.TempDir()`から実際にファイルシステムのルートまで歩かせて確認しており（`/`近辺に紛れ込みが無い前提）、qsokuの`find_test.go`も同じ前提を踏襲した
+
+**手元で確かめたこと：** `make check`・`make race`が通る。`go test ./internal/qsokufile/... -v`で表テスト（`Parse`14パターン、`Find`5パターン）が緑。カバレッジ77.1%（数値目標は設けていない。`filepath.Abs`の失敗などOSレベルの経路は未到達のまま残した）
