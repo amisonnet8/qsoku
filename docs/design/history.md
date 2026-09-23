@@ -132,3 +132,12 @@ v0.1.0の正式リリース後、トップの`README.md`/`README_ja.md`を、ロ
 **リポジトリ自身に本物の`qsokufile`を新設した（ドッグフーディング）：** デモの録画用に、リポジトリ直下へ`build: (cd //; go build ./...)` / `test: (cd //; go test ./...)`という2行の`qsokufile`を追加した。**`make`を経由させない**——`qsoku`が`make`の薄いラッパーに見えると、「makeの真似をしない」というqsoku自身の立ち位置（`CLAUDE.md`）と矛盾して見えるため、Goの実コマンドを直接`//`経由で呼ぶ形にした。`internal/cli/`という2階層下から`qsoku test`を実行すると、`//`がリポジトリのルートを見つけて`go test ./...`が実際に走る——録画用の小道具ではなく、このリポジトリで今後も使う本物の近道として残した。
 
 **READMEの「## Example」節を実践的な内容に変更：** 冒頭の実行例が、`hello: echo "hello, $1"`という`hello world`のおもちゃの例に、位置引数`$1`という初見には分かりにくい要素が混ざっていた。`docs/tour/`で使っている`tour`fixture（`build`・`test`という実プロジェクトらしい名前の近道、`$1`を使わない）に差し替えた。`test`の項目（`(cd //; echo "testing from $QSOKU_ROOT")`）は`//`を使っている。
+
+## 2026-09-23　リポジトリ自身のqsokufileは、CIには組み込まない
+
+v0.1.1リリース後、「このリポジトリ自身のqsokufileをCIに導入するか」を検討し、**しない**と決めた。技術的には難しくない（`qsoku`を先にビルドしてPATHに通し、`ci.yml`の該当ステップを`qsoku build`・`qsoku test`に置き換えるだけ）が、2つの理由で見送った。
+
+- **循環のリスク：** CIの本筋（build/test）がqsoku自身を経由すると、qsoku自身の不具合（終了コードの素通し・`//`置き換えなど）が原因でCIが落ちたときに、「テスト対象が悪いのか、qsokuが悪いのか」の切り分けが難しくなる。qsokuはリリースしたばかりで実運用実績が薄く、この時点で自分のCIの本筋を自分に依存させるのは時期尚早
+- **`qsokufile`が`build`・`test`の2エントリしか無い：** CIが実際に走らせているのは`vet`・`lint`・`unit`・race・e2e・shellcheck・trivy・`goreleaser-check`の7系統で、置き換えられるのはごく一部。全体を置き換えるには`Makefile`のターゲットを`qsokufile`にも書き写すことになり、二重管理になる
+
+**`make`→`qsoku`への移行を試すなら、qsoku以外の、もっと枯れたプロジェクトで試すべき**という結論になった。qsoku自身は、実開発では引き続き`make`を使う（`CLAUDE.md`・`testing.md`のまま）。リポジトリ直下の`qsokufile`は、デモ・手元で試す用の本物の近道として残すが、CIには組み込まない。
