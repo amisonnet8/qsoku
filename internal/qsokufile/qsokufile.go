@@ -22,6 +22,16 @@ type File struct {
 	Entries []Entry
 }
 
+// Lookup returns the entry defined under name, if any.
+func (f *File) Lookup(name string) (Entry, bool) {
+	for _, e := range f.Entries {
+		if e.Name == name {
+			return e, true
+		}
+	}
+	return Entry{}, false
+}
+
 // ParseError reports a malformed line: a line with no ':', an invalid name,
 // or a name already defined earlier in the file.
 type ParseError struct {

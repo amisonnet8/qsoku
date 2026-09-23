@@ -26,12 +26,17 @@ qsoku/
 △ └── examples/             実例。実際のqsokufileと、そのまま動く使い方の例
 △                            tour/・examples/は**実装完了後**に作る。英語版＋`*_ja.md`
 ◯ cmd/qsoku/main.go        エントリポイント。引数を渡すだけ
-◯ internal/cli/             実装本体。今は`Run`（`.version`だけ実装、ほかは仮に
-◯                            `not implemented yet`で終了コード1）と`buildVersion`のみ
+◯ internal/cli/             実装本体。`.`で始まらない名前は実際に見つけて実行する
+◯                            （`internal/qsokufile`・`internal/run`を呼ぶ）。`.version`も
+◯                            実装済み。管理用コマンド（`.init`〜`.help`、引数なし）は
+◯                            Step 6まで`not implemented yet`で終了コード1の仮のまま
 ◯ internal/qsokufile/        qsokufileの探索（`Find`）と解析（`Parse`）、両方をまとめた
-◯                            `Load`、`//`の置き換え（`Substitute`・`SubstituteArg`）。
-◯                            `internal/cli`を知らない層（`.golangci.yaml`のdepguardで
-◯                            強制）。層への分け方は引き続きStep 5〜6で足していく
+◯                            `Load`、名前引き（`Lookup`）、`//`の置き換え（`Substitute`・
+◯                            `SubstituteArg`）。`internal/cli`・`internal/run`を知らない層
+◯ internal/run/               `sh`を実際に起動するだけの層（`Execute`）。qsokufileが
+◯                            何かは知らない。居場所の持ち帰り・終了コードの素通しを担う
+◯                            （`internal/qsokufile`・`internal/cli`のどちらも知らない。
+◯                            `.golangci.yaml`のdepguardで3層の依存の向きを強制）
 △ e2e/                      本物のバイナリと本物のシェル（bash・zsh・fish）で動かすテスト
 ◯ .devcontainer/           devcontainer.json・postCreate.sh
 ◯ .github/workflows/        CI（Linux・macOSのマトリクス）

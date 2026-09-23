@@ -10,8 +10,8 @@ linters:
   # errcheck, govet, ineffassign, staticcheck, unused
   default: standard
   enable:
-    # Layer boundaries (directory-structure.md): internal/qsokufile must not
-    # depend on internal/cli.
+    # Layer boundaries (directory-structure.md): internal/qsokufile and
+    # internal/run must not depend on internal/cli.
     - depguard
     # The core returns structured errors; wrapping must use errors.Is/As.
     - errorlint
@@ -34,7 +34,8 @@ linters:
   settings:
     depguard:
       rules:
-        # Dependency direction is cli -> qsokufile, never the reverse.
+        # Dependency direction is cli -> {qsokufile, run}, never the reverse,
+        # and qsokufile and run do not depend on each other either.
         qsokufile:
           list-mode: lax
           files:
@@ -42,6 +43,17 @@ linters:
           deny:
             - pkg: github.com/amisonnet8/qsoku/internal/cli
               desc: the qsokufile layer must not depend on an entry point
+            - pkg: github.com/amisonnet8/qsoku/internal/run
+              desc: qsokufile only parses and rewrites text; it does not run anything
+        run:
+          list-mode: lax
+          files:
+            - "**/internal/run/**"
+          deny:
+            - pkg: github.com/amisonnet8/qsoku/internal/cli
+              desc: the run layer must not depend on an entry point
+            - pkg: github.com/amisonnet8/qsoku/internal/qsokufile
+              desc: run only knows how to execute a command string; it does not know what a qsokufile is
 
     nolintlint:
       require-explanation: true

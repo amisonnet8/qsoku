@@ -31,12 +31,24 @@ For the file format itself, see [qsokufile.md](qsokufile.md).
    __status=$?; pwd > "$QSOKU_CWD_FILE"; exit $__status' qsoku "$@"
    ```
 
-   - The `pwd` line is joined with a **newline**, not `;` — a trailing `# …`
-     comment on the command would otherwise swallow it.
+   — but only when `QSOKU_CWD_FILE` is set in qsoku's own environment (see
+   [Bringing the working directory back](#bringing-the-working-directory-back)
+   below); otherwise it is just `sh -c '<command>' qsoku "$@"`, with no
+   second line.
+
+   - The `pwd` line, when present, is joined with a **newline**, not `;` —
+     a trailing `# …` comment on the command would otherwise swallow it.
    - `"$@"` carries `[args...]` through to the command as `$1`, `$2`, and so
      on, exactly as `sh` itself would expand them.
    - Standard input, standard output and standard error are passed straight
      through; qsoku does not read or alter them.
+   - A `qsokufile` entry should not itself call `exit`: since the second
+     line is appended to the *same* script, an `exit` inside the entry's own
+     command ends the whole script right there, before qsoku's own line
+     ever runs. Let the entry's last command's own exit status decide
+     success or failure instead (as `make` recipes and ordinary shell
+     scripts do), the same way `cd //src && make build` in the example below
+     does.
 3. `sh` is located via `PATH`, like any other subprocess.
 
 ### Environment passed to the command
@@ -44,7 +56,7 @@ For the file format itself, see [qsokufile.md](qsokufile.md).
 | Variable | Value |
 |---|---|
 | `QSOKU_ROOT` | The absolute path of the directory holding the `qsokufile` in use (what `//` expands to) |
-| `QSOKU_CWD_FILE` | Set by the shell integration function (see [Shell integration](#shell-integration)) to a temporary file's path. When set, the command above appends the `pwd` line. When unset (for example, qsoku run directly without the shell function), the `pwd` line is still appended, but there is nothing reading the file — this is harmless |
+| `QSOKU_CWD_FILE` | Set by the shell integration function (see [Shell integration](#shell-integration)) to a temporary file's path. When set, the command above appends the `pwd` line. When unset (for example, qsoku run directly without the shell function), the `pwd` line is left out entirely — appending it regardless would redirect `pwd`'s output to an empty filename, which `sh` reports as an error, for no benefit: nothing would read the file anyway |
 
 ### Bringing the working directory back
 
