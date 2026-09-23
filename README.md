@@ -60,16 +60,23 @@ matter where you call it from.
 
 ## Example
 
-<!-- qsoku:example dir=basic -->
+<!-- qsoku:example dir=tour -->
 ```
-$ qsoku hello world
-hello, world
+$ qsoku build
+building the project
+$ qsoku test
+testing from /home/you/project
 ```
 
 ```
 # qsokufile
-hello: echo "hello, $1"
+build: echo "building the project"
+test: (cd //; echo "testing from $QSOKU_ROOT")
 ```
+
+`test` uses `//` to reach the repository root — from `qsoku build` you get the
+same shortcut whether you run it from the repository root or three
+directories down.
 
 ## Install
 

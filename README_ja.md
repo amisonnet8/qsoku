@@ -53,16 +53,22 @@
 
 ## 例
 
-<!-- qsoku:example dir=basic -->
+<!-- qsoku:example dir=tour -->
 ```
-$ qsoku hello world
-hello, world
+$ qsoku build
+building the project
+$ qsoku test
+testing from /home/you/project
 ```
 
 ```
 # qsokufile
-hello: echo "hello, $1"
+build: echo "building the project"
+test: (cd //; echo "testing from $QSOKU_ROOT")
 ```
+
+`test`は`//`でリポジトリのルートへたどり着く——`qsoku build`は、リポジトリの
+ルートで実行しても3階層下で実行しても同じ近道として動く。
 
 ## インストール
 
