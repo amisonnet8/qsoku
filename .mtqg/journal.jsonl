@@ -91,3 +91,5 @@
 {"id":"82f06dc6e2e741ccbb7fe1f4b9cbb738","op":"status","from":"open","status":"done","v":0,"ts":"2026-09-23T11:45:57Z","author":{"kind":"ai","name":"claude-code"}}
 {"id":"6d13b10c814d4cd1bcd7e7e06388a502","op":"create","type":"memo","text":"公開直前の同名チェック(2026-09-23): GitHub(gh search repos qsoku)→自分のamisonnet8/qsokuのみ。npm(registry.npmjs.org/qsoku)→404で空き。Go(pkg.go.dev/search?q=qsoku)→0件。紛らわしい先客なし。qsokuという名前のまま進めてよい","v":0,"ts":"2026-09-23T11:46:33Z","author":{"kind":"ai","name":"claude-code"}}
 {"id":"213740c79cd848bbae75a511f5e89c28","op":"create","type":"todo","status":"open","text":"[検証用] 並行記録シナリオの確認用todo(mtqg review実地確認、Step 9)","v":0,"ts":"2026-09-23T11:46:46Z","author":{"kind":"ai","name":"claude-code"}}
+{"id":"213740c79cd848bbae75a511f5e89c28","op":"edit","text":"[検証用] 並行記録シナリオの確認用todo(mtqg review実地確認、Step 9、mainから文言変更)","v":0,"ts":"2026-09-23T11:47:12Z","author":{"kind":"ai","name":"claude-code"}}
+{"id":"056b5cd8f96c402cad84b1b127199b08","op":"create","type":"glossary","word":"qsokufile","text":"[main] リポジトリ直下からの相対で場所を決めるコマンド定義ファイル(意図的に別の言い回しで再定義、review検証用)","v":0,"ts":"2026-09-23T11:47:12Z","author":{"kind":"ai","name":"claude-code"}}
