@@ -1,2 +1,19 @@
-build: (cd //; go build ./...)
+# A worked sample next to this repository's own Makefile — not used for
+# qsoku's own development (that stays on `make`; see CLAUDE.md, testing.md).
+# Names mostly match the Makefile's targets. `e2e` is qsoku's own
+# end-to-end tests: `test` here already means what the Makefile calls
+# `unit` (kept as-is because the banner README's demo recording depends
+# on this exact command).
+
+build: (cd //; go build ./... && go build ./cmd/qsoku)
+fmt: (cd //; golangci-lint fmt)
+vet: (cd //; go vet ./... && go vet -tags e2e ./e2e/...)
+lint: (cd //; golangci-lint run)
 test: (cd //; go test ./...)
+check: (cd //; go vet ./... && go vet -tags e2e ./e2e/... && golangci-lint run && go test ./...)
+e2e: (cd //; go test -tags e2e -count=1 ./e2e/...)
+docs-examples: (cd //; go test -tags e2e -count=1 -run '^TestDocExamples$' ./e2e/... -update)
+race: (cd //; CGO_ENABLED=1 go test -race -count=1 ./...)
+trivy: (cd //; trivy fs --config trivy.yaml .)
+shellcheck: (cd //; git ls-files '*.sh' '*.bash' | xargs -r shellcheck)
+goreleaser-check: (cd //; goreleaser check && goreleaser release --snapshot --clean --skip=publish)

@@ -18,9 +18,13 @@ qsoku/
                             tour/reference/examplesへのリンク）。Step 9で作成、v0.1.0公開後に
                             「映え対応」で作り直した。冒頭の「開発初期」の注意書きはv0.1.0公開
                             後に外した（人間の判断）
-◯ qsokufile                このリポジトリ自身の近道（`build`・`test`、`//`でルートへ戻って
-                            `go build`・`go test`を呼ぶ）。看板READMEのデモGIF録画用に新設
-                            したが、実際に使える本物の近道として残す（ドッグフーディング）
+◯ qsokufile                Makefileの主なターゲットを写した見本（`build`・`fmt`・`vet`・
+                            `lint`・`test`・`check`・`e2e`・`docs-examples`・`race`・`trivy`・
+                            `shellcheck`・`goreleaser-check`）。**このリポジトリ自身の開発には
+                            使わない**（実開発は引き続き`make`。CLAUDE.md・testing.md）。
+                            `test`は看板READMEのデモGIFが依存する`(cd //; go test ./...)`の
+                            まま（Makefileの`unit`相当。名前がMakefile側のe2eターゲットと
+                            ずれるため、そちらは`e2e`という名前にした）
 ◯ Makefile                ビルド・テストの入口（`make build`・`make check`など）
 ◯ go.mod                   `go.sum`はまだ無い（依存が無いため）
 ◯ docs/

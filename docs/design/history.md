@@ -141,3 +141,10 @@ v0.1.1リリース後、「このリポジトリ自身のqsokufileをCIに導入
 - **`qsokufile`が`build`・`test`の2エントリしか無い：** CIが実際に走らせているのは`vet`・`lint`・`unit`・race・e2e・shellcheck・trivy・`goreleaser-check`の7系統で、置き換えられるのはごく一部。全体を置き換えるには`Makefile`のターゲットを`qsokufile`にも書き写すことになり、二重管理になる
 
 **`make`→`qsoku`への移行を試すなら、qsoku以外の、もっと枯れたプロジェクトで試すべき**という結論になった。qsoku自身は、実開発では引き続き`make`を使う（`CLAUDE.md`・`testing.md`のまま）。リポジトリ直下の`qsokufile`は、デモ・手元で試す用の本物の近道として残すが、CIには組み込まない。
+
+## 2026-09-24　リポジトリ自身のqsokufileを、Makefileと並ぶ見本に広げた
+
+上のエントリで「`qsokufile`が`build`・`test`の2エントリしかないため全体を移行するには二重管理になる」と書いたが、人間の指示で、その二重管理を承知のうえでMakefileの主なターゲット（`fmt`・`vet`・`lint`・`check`・`docs-examples`・`race`・`trivy`・`shellcheck`・`goreleaser-check`）を`qsokufile`側にも写した。位置づけを「本物の近道」から**「実開発には使わない見本」**に変えたことで、二重管理の懸念（Makefileが変わってもqsokufileが追随しない）はもとから許容範囲になる——実開発の唯一の入口は引き続き`make`で、`qsokufile`はMakefileと横に並べて見せるためだけの存在。
+
+- `test`は変更していない（`(cd //; go test ./...)`のまま）。看板READMEのデモGIFの録画内容とキャプションがこのコマンド文字列に依存しているため
+- Makefileの`test`（e2eテスト）に相当する項目は`test`という名前にできない（`qsokufile`側の`test`は先に決まっていたMakefileの`unit`相当のまま動かせないため）ので、`e2e`という名前にした。Makefileとqsokufileで同じ名前が違うものを指す唯一の箇所であり、qsokufileの先頭コメントに理由を書いた
