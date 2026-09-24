@@ -220,3 +220,14 @@ func TestDocsExamplesQsokufilesParse(t *testing.T) {
 		})
 	}
 }
+
+// TestRootQsokufileParses checks that this repository's own qsokufile (a
+// worked sample, not used for qsoku's own development — see
+// docs/design/history.md) parses: qsoku .list must succeed run from the
+// repository root. It does not run any of the entries.
+func TestRootQsokufileParses(t *testing.T) {
+	_, stderr, code := runBinary(t, "..", nil, ".list")
+	if code != 0 {
+		t.Errorf(".list in repository root: code = %d, stderr = %q", code, stderr)
+	}
+}

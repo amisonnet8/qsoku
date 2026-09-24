@@ -71,7 +71,10 @@ qsoku/
 ◯                            予定より前倒しでStep 7に作った（`.mtqg`のhistory参照）。
 ◯ ├── shell_test.go          シェル連携・補完（Step 7）
 ◯ ├── run_test.go            本物のバイナリを直接実行（終了コードの素通し・シグナル・
-◯                            `//`置き換え・`QSOKU_CWD_FILE`の受け渡し。Step 8）
+◯                            `//`置き換え・`QSOKU_CWD_FILE`の受け渡し。Step 8）。
+◯                            `docs/examples/*/qsokufile`とリポジトリ直下の`qsokufile`が
+◯                            パースできることも、ここで（`qsoku .list`を走らせるだけで）
+◯                            確かめる（コマンドの中身は実行しない）
 ◯ ├── examples_test.go       docs/reference/・README・docs/tour/の実行例を実測で確かめる
 ◯                            （`make docs-examples`で出力を文書へ書き込む。対象文書は
 ◯                            `documentPairs`。mtqgの`e2e/examples_test.go`の簡素化版。

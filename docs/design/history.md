@@ -148,3 +148,5 @@ v0.1.1リリース後、「このリポジトリ自身のqsokufileをCIに導入
 
 - `test`は変更していない（`(cd //; go test ./...)`のまま）。看板READMEのデモGIFの録画内容とキャプションがこのコマンド文字列に依存しているため
 - Makefileの`test`（e2eテスト）に相当する項目は`test`という名前にできない（`qsokufile`側の`test`は先に決まっていたMakefileの`unit`相当のまま動かせないため）ので、`e2e`という名前にした。Makefileとqsokufileで同じ名前が違うものを指す唯一の箇所であり、qsokufileの先頭コメントに理由を書いた
+
+**見本として広げたことで、壊れたままコミットされる危険も増えた**（項目数が2→12に増え、typoや`:`抜けが起きやすくなった）。CIには組み込まない（コマンドの中身は実行しない）という決定は変えず、`docs/examples/*/qsokufile`と同じやり方——`qsoku .list`が成功する（パースできる）ことだけを確かめる——を`e2e/run_test.go`の`TestRootQsokufileParses`として足した。`TestDocsExamplesQsokufilesParse`を拡張せず別関数にしたのは、対象が「コピーして使う配布物」と「このリポジトリ自身の見本」で性質が違うため。
