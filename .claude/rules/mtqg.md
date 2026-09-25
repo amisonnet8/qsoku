@@ -1,15 +1,15 @@
 # mtqgの使い方（このリポジトリの運用）
 
-このリポジトリは、mtqg（`github.com/amisonnet8/mtqg`）を使って開発の過程を記録する。mtqg自身はこのリポジトリのコードではなく、人間が別に用意したバイナリをPATH越しに使う（`.devcontainer/postCreate.sh`参照）。
+このリポジトリは、mtqg（`github.com/amisonnet8/mtqg`）を使って開発の過程を記録する。mtqg自身はこのリポジトリのコードではなく、`.devcontainer/postCreate.sh`が`go install`で入れるバイナリをPATH越しに使う（タグがまだ無いため、コミットに固定してインストールしている）。
 
 ## 最初にやること
 
 - まだ`.mtqg/`が無ければ、`mtqg init`を一度実行し、案内に従って`.mtqg/`をコミットする
-- 記録者を環境変数で決めておく：`MTQG_AUTHOR_KIND=ai`・`MTQG_AUTHOR_NAME=claude-code`
+- 記録者を環境変数で決めておく：`MTQG_AUTHOR_KIND=ai`・`MTQG_AUTHOR_NAME=claude-code`（`mtqg init --agent claude-code`が`.claude/settings.json`の`env`に設定済み。下の「AIエージェント連携」参照）
 
 ## 作業を始めるとき
 
-- **必ず`mtqg context`を読むこと。** 現在地・未完了のtodo・未回答の質問・未解決のbugがここに出る。**進捗管理の文書（PLAN.md相当）はこのリポジトリに無い**（`CLAUDE.md`「記録の使い分け」）。すべてmtqgの記録から拾う
+- **必ず`mtqg context`を読むこと。** 現在地・未完了のtodo・未回答の質問・未解決のbugがここに出る。**進捗管理の文書（PLAN.md相当）はこのリポジトリに無い**（`CLAUDE.md`「記録の使い分け」）。すべてmtqgの記録から拾う。`SessionStart`フックがセッション開始・再開のたびに自動でこれを読み込むが、圧縮後の再開などで見えていないと感じたら、手で`mtqg context`を読み直すこと
 
 ## 何をどの種類で記録するか
 
@@ -20,6 +20,7 @@
 | `q add`（question） | 判断に迷って人間に確認したいこと。回答が付いたら質問の対象に`q add <id> 回答本文`で続ける |
 | `b add`（bug） | 見つけた不具合とそのやり取り。優先度・担当者・再現手順の欄は無い（課題管理はしない） |
 | `g add`（glossary） | 用語の合意（`//`、qsokufile、居場所の持ち帰り、など） |
+| `r add`（rule） | 読めばそのまま従える、チームの決まり事（2026-09-25、mtqg本体に追加された6つ目の種類）。`.claude/rules/*.md`は、このruleの記録から人間が選んで書き写す派生文書という位置づけ（mtqg本体`docs/design/history.md`2026-09-25）。qsokuでどこまで使うかはまだ決めていない |
 
 - 記録は英語・日本語どちらでもよい。mtqgは中身を訳さない・変えない
 - IDは4桁以上の前方一致で指定できる（`mtqg show <ID先頭4桁以上>`）
@@ -46,6 +47,15 @@
 - AIが記録を忘れる、`context`を読まない、引数を間違える、人間が記録を面倒に感じる → memo/bugにして「MCP・フックで解くもの」の候補にする
 
 開発がひと区切りついたら、これらをmtqg本体のリポジトリへ報告する（2分類の形式は、mtqg本体側の`PLAN.md`「段階2：サンプルPJ」を参照）。
+
+## AIエージェント連携（2026-09-25、`mtqg init --agent claude-code`で配線）
+
+段階3で報告した「MCP・フックで解くもの」3件のうち、Q&Aの自動記録とmemo/bugの一貫性は、mtqg本体側でフック・MCPサーバーとして実装された。qsoku自身にも配線済み。
+
+- **`SessionStart`／`Stop`フック**（`.claude/settings.json`）：セッションの開始・再開時に`mtqg context`の内容を自動で読み込む。終了時、このセッション中にmtqgへの書き込みが1件も無ければ促す。**フックは「読み込みと記録漏れの確認」だけを機械的に行い、何を記録するかの判断はしない**（mtqg本体の設計、役割分担）
+- **MCPサーバー**（`.mcp.json`、`mtqg mcp`）：`memo_add`・`todo_add`・`qa_ask`・`qa_answer`・`bug_report`・`bug_reply`・`glossary_define`・`rule_add`・各種`done`/`reopen`・`edit`・`context`・`show`・`search`などが`mcp__mtqg__*`ツールとして直接呼べる。シェルコマンド（`Bash`経由の`mtqg q add`等）を介さずに記録できるため、**「対話中の質問・回答もその場で記録する」（上の節）は、これらのMCPツールで行ってよい**（結果は同じ`journal.jsonl`に書かれる）
+- 記録者（`author`）は、MCP経由だと接続したクライアント名から自動で決まり、CLI経由だと環境変数（`MTQG_AUTHOR_KIND`・`MTQG_AUTHOR_NAME`、`.claude/settings.json`の`env`に設定済み）から決まる。どちらでも`claude-code`になる
+- `delete`・`undo`・`archive`・`review`・`format`はMCPに公開されていない（破壊的・複雑な操作をAIの判断だけで実行させないため。これらはCLIで行う）
 
 ## その他
 

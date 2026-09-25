@@ -80,14 +80,21 @@ qsoku/
 ◯                            `documentPairs`。mtqgの`e2e/examples_test.go`の簡素化版。
 ◯                            Step 8で作り、Step 9でREADME・tour/にも対象を広げた）
 ◯ └── testdata/examples/     ↑の例が使うfixture（言語非依存。英日どちらの文書からも参照）
-◯ .devcontainer/           devcontainer.json・postCreate.sh
+◯ .devcontainer/           devcontainer.json・postCreate.sh。mtqgのインストール（タグが
+                            まだ無いためコミットへの固定）もここ
+◯ .mcp.json                mtqgのMCPサーバー（`mtqg mcp`）の起動設定。`mtqg init --agent
+                            claude-code`が作った（2026-09-25）
 ◯ .github/workflows/
 ◯ ├── ci.yml                 CI（Linux・macOSのマトリクス。check・race・shellcheck・
 ◯ │                            trivy・goreleaser（make goreleaser-checkの安全網）の5系統）
 ◯ └── release.yml            v*タグのpushだけで動く。goreleaser-actionで実際に
 ◯                            ビルド・GitHub Releaseの公開まで行う
 ◯ .claude/
-◯ ├── settings.json         権限（deny/ask）とビルドフックの設定。人間が管理する
+◯ ├── settings.json         権限（deny/ask）とフックの設定。人間が管理する部分（permissions・
+◯                            build.shのPostToolUse）に加え、`mtqg init --agent claude-code`
+◯                            （2026-09-25）が`env`（記録者の自動設定）・`SessionStart`／
+◯                            `Stop`フック（`mtqg hook claude-code`。`mtqg context`の自動
+◯                            読み込みと、記録漏れがあれば終了時に促す）を足した
 ◯ ├── rules/                 このファイルを含む、育てていくルール
 ◯ └── hooks/                 build.sh：`.go`・`go.mod`・`go.sum`編集後に`make build`する
 ◯                            （mtqgの`.claude/hooks/build.sh`と同じ）

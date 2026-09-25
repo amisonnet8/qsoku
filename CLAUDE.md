@@ -58,6 +58,7 @@
 ## ドキュメントの言語
 
 - **`CLAUDE.md`・`.claude/rules/`・`docs/design/`は日本語のみ。** 英語版は作らない
+  - 例外：本ファイル末尾の`mtqg init --agent claude-code`が挿入した1行（mtqgの配線コマンドが冪等性の判定に使う定型文で、書き換えると再実行のたびに重複追記されうるため、英語のまま残す。2026-09-25）
 - **`docs/reference/`は英語版（`*.md`）と日本語版（`*_ja.md`）の2本立て。** 英語版が正。同じ変更の中で両方直す
 - **コード・コメント・コミットメッセージ・CLI出力は英語。** 対話は日本語で行うが、これらは英語で書くこと
 
@@ -90,3 +91,5 @@
 - **Skill化した方が効率的そうな作業**：同じ手順を繰り返しているパターンに気づいた場合
 
 提案は気づいたタイミングで随時行ってよく、まとめて報告するために貯めておく必要はない。
+
+This repository records its development with mtqg: run `mtqg context` at the start of a session, and see `.mtqg/SCHEMA.md` for the data format.

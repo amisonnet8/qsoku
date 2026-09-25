@@ -45,6 +45,8 @@ go install golang.org/x/tools/cmd/goimports@latest
 # pins, so a local check matches CI.
 go install github.com/goreleaser/goreleaser/v2@v2.18.2
 
-# mtqg is NOT installed here. Clone github.com/amisonnet8/mtqg yourself, build
-# it (go build ./cmd/mtqg), and put the binary on the PATH. This repository
-# uses mtqg to record its own development (CLAUDE.md, .claude/rules/mtqg.md).
+# mtqg: this repository's own process-recording tool (CLAUDE.md,
+# .claude/rules/mtqg.md). Also wires up the Claude Code hook and MCP server
+# (.claude/settings.json, .mcp.json; "mtqg init --agent claude-code").
+# Pinned to a commit, not a version tag: mtqg has not tagged a release yet.
+go install github.com/amisonnet8/mtqg/cmd/mtqg@56b331c65e1406bd17b6d357eb04341973d36579
