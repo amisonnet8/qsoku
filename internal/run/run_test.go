@@ -177,7 +177,7 @@ func TestExecute_signal(t *testing.T) {
 		// $$" against it still surfaces as 128+SIGTERM through Go's
 		// syscall.WaitStatus (which on Windows has no real signal concept)
 		// has not been confirmed on real Windows CI yet (see todo
-		// a251592e2c). Skip rather than assert something unverified.
+		// 6fa5476e). Skip rather than assert something unverified.
 		t.Skip("signal delivery to sh on Windows is not confirmed yet")
 	}
 	var stdout, stderr bytes.Buffer

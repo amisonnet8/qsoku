@@ -70,7 +70,7 @@ func TestRunPassesThroughExitCode(t *testing.T) {
 func TestRunSignaledCommand(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		// See the same skip in internal/run/run_test.go: unconfirmed on
-		// real Windows CI yet (todo a251592e2c).
+		// real Windows CI yet (todo 6fa5476e).
 		t.Skip("signal delivery to sh on Windows is not confirmed yet")
 	}
 	dir := resolvedTempDir(t)

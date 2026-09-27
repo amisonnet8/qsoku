@@ -160,64 +160,13 @@ todo `a251592e2c`（人間が登録）で、これまで「対象外」として
 
 この2つの判断（実行方式・PowerShell対応の範囲）と、CI・配布をどこまでやるか（`windows-latest`をCIに追加、GoReleaserでWindows版のzipも配布）は、プランモード中に`AskUserQuestion`で問い、`mtqg q`（`348a589e`・`7da0b7fa`・`e46770f3`）に記録した。
 
-**居場所の持ち帰りのパス形式の食い違い：** Git Bashの`sh`の`pwd`はMSYS形式のパス（`/c/Users/...`）を返すが、pwshの`Set-Location`はこの形式を解釈できない。`internal/run`の持ち帰り行を、Windowsでは`pwd -W`（Windows形式のパス`C:/Users/...`を返す。素のPOSIX `sh`はこのオプションを知らずエラーになるので、まず試してエラーを捨て、失敗したら素の`pwd`にフォールバックする）に変えて解決した。
+## 2026-09-27　Windowsでのパスの扱い
 
-手元の開発環境はLinuxのdevcontainerだけなので、Windows固有の変更は`GOOS=windows`でのクロスコンパイルによる構文・型チェックまでしか確かめられない。シグナル系のテスト（`kill -TERM $$`がGoの`syscall.WaitStatus`にどう見えるか）は実機Windowsでの検証がまだ無いため、CI（`windows-latest`）で確認できるまでSkipにした。CIへの`windows-latest`追加・GoReleaserのWindows対応（`.zip`）は`make goreleaser-check`で手元確認済み。
+Windows対応の実装・CIでの検証を通じて、パスの扱いに関する設計判断がいくつか必要になった。
 
-## 2026-09-27　Windows・PowerShell対応のCI初回実行で見つかった不具合
+- **居場所の持ち帰りは`pwd -W`（フォールバックで`pwd`）。** Git Bashの`sh`の`pwd`はMSYS形式のパス（`/c/Users/...`）を返すが、pwshの`Set-Location`はこの形式を解釈できない。`internal/run`の持ち帰り行を、Windowsでは`pwd -W`（Windows形式のパス`C:/Users/...`を返す。素のPOSIX `sh`はこのオプションを知らずエラーになるので、まず試してエラーを捨て、失敗したら素の`pwd`にフォールバックする）に変えて解決した
+- **qsokuが表示・`QSOKU_ROOT`として渡すパスは、全OS共通でフォワードスラッシュにする。** `qsokufile.Find`（パスを生成する唯一の場所）の返り値を`filepath.ToSlash`で正規化し、`pwd -W`と同じ流儀に統一した。Goの`filepath.Dir`・`filepath.Join`はWindows上で**入力がフォワードスラッシュでも出力はバックスラッシュに戻す**ため、`Find`の返り値をさらに`filepath.Dir`に通す場所（`internal/cli/cli.go`の`runName`、`edit.go`の`runEdit`、`where.go`）では、そのつど`filepath.ToSlash`をかけ直す必要があった。`.init`（`Find`を経由せず`os.Getwd()`から独自に組み立てる）は、実際のファイル操作には元のネイティブパスを使い、表示用にだけ`filepath.ToSlash`した値を分けて持つ
+- **`$EDITOR`は引用符なしで埋め込む設計のまま。** 複数語（`code --wait`など）が引数分割されるようにするための元々の設計判断だが、Windowsで`$EDITOR`に絶対パスを設定する場合はフォワードスラッシュ形式にする必要がある（Git Bash利用者が元々知っておくべき慣習で、qsoku固有の制約ではない）
+- **Git BashのMSYS環境が、ネイティブ（MSYS非対応）プログラムに渡す前に引数を書き換えることがある。** `//src`のような`/`で始まる引数は、MSYSが先頭の`/`を「変換除外」の合図として1文字消費し、残りの`/src`をそのまま（無変換で）qsoku.exeに渡す。qsoku側は`//`という接頭辞を保っていない`/src`をただの引数として素通しする——qsoku自身のコードの不具合ではなく、qsokuの`//`とは無関係のMSYSの挙動に巻き込まれるかたちになる。qsoku側では検知も訂正もできない（引数を受け取った時点で書き換えは終わっている）ため、`docs/reference/qsokufile.md`に利用者向けの注意書きとして残した。回避策は`MSYS_NO_PATHCONV=1`（CIで確認済み。より絞った`MSYS2_ARG_CONV_EXCL=//`は未確認）
 
-上のエントリの内容をpushしたところ、`windows-latest`・`ubuntu-latest`・`macos-latest`のCIで以下が判明した。
-
-- **`ubuntu-latest`・`macos-latest`：`TestShellIntegrationPwsh`・`TestCompletionInPwsh`が、pwshの出力に混ざる終端制御シーケンス（`\x1b[?1h`・`\x1b[?1l`。DECCKM、カーソルキーモードの切り替え）でパース結果が崩れて落ちた。** pwshは、標準出力がパイプ（実端末ではない）でも、ネイティブコマンド（ここでは`qsoku`本体）を呼ぶ前後でこの制御シーケンスを出すことがある。`e2e/shell_test.go`に`cleanPwshOutput`（正規表現でCSIシーケンスを取り除き、それだけで空行になった行は捨てる）を足し、この2つのテストの出力に通してから既存のパース処理へ渡すようにした。実際にこの環境へpwsh 7.6.6を導入し、修正後に本当にPASSすることを確認済み
-- **`windows-latest`：`t.TempDir()`が返すバックスラッシュ形式のパスを、引用符なしでシェルスクリプトのテキストへ直接埋め込んでいた箇所が、Windows特有の壊れ方をした。** `sh`（Git for WindowsのMSYS `sh.exe`）は、引用符の外のバックスラッシュを次の1文字へのエスケープとして読むため、`C:\Users\...`のようなパスが`C:Users...`のように文字化けする。3か所で直した：
-  - `internal/run/run_test.go`の`TestExecute_cwdHandoff`：テスト自身が組み立てる`cd <path>`のコマンド文字列と、比較に使う期待値の両方を`filepath.ToSlash`で正規化した（Windowsでの持ち帰り行`pwd -W`もフォワードスラッシュ形式を返すため、両者が噛み合う）。ドライブレターの大文字・小文字はWindows上では区別しないため、比較もWindowsのときだけ`strings.EqualFold`にした
-  - `internal/cli/edit_test.go`の`fakeEditor`：返すパスを`filepath.ToSlash`に変えた。`runEdit`（本体側）は`$EDITOR`の値をそのまま——複数語（`code --wait`など）が引数分割されるよう、あえて引用符を付けずに——スクリプトへ埋め込む設計のままにした（Git Bash利用者が元々知っておくべき慣習と同じで、qsoku固有の欠陥ではないため）。実際にWindowsで`$EDITOR`へ絶対パスを設定する場合も、フォワードスラッシュ形式にする必要があることを意味する
-  - `internal/qsokufile/write_test.go`の`TestSetEntry_preservesPermissions`：これはパスの問題ではなく、**Windowsに`chmod`相当のPOSIXパーミッションビットが無い**（Goの`os.Chmod`はWindowsでは読み取り専用属性の切り替えにしかならない）ための失敗。テストの前提そのものがWindowsでは成立しないため、Windowsでは`t.Skip`にした
-
-手元のLinux devcontainerでは実機Windowsを再現できないため、パス関連の修正は`GOOS=windows`のクロスコンパイルでの型・構文チェックまでしか確かめられていない。次のpush後のCI（`windows-latest`）で実際に通るか確認する必要がある。
-
-## 2026-09-27　2回目のCI実行で見つかった不具合：論理pwdと物理pwdの食い違い
-
-1回目の修正をpushした後の2回目のCIで、`macos-latest`と`windows-latest`に残っていた不具合はどちらも根が同じだった：**同じディレクトリを指す複数の正当な表記**（シンボリックリンクのエイリアス、Windowsの8.3短縮名）を、文字列としてそのまま比較していたこと。
-
-- **`macos-latest`：`TestShellIntegrationPwsh`が、`/var/folders/...`（`t.TempDir()`の生の値）と`/private/var/folders/...`（実際に`cd`した後の値）の食い違いで落ちた。** bash・zsh・fishは自分の`$PWD`を論理パス（`cd`した通りの文字列）として保つが、**pwshの`Set-Location`／カレントディレクトリの管理は物理パスに解決する**（シンボリックリンクを辿った実体を返す）ため、macOSの`/tmp`→`/private/tmp`のようなエイリアスで両者が食い違う。`e2e/shell_test.go`に`resolveSymlinks`を足し、pwshのテストで比較に使う`dir`・`sub`をあらかじめ`filepath.EvalSymlinks`で解決してから使うようにした
-- **`windows-latest`：`TestExecute_cwdHandoff`が、`RUNNER~1`（Go自身の`t.TempDir()`が返す8.3短縮名）と`runneradmin`（`pwd -W`が返す実際の長いユーザー名）の食い違いで落ちた。** `pwd -W`はWindowsのAPI経由で正規化した実際のパスを返すため、短縮名をそのまま`cd`しても、戻ってくる値は長い名前に解決されている。`internal/run/run_test.go`に`canonicalPath`（`filepath.EvalSymlinks`。Windowsでは短縮名の正規化も兼ねる）を足し、比較の期待値をこれで正規化した
-
-**教訓：** 同じディレクトリを指す文字列表現は、シェル・OSによって「入力した通り（論理）」を返すものと「実体に解決したもの（物理）」を返すものが混在する。テストでパスを比較するときは、`os.SameFile`や`filepath.EvalSymlinks`のような、表記の違いを吸収する手段を最初から使うべきだった——1回目の修正時点で、Windowsのバックスラッシュ問題は直したが、この論理／物理の違いには気づけていなかった。
-
-## 2026-09-27　3回目のCI実行で見つかった不具合：パスの表示形式の不統一
-
-`macos-latest`は2回目の修正で通ったが、`windows-latest`は3回目も落ちた。今回の不具合は、**qsoku自身が表示・`QSOKU_ROOT`として渡すパスが、`filepath.Dir`・`filepath.Join`を通るたびにOSネイティブの区切り文字（Windowsではバックスラッシュ）に戻ってしまう**という、これまでとは別の種類の食い違いだった。
-
-- **`TestDocExamples`の多数（`.init`の`Created ...`、`"nope" is not defined in ...`、パースエラーの`line 2: ...`など）：** 表示するパスの区切り文字がバックスラッシュになり、フォワードスラッシュで書かれた文書と食い違った
-- **`qsokufile.md:115`「`qsoku show //src`」：** 期待値と大きく異なる`/src`のみが出力された（原因はまだ完全には特定できていない——`SubstituteArg`に渡る`root`がバックスラッシュ形式だったことに起因すると推測しているが、実機Windowsで確認できていない）
-- **`internal/run.Execute`が`QSOKU_ROOT`に渡す`root`（`qsoku .edit`の`$EDITOR`呼び出し含む）も同じくバックスラッシュ形式だった**
-
-**方針転換：`qsokufile.Find`が返すパスを、Windowsも含めて常にフォワードスラッシュ形式にする（`filepath.ToSlash`）。** これが唯一パスを生成する場所であり（CLAUDE.mdの「解釈は1か所に集める」の精神を、パスの表示形式にも広げた）、以後`pwd -W`と同じ流儀で統一される。ただし、Goの`filepath.Dir`・`filepath.Join`はWindows上で**入力がフォワードスラッシュでも出力はバックスラッシュに戻す**ため、`Find`で正規化するだけでは足りない——`root := filepath.Dir(f.Path)`のように**`Find`の返り値をさらに`filepath.Dir`に通す場所**（`internal/cli/cli.go`の`runName`、`edit.go`の`runEdit`、`where.go`）では、そのつど`filepath.ToSlash`をもう一度かけ直す必要があった。`.init`（`Find`を経由せず`os.Getwd()`から独自に組み立てる）も同様に、実際のファイル操作には元のネイティブパスを使いつつ、表示用にだけ`filepath.ToSlash`した値を分けて持つようにした。
-
-**併せて、これに合わせてテスト側の期待値もフォワードスラッシュへ統一した：**
-- `e2e/run_test.go`の`TestRunArgumentSubstitution`・`TestRunCwdHandoffDoesNotMixWithStdout`
-- `e2e/shell_test.go`：pwshが出す行末の`\r`（Windowsの改行既定）を`cleanPwshOutput`で追加除去。bash・zshの`pwd`はMSYS独自の表記（`/c/Users/...`。ドライブレターを小文字化した仮想ルート）を返す——`pwd -W`とは別物——ため、`toMsysPath`を新設してbash・zshのテストの比較にだけ使う。`newShellRepo`自体も、返す`dir`をあらかじめ`filepath.EvalSymlinks`で正規化するよう変えた（前回のエントリで`TestShellIntegrationPwsh`用に個別対応していたシンボリックリンク解決・8.3短縮名の正規化を、ここに一本化した）
-
-3回連続でWindows特有の不具合が出たことから、**「手元のLinux環境では検証できない領域が、当初の想定より広い」**ことが分かった。パスの区切り文字・表記（ネイティブ／フォワードスラッシュ／MSYS形式／短縮名／長い名前）という、Windows特有の"当たり前"をどれだけ推測で埋めても、実機・実CIでしか最終確認できない不確実性が残ることを踏まえ、今後もCIの結果を見ながら反復することにする。
-
-## 2026-09-27　4回目のCI実行：単体テスト側の期待値の直し忘れ
-
-`qsokufile.Find`をフォワードスラッシュ返却に変えた際、e2eテスト（`e2e/run_test.go`・`e2e/shell_test.go`）の期待値は直したが、**同じ変更の影響を受ける通常の単体テスト**（`internal/cli/where_test.go`の`TestRun_where`、`internal/qsokufile/find_test.go`の`TestFind`）を見落としていた。`go test ./...`（`make check`に含まれる、`-tags e2e`を付けない方）はこの環境でも普段から走らせていたはずだが、**Windows以外ではバックスラッシュとフォワードスラッシュが一致するため、Linux／macOSでは何度実行しても検知できない**——`qsokufile.Find`の変更点そのものが、Windows以外では观测できない類の変更だった。
-
-`filepath.ToSlash(want)`で期待値を直し、`make check`で確認。**教訓：** パスの区切り文字にまつわる変更は、そのテストが実際に`os.PathSeparator`に依存する箇所を洗い出すために、変更したファイルだけでなく`grep`で横断的に確認する必要がある（`e2e/`だけでなく`internal/*/​*_test.go`も含めて）。今回は`e2e`ディレクトリだけを見て「テストは直した」と判断したのが甘かった。
-
-## 2026-09-27　5回目のCI実行：「show //src」の正体はMSYSの引数書き換えだった
-
-前回まで残っていた`docs/reference/qsokufile.md`「`qsoku show //src`」が`/src`だけを出す謎が、5回目でようやく解けた。**qsoku自身のコードの不具合ではなく、Git BashのMSYS環境が持つ「ネイティブ（MSYS非対応）プログラムに渡す前に、`/`で始まる引数をPOSIXの絶対パスとみなして自動的に書き換える」という、qsokuの`//`とは無関係の挙動に、たまたま巻き込まれていた。**
-
-MSYSの`sh`・`bash`は、`qsoku.exe`のようなネイティブWindowsバイナリを呼ぶとき、引数が`/`で始まっていると「POSIXパスらしきもの」とみなしてWindows形式に自動変換する（Docker Desktop for WindowsをGit Bashから使うときに`-v /path:/path`が壊れる、というよく知られた問題と同じ機構）。qsokuの`//src`もこの条件（`/`で始まる）に該当してしまい、qsoku自身が受け取る前に書き換えられていた——`SubstituteArg`が受け取った時点で、引数はすでに`//`という接頭辞を保っていない状態になっていたため、`strings.HasPrefix(arg, "//")`が偽になり、素通しされていた（結果的に見えていた`/src`は、MSYSが`//src`を書き換えた後の値そのもの）。
-
-**この気付きに至った経緯：** 前回（4回目）の修正でqsokufile.Findがフォワードスラッシュを返すようになった結果、他のすべての例（`.init`・`.where`・エラーメッセージ）は文書と一致するようになったが、**`docs/reference/`の実行例を確かめる`e2e/examples_test.go`自身の、フィクスチャの絶対パスをプレースホルダーに置き換える処理（`strings.ReplaceAll(out, dir, placeholderPath)`）が、ネイティブ形式の`dir`とフォワードスラッシュ形式の実際の出力の食い違いで効かなくなり、他の全例で「置き換えられていない生のパスがそのまま出る」という新しい失敗が大量に出た**。これを`filepath.ToSlash(dir)`で直したところ、「show //src」**だけ**が相変わらず`/src`のまま——他の失敗は表記の食い違いで説明がついたのに対し、これだけは値そのものが違うことが、原因の切り分けの決め手になった。
-
-**対処：**
-- `e2e/examples_test.go`：フィクスチャの絶対パスとの比較を`filepath.ToSlash(dir)`で行うよう修正（表記の食い違いの解消）
-- 同ファイルの`run`メソッド（`sh -c`でdocsの実行例を動かす部分）に`MSYS_NO_PATHCONV=1`を設定し、MSYSの自動書き換えを止めた
-- `docs/reference/qsokufile.md`・`qsokufile_ja.md`の「打たれた引数」節に、この制約を追記した——**qsoku自身では検知も訂正もできない**（qsokuが引数を受け取った時点で、書き換えはすでに終わっている）ため、Git Bashの利用者向けの注意書きとして残した。`MSYS_NO_PATHCONV=1`（または`MSYS2_ARG_CONV_EXCL=//`）が回避策になる
-
-**教訓：** Windows対応は、qsoku自身のGoコードだけでなく、**呼び出し元のシェル（MSYS）が引数を書き換える**という、実行環境側の挙動まで含めて考える必要があった。今回のように「値そのものが違う」失敗は、表記の違い（区切り文字・大文字小文字・短縮名など、ここまでの4回で扱ってきたもの）とは別の種類の原因を疑うべきだった。
+反復修正の経緯（CIで見つかった不具合とその都度の対処）はmtqgのmemo（`89e960f3`・`141f2383`・`4a25ec24`・`67e9e8c0`・`66684332`・`35d798f6`・`2bf5c125`）を参照。Windows実機でのシグナル系動作の検証はtodo`6fa5476e`として残っている（`internal/run/run_test.go`・`e2e/run_test.go`のWindows向けSkipは、それまでの措置）。
