@@ -21,10 +21,17 @@ func runInit(args []string, stdout, stderr io.Writer) int {
 		_, _ = fmt.Fprintf(stderr, "qsoku: %v\n", err)
 		return exitNotFound
 	}
+	// path is used for the actual file operations below (native form, as
+	// os.Stat/os.WriteFile expect); displayPath is what gets printed, '/'-
+	// separated like qsokufile.Find's result and "pwd -W" (docs/reference/
+	// cli.md "Bringing the working directory back") so a qsokufile's
+	// location always reads the same way regardless of which command
+	// printed it.
 	path := filepath.Join(cwd, "qsokufile")
+	displayPath := filepath.ToSlash(path)
 
 	if _, err := os.Stat(path); err == nil {
-		_, _ = fmt.Fprintf(stderr, "qsoku: %s already exists\n", path)
+		_, _ = fmt.Fprintf(stderr, "qsoku: %s already exists\n", displayPath)
 		return exitNotFound
 	} else if !os.IsNotExist(err) {
 		_, _ = fmt.Fprintf(stderr, "qsoku: %v\n", err)
@@ -35,6 +42,6 @@ func runInit(args []string, stdout, stderr io.Writer) int {
 		_, _ = fmt.Fprintf(stderr, "qsoku: %v\n", err)
 		return exitNotFound
 	}
-	_, _ = fmt.Fprintf(stdout, "Created %s\n", path)
+	_, _ = fmt.Fprintf(stdout, "Created %s\n", displayPath)
 	return exitOK
 }

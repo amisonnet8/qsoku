@@ -20,6 +20,15 @@ var ErrNotFound = errors.New("no qsokufile found")
 //
 // A directory that happens to be named "qsokufile" is not a match: Find
 // keeps walking up past it, the same as if nothing were there.
+//
+// The returned path always uses '/' (filepath.ToSlash), even on Windows:
+// this is the one place a qsokufile's path is produced, and every path a
+// caller builds from it -- printed in a message, or, via filepath.Dir,
+// turned into QSOKU_ROOT -- should read the same way "pwd -W" already does
+// (docs/reference/cli.md "Bringing the working directory back") rather than
+// mixing native backslashes into an otherwise forward-slash world. The walk
+// itself still uses native paths throughout; only the final result is
+// converted.
 func Find(startDir string) (string, error) {
 	dir, err := filepath.Abs(startDir)
 	if err != nil {
@@ -31,7 +40,7 @@ func Find(startDir string) (string, error) {
 		info, err := os.Stat(candidate)
 		switch {
 		case err == nil && !info.IsDir():
-			return candidate, nil
+			return filepath.ToSlash(candidate), nil
 		case err == nil, os.IsNotExist(err):
 			// Either a directory named "qsokufile" (not a match) or nothing
 			// there at all: keep walking up.

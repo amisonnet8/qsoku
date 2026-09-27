@@ -184,3 +184,19 @@ todo `a251592e2c`（人間が登録）で、これまで「対象外」として
 - **`windows-latest`：`TestExecute_cwdHandoff`が、`RUNNER~1`（Go自身の`t.TempDir()`が返す8.3短縮名）と`runneradmin`（`pwd -W`が返す実際の長いユーザー名）の食い違いで落ちた。** `pwd -W`はWindowsのAPI経由で正規化した実際のパスを返すため、短縮名をそのまま`cd`しても、戻ってくる値は長い名前に解決されている。`internal/run/run_test.go`に`canonicalPath`（`filepath.EvalSymlinks`。Windowsでは短縮名の正規化も兼ねる）を足し、比較の期待値をこれで正規化した
 
 **教訓：** 同じディレクトリを指す文字列表現は、シェル・OSによって「入力した通り（論理）」を返すものと「実体に解決したもの（物理）」を返すものが混在する。テストでパスを比較するときは、`os.SameFile`や`filepath.EvalSymlinks`のような、表記の違いを吸収する手段を最初から使うべきだった——1回目の修正時点で、Windowsのバックスラッシュ問題は直したが、この論理／物理の違いには気づけていなかった。
+
+## 2026-09-27　3回目のCI実行で見つかった不具合：パスの表示形式の不統一
+
+`macos-latest`は2回目の修正で通ったが、`windows-latest`は3回目も落ちた。今回の不具合は、**qsoku自身が表示・`QSOKU_ROOT`として渡すパスが、`filepath.Dir`・`filepath.Join`を通るたびにOSネイティブの区切り文字（Windowsではバックスラッシュ）に戻ってしまう**という、これまでとは別の種類の食い違いだった。
+
+- **`TestDocExamples`の多数（`.init`の`Created ...`、`"nope" is not defined in ...`、パースエラーの`line 2: ...`など）：** 表示するパスの区切り文字がバックスラッシュになり、フォワードスラッシュで書かれた文書と食い違った
+- **`qsokufile.md:115`「`qsoku show //src`」：** 期待値と大きく異なる`/src`のみが出力された（原因はまだ完全には特定できていない——`SubstituteArg`に渡る`root`がバックスラッシュ形式だったことに起因すると推測しているが、実機Windowsで確認できていない）
+- **`internal/run.Execute`が`QSOKU_ROOT`に渡す`root`（`qsoku .edit`の`$EDITOR`呼び出し含む）も同じくバックスラッシュ形式だった**
+
+**方針転換：`qsokufile.Find`が返すパスを、Windowsも含めて常にフォワードスラッシュ形式にする（`filepath.ToSlash`）。** これが唯一パスを生成する場所であり（CLAUDE.mdの「解釈は1か所に集める」の精神を、パスの表示形式にも広げた）、以後`pwd -W`と同じ流儀で統一される。ただし、Goの`filepath.Dir`・`filepath.Join`はWindows上で**入力がフォワードスラッシュでも出力はバックスラッシュに戻す**ため、`Find`で正規化するだけでは足りない——`root := filepath.Dir(f.Path)`のように**`Find`の返り値をさらに`filepath.Dir`に通す場所**（`internal/cli/cli.go`の`runName`、`edit.go`の`runEdit`、`where.go`）では、そのつど`filepath.ToSlash`をもう一度かけ直す必要があった。`.init`（`Find`を経由せず`os.Getwd()`から独自に組み立てる）も同様に、実際のファイル操作には元のネイティブパスを使いつつ、表示用にだけ`filepath.ToSlash`した値を分けて持つようにした。
+
+**併せて、これに合わせてテスト側の期待値もフォワードスラッシュへ統一した：**
+- `e2e/run_test.go`の`TestRunArgumentSubstitution`・`TestRunCwdHandoffDoesNotMixWithStdout`
+- `e2e/shell_test.go`：pwshが出す行末の`\r`（Windowsの改行既定）を`cleanPwshOutput`で追加除去。bash・zshの`pwd`はMSYS独自の表記（`/c/Users/...`。ドライブレターを小文字化した仮想ルート）を返す——`pwd -W`とは別物——ため、`toMsysPath`を新設してbash・zshのテストの比較にだけ使う。`newShellRepo`自体も、返す`dir`をあらかじめ`filepath.EvalSymlinks`で正規化するよう変えた（前回のエントリで`TestShellIntegrationPwsh`用に個別対応していたシンボリックリンク解決・8.3短縮名の正規化を、ここに一本化した）
+
+3回連続でWindows特有の不具合が出たことから、**「手元のLinux環境では検証できない領域が、当初の想定より広い」**ことが分かった。パスの区切り文字・表記（ネイティブ／フォワードスラッシュ／MSYS形式／短縮名／長い名前）という、Windows特有の"当たり前"をどれだけ推測で埋めても、実機・実CIでしか最終確認できない不確実性が残ることを踏まえ、今後もCIの結果を見ながら反復することにする。

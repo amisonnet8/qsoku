@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"slices"
 	"strconv"
 	"strings"
@@ -20,7 +21,13 @@ import (
 // "sub" directory the entries cd into.
 func newShellRepo(t *testing.T) (dir, sub string) {
 	t.Helper()
-	dir = t.TempDir()
+	// Canonicalized up front (filepath.EvalSymlinks), not just t.TempDir()'s
+	// raw value: on macOS this resolves the /tmp -> /private/tmp symlink,
+	// and on Windows it normalizes a short 8.3-style path segment (e.g.
+	// "RUNNER~1") to its real long name -- both forms a real shell's own
+	// "pwd", after cd'ing here, reports back regardless of what t.TempDir()
+	// itself happened to return.
+	dir = resolveSymlinks(t, t.TempDir())
 	sub = filepath.Join(dir, "sub")
 	if err := os.Mkdir(sub, 0o750); err != nil {
 		t.Fatal(err)
@@ -154,12 +161,30 @@ func posixCwdScript(shell, dir string) string {
 	return b.String()
 }
 
+// toMsysPath converts a native Windows path (whatever separator or drive-
+// letter case it happens to use) to the form Git for Windows' MSYS bash/zsh
+// report back from their own "pwd" builtin (/c/Users/... rather than
+// C:/Users/... or C:\Users\...): MSYS mounts each drive under a lowercase
+// single-letter root of its own POSIX-style namespace, regardless of what
+// was passed to "cd" to get there. A no-op everywhere else, where "pwd"
+// already reports back exactly what was cd'd to.
+func toMsysPath(p string) string {
+	if runtime.GOOS != "windows" {
+		return p
+	}
+	p = filepath.ToSlash(p)
+	if len(p) >= 2 && p[1] == ':' {
+		return "/" + strings.ToLower(p[:1]) + p[2:]
+	}
+	return p
+}
+
 func TestShellIntegrationBash(t *testing.T) {
 	bash := shellPath(t, "bash")
 	dir, sub := newShellRepo(t)
 
 	out := runShellScript(t, dir, posixCwdScript("bash", dir), bash, "--norc", "--noprofile")
-	checkCwdResults(t, dir, sub, parseCwdOutput(t, out))
+	checkCwdResults(t, toMsysPath(dir), toMsysPath(sub), parseCwdOutput(t, out))
 }
 
 func TestShellIntegrationZsh(t *testing.T) {
@@ -167,7 +192,7 @@ func TestShellIntegrationZsh(t *testing.T) {
 	dir, sub := newShellRepo(t)
 
 	out := runShellScript(t, dir, posixCwdScript("zsh", dir), zsh, "-f")
-	checkCwdResults(t, dir, sub, parseCwdOutput(t, out))
+	checkCwdResults(t, toMsysPath(dir), toMsysPath(sub), parseCwdOutput(t, out))
 }
 
 func TestShellIntegrationFish(t *testing.T) {
@@ -299,8 +324,13 @@ func quotePwsh(s string) string {
 // pwsh had never touched the terminal at all.
 var ansiEscape = regexp.MustCompile(`\x1b\[[0-9;?]*[a-zA-Z]`)
 
+// cleanPwshOutput also strips '\r': on Windows, pwsh's Write-Output ends
+// lines with the platform's own newline (CRLF), which this package's other
+// parsing helpers -- built around bash/zsh/fish's plain '\n' -- do not
+// expect.
 func cleanPwshOutput(s string) string {
 	s = ansiEscape.ReplaceAllString(s, "")
+	s = strings.ReplaceAll(s, "\r", "")
 	lines := strings.Split(s, "\n")
 	kept := lines[:0]
 	for _, l := range lines {
@@ -311,12 +341,15 @@ func cleanPwshOutput(s string) string {
 	return strings.Join(kept, "\n")
 }
 
-// resolveSymlinks resolves an existing directory (already created by
-// newShellRepo) to its canonical form -- unlike bash/zsh/fish, pwsh's
+// resolveSymlinks resolves a path (typically t.TempDir()'s raw value) to
+// its canonical form: on macOS this follows /tmp -> /private/tmp, and on
+// Windows it normalizes a short 8.3-style path segment (e.g. "RUNNER~1") to
+// its real long name. newShellRepo uses this for the directory it returns,
+// since a real shell reports back one of these canonical forms regardless
+// of what was passed to "cd" to get there -- notably pwsh, whose
 // Set-Location/current-directory tracking does not preserve a "logical",
-// possibly-symlinked path the way a POSIX shell's own $PWD does, so on
-// macOS (whose /tmp is a symlink to /private/tmp) it reports the resolved
-// form back regardless of what was passed to it.
+// possibly-symlinked or short-named path the way a POSIX shell's own $PWD
+// does.
 func resolveSymlinks(t *testing.T, dir string) string {
 	t.Helper()
 	resolved, err := filepath.EvalSymlinks(dir)
@@ -329,7 +362,6 @@ func resolveSymlinks(t *testing.T, dir string) string {
 func TestShellIntegrationPwsh(t *testing.T) {
 	pwsh := shellPath(t, "pwsh")
 	dir, sub := newShellRepo(t)
-	dir, sub = resolveSymlinks(t, dir), resolveSymlinks(t, sub)
 
 	var b strings.Builder
 	b.WriteString("Invoke-Expression (& qsoku .shell pwsh | Out-String)\n")

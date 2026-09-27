@@ -41,7 +41,11 @@ func runEdit(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 	// run through sh rather than as a single program name; the path is
 	// passed as $1 (not baked into the command text) so it is never
 	// re-parsed by sh even if it contains spaces or shell metacharacters.
-	root := filepath.Dir(path)
+	// filepath.Dir re-introduces native backslashes on Windows even though
+	// path itself is already '/'-separated (qsokufile.Find), so this is
+	// converted again -- root becomes QSOKU_ROOT, which should read like
+	// "pwd -W" does.
+	root := filepath.ToSlash(filepath.Dir(path))
 	command := editor + ` "$1"`
 	code, err := run.Execute(command, root, []string{path}, stdin, stdout, stderr)
 	if err != nil {

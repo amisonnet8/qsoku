@@ -67,7 +67,11 @@ func runName(name string, args []string, stdin io.Reader, stdout, stderr io.Writ
 		return exitCommandLine
 	}
 
-	root := filepath.Dir(f.Path)
+	// filepath.Dir re-introduces native backslashes on Windows even though
+	// f.Path itself is already '/'-separated (qsokufile.Find), so this is
+	// converted again -- root becomes QSOKU_ROOT below and feeds
+	// SubstituteArg, both of which should read like "pwd -W" does.
+	root := filepath.ToSlash(filepath.Dir(f.Path))
 	command := qsokufile.Substitute(entry.Command)
 	subArgs := make([]string, len(args))
 	for i, a := range args {

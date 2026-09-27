@@ -152,7 +152,11 @@ func TestRunArgumentSubstitution(t *testing.T) {
 	if code != 0 {
 		t.Fatalf("code = %d, want 0 (stdout=%q)", code, stdout)
 	}
-	want := filepath.Join(dir, "src") + "\n"
+	// qsoku's own QSOKU_ROOT (and so //-substitution) always reads with '/'
+	// on every platform (qsokufile.Find, "pwd -W" for the same reason on
+	// Windows), so the expected value is normalized the same way; a no-op
+	// on Linux/macOS.
+	want := filepath.ToSlash(filepath.Join(dir, "src")) + "\n"
 	if stdout != want {
 		t.Errorf("stdout = %q, want %q", stdout, want)
 	}
@@ -180,7 +184,9 @@ func TestRunCwdHandoffDoesNotMixWithStdout(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := filepath.Join(dir, "sub") + "\n"
+	// The cwd handoff always reads with '/' on Windows too ("pwd -W" --
+	// internal/run/run.go); a no-op on Linux/macOS.
+	want := filepath.ToSlash(filepath.Join(dir, "sub")) + "\n"
 	if string(got) != want {
 		t.Errorf("cwd file = %q, want %q", got, want)
 	}

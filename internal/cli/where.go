@@ -23,6 +23,9 @@ func runWhere(args []string, stdout, stderr io.Writer) int {
 	if err != nil {
 		return reportFindError(err, stderr)
 	}
-	_, _ = fmt.Fprintln(stdout, filepath.Dir(path))
+	// filepath.Dir re-introduces native backslashes on Windows even though
+	// path itself is already '/'-separated (qsokufile.Find); converted
+	// again so what this prints reads like "pwd -W" does.
+	_, _ = fmt.Fprintln(stdout, filepath.ToSlash(filepath.Dir(path)))
 	return exitOK
 }
