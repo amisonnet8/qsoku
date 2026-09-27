@@ -368,7 +368,11 @@ func (r *exampleRunner) outputs(t *testing.T, ex *example) []string {
 	var got []string
 	for _, c := range ex.cmds {
 		out := r.run(t, runDir, c.text)
-		out = strings.ReplaceAll(out, dir, placeholderPath)
+		// qsoku itself only ever prints a qsokufile-derived path with '/'
+		// (qsokufile.Find), even on Windows, so the copy's own path is
+		// matched in that same form -- a no-op on Linux/macOS, where dir
+		// already uses '/'.
+		out = strings.ReplaceAll(out, filepath.ToSlash(dir), placeholderPath)
 		got = append(got, strings.TrimRight(out, "\n"))
 	}
 	return got
@@ -383,6 +387,17 @@ func (r *exampleRunner) run(t *testing.T, dir, text string) string {
 	cmd.Env = []string{
 		"PATH=" + filepath.Dir(binary) + string(os.PathListSeparator) + os.Getenv("PATH"),
 		"HOME=" + home,
+		// MSYS_NO_PATHCONV: on Windows, Git for Windows' MSYS sh.exe
+		// auto-converts an argument that looks like a POSIX absolute path
+		// (starting with "/") into a Windows path before a native
+		// (non-MSYS) executable such as qsoku.exe ever sees it -- a
+		// well-known MSYS behavior, unrelated to qsoku's own "//" syntax
+		// (docs/reference/qsokufile.md "// : the qsokufile's location")
+		// but colliding with it, since "//src" starts the same way. This
+		// disables that conversion so the examples below show qsoku's own
+		// behavior, not a shell-specific mangling of it; harmless
+		// (unrecognized) on Linux/macOS.
+		"MSYS_NO_PATHCONV=1",
 	}
 	var out, errOut strings.Builder
 	cmd.Stdout, cmd.Stderr = &out, &errOut

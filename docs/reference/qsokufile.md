@@ -101,6 +101,16 @@ and is never affected by this rule.
   argument to the `cd` entry's command (after the user's own shell has
   already removed any quotes). qsoku substitutes it the same way, so `$1`
   inside the qsokufile's command receives `/path/to/qsokufile/dir/src`.
+  - **On Windows, from Git Bash**: MSYS (the environment behind Git for
+    Windows' `sh.exe`/`bash.exe`) automatically rewrites an argument that
+    looks like a POSIX absolute path — one starting with `/` — before a
+    native (non-MSYS) program such as `qsoku.exe` ever sees it. Since `//src`
+    starts that way too, it can be caught by this unrelated MSYS behavior
+    and arrive already altered. Set `MSYS_NO_PATHCONV=1` (or the more
+    targeted `MSYS2_ARG_CONV_EXCL=//`) to turn this off. This is a property
+    of the calling shell, not something qsoku itself can detect or correct
+    — by the time qsoku reads its arguments, the conversion has already
+    happened.
 - Implementation note: recognizing quotes needs only to track whether the
   lexer is inside single quotes, double quotes, or after a backslash — full
   shell grammar is not required.

@@ -206,3 +206,18 @@ todo `a251592e2c`（人間が登録）で、これまで「対象外」として
 `qsokufile.Find`をフォワードスラッシュ返却に変えた際、e2eテスト（`e2e/run_test.go`・`e2e/shell_test.go`）の期待値は直したが、**同じ変更の影響を受ける通常の単体テスト**（`internal/cli/where_test.go`の`TestRun_where`、`internal/qsokufile/find_test.go`の`TestFind`）を見落としていた。`go test ./...`（`make check`に含まれる、`-tags e2e`を付けない方）はこの環境でも普段から走らせていたはずだが、**Windows以外ではバックスラッシュとフォワードスラッシュが一致するため、Linux／macOSでは何度実行しても検知できない**——`qsokufile.Find`の変更点そのものが、Windows以外では观测できない類の変更だった。
 
 `filepath.ToSlash(want)`で期待値を直し、`make check`で確認。**教訓：** パスの区切り文字にまつわる変更は、そのテストが実際に`os.PathSeparator`に依存する箇所を洗い出すために、変更したファイルだけでなく`grep`で横断的に確認する必要がある（`e2e/`だけでなく`internal/*/​*_test.go`も含めて）。今回は`e2e`ディレクトリだけを見て「テストは直した」と判断したのが甘かった。
+
+## 2026-09-27　5回目のCI実行：「show //src」の正体はMSYSの引数書き換えだった
+
+前回まで残っていた`docs/reference/qsokufile.md`「`qsoku show //src`」が`/src`だけを出す謎が、5回目でようやく解けた。**qsoku自身のコードの不具合ではなく、Git BashのMSYS環境が持つ「ネイティブ（MSYS非対応）プログラムに渡す前に、`/`で始まる引数をPOSIXの絶対パスとみなして自動的に書き換える」という、qsokuの`//`とは無関係の挙動に、たまたま巻き込まれていた。**
+
+MSYSの`sh`・`bash`は、`qsoku.exe`のようなネイティブWindowsバイナリを呼ぶとき、引数が`/`で始まっていると「POSIXパスらしきもの」とみなしてWindows形式に自動変換する（Docker Desktop for WindowsをGit Bashから使うときに`-v /path:/path`が壊れる、というよく知られた問題と同じ機構）。qsokuの`//src`もこの条件（`/`で始まる）に該当してしまい、qsoku自身が受け取る前に書き換えられていた——`SubstituteArg`が受け取った時点で、引数はすでに`//`という接頭辞を保っていない状態になっていたため、`strings.HasPrefix(arg, "//")`が偽になり、素通しされていた（結果的に見えていた`/src`は、MSYSが`//src`を書き換えた後の値そのもの）。
+
+**この気付きに至った経緯：** 前回（4回目）の修正でqsokufile.Findがフォワードスラッシュを返すようになった結果、他のすべての例（`.init`・`.where`・エラーメッセージ）は文書と一致するようになったが、**`docs/reference/`の実行例を確かめる`e2e/examples_test.go`自身の、フィクスチャの絶対パスをプレースホルダーに置き換える処理（`strings.ReplaceAll(out, dir, placeholderPath)`）が、ネイティブ形式の`dir`とフォワードスラッシュ形式の実際の出力の食い違いで効かなくなり、他の全例で「置き換えられていない生のパスがそのまま出る」という新しい失敗が大量に出た**。これを`filepath.ToSlash(dir)`で直したところ、「show //src」**だけ**が相変わらず`/src`のまま——他の失敗は表記の食い違いで説明がついたのに対し、これだけは値そのものが違うことが、原因の切り分けの決め手になった。
+
+**対処：**
+- `e2e/examples_test.go`：フィクスチャの絶対パスとの比較を`filepath.ToSlash(dir)`で行うよう修正（表記の食い違いの解消）
+- 同ファイルの`run`メソッド（`sh -c`でdocsの実行例を動かす部分）に`MSYS_NO_PATHCONV=1`を設定し、MSYSの自動書き換えを止めた
+- `docs/reference/qsokufile.md`・`qsokufile_ja.md`の「打たれた引数」節に、この制約を追記した——**qsoku自身では検知も訂正もできない**（qsokuが引数を受け取った時点で、書き換えはすでに終わっている）ため、Git Bashの利用者向けの注意書きとして残した。`MSYS_NO_PATHCONV=1`（または`MSYS2_ARG_CONV_EXCL=//`）が回避策になる
+
+**教訓：** Windows対応は、qsoku自身のGoコードだけでなく、**呼び出し元のシェル（MSYS）が引数を書き換える**という、実行環境側の挙動まで含めて考える必要があった。今回のように「値そのものが違う」失敗は、表記の違い（区切り文字・大文字小文字・短縮名など、ここまでの4回で扱ってきたもの）とは別の種類の原因を疑うべきだった。
