@@ -2,16 +2,16 @@
 
 ## 開発環境の前提
 
-開発者の手元環境は**Linux（devcontainer）のみ**。実機のWindowsは無いので、Windows固有の挙動（`pwd -W`のパス形式、シグナルの伝わり方など）はCI（`windows-latest`）でしか確かめられない（2026-09-27、todo `a251592e2c`。以前は「Windowsは対象外」としていたが、方針を改めた）。
+開発者の手元環境は**Linux（devcontainer）のみ**。実機のWindowsは無いので、Windows固有の挙動（`pwd -W`のパス形式、シグナルの伝わり方など）はCI（`windows-latest`）でしか確かめられない（2026-09-27に対応済み。以前は「Windowsは対象外」としていたが、方針を改めた。経緯は`docs/design/history.md`参照）。
 
-**CI（`.github/workflows/`）の対象OSはLinux・macOS・Windows**（`check`ジョブのみ。`race`はWindowsでcgoにmingwが要るためLinux・macOSのまま。2026-09-23、人間の判断で最初はWindows対象外としたが、2026-09-27にWindows対応の一環として`windows-latest`を追加）。**windows-latestランナーには`make`が無い**（`Makefile`は`sh`前提）ため、`ci.yml`の`check (windows-latest)`ステップは`make check`・`make test`の中身（`go vet`・`golangci-lint run`・`go test`）を直接呼ぶ
+**CI（`.github/workflows/`）の対象OSはLinux・macOS・Windows**（`check`ジョブのみ。`race`はLinux・macOSのまま、`shellcheck`・`trivy`・`goreleaser`はLinuxのみのまま）。**windows-latestランナーには`make`が無い**（`Makefile`は`sh`前提）ため、`ci.yml`の`check (windows)`・`test (windows)`ステップは、`make check`・`make test`の中身（`go vet`・`golangci-lint run`・`go test`）を直接呼ぶ
 
 | 対象 | 進め方 |
 | :--- | :--- |
 | `qsokufile`の解析・`//`の置き換え・管理用コマンド | Linux・Goだけで単体テストを書く。字句解析（引用符の状態を追う部分）は、URL・引用符の中・括弧の中・`;`の後を表で押さえる |
-| シェル連携・補完（bash・zsh・fish・pwsh） | 4つとも devcontainer に入れてある（`postCreate.sh`。pwshはMicrosoft自身のaptリポジトリから）。**本物のシェルで動かして確かめる**（スクリプトを模したものに置き換えない）。`e2e/shell_test.go`（`go test -tags e2e`、`make test`）が実施。pwshは`shellPath`ヘルパーで`exec.LookPath`が失敗すればSkipする既存の仕組みがそのまま効く（devcontainerの再ビルド前は手元でSkipされる） |
+| シェル連携・補完（bash・zsh・fish・pwsh） | 4つとも devcontainer に入れてある（`postCreate.sh`。pwshはMicrosoft自身のaptリポジトリから）。**本物のシェルで動かして確かめる**（スクリプトを模したものに置き換えない）。`e2e/shell_test.go`（`go test -tags e2e`、`make test`）が実施。手元に無いシェルは`shellPath`ヘルパーで`exec.LookPath`が失敗すればSkipする（例：Windowsではzsh・fishが無いのでSkip） |
 | 本物のバイナリを直接実行（終了コード・シグナル・`//`置き換え・`QSOKU_CWD_FILE`） | `e2e/run_test.go`（`make test`）。`internal/cli`の単体テストは`Run`をプロセス内で呼ぶだけなので、ビルドした実バイナリでしか見えない部分をここで押さえる |
-| `docs/reference/`・`README.md`・`docs/tour/`の実行例 | 手で書かない。`$ qsoku ...`の直前に`<!-- qsoku:example dir=<fixture> ... -->`を置くと、`e2e/examples_test.go`が実際にビルドしたqsokuで実行し、`make docs-examples`が出力を文書へ書き込む（`docs/reference/README.md`参照）。対象文書は`e2e/examples_test.go`の`documentPairs`（Step 9でREADME・tour/に拡張）。比較だけなら`make test`が実施 |
+| `docs/reference/`・`README.md`・`docs/tour/`の実行例 | 手で書かない。`$ qsoku ...`の直前に`<!-- qsoku:example dir=<fixture> ... -->`を置くと、`e2e/examples_test.go`が実際にビルドしたqsokuで実行し、`make docs-examples`が出力を文書へ書き込む（`docs/reference/README.md`参照）。対象文書は`e2e/examples_test.go`の`documentPairs`。比較だけなら`make test`が実施 |
 | `docs/examples/`のqsokufile | 実行はしない（`go`・`npm`など、このリポジトリに無いツールを呼ぶため）。`e2e/run_test.go`の`TestDocsExamplesQsokufilesParse`が、各ディレクトリで`qsoku .list`が成功すること（解析できること）だけを確かめる |
 | 依存の脆弱性・ライセンス | `trivy`（`trivy.yaml`） |
 | シェルスクリプト | `shellcheck`（追跡中の`*.sh`・`*.bash`のみ） |
@@ -29,13 +29,22 @@
 - **終了コード**：コマンドを実行した後は`sh`の終了コードをそのまま返すこと（qsoku自身の決まりで上書きしない）。コマンドを実行する前のqsoku自身のエラーは0/1/2（`docs/reference/cli.md`「Exit codes」）を表テストで押さえる
 - **シェル補完**：登録されている名前を補完する。bash・zsh・fish・pwshで確認する（mtqgの`e2e/completion_test.go`のやり方が参考になる）。**fishは同じ候補にならない**：`.`で始まる候補（管理用コマンド）は、打っている語自体が`.`で始まるまでfishが隠すため（ドットファイルの扱いと同じ規則）。`qsoku <TAB>`は定義済みの名前だけ、`qsoku .<TAB>`で管理用コマンドが出ることを別々に確かめる（`docs/reference/cli.md`「Shell completion」に明記）。pwshは`Register-ArgumentCompleter`（bash・zshと同じく`.`の隠し規則は無い）を`TabExpansion2`で呼び出して確かめる
 
-## Windows対応（2026-09-27、todo `a251592e2c`）
+## Windows対応（2026-09-27）
 
-- **qsokufileのコマンドはWindowsでも常に`sh`で実行する**（CLAUDE.md「実行は常にsh」を維持。Git for Windowsの`sh.exe`が`PATH`にある前提）。PowerShellは呼び出し元シェルとしてのみ対応する（`qsoku .shell pwsh`）
-- **`pwsh`（PowerShell 7+）を全OS共通で対応**。Windows標準の旧PowerShell 5.1は検証しない
-- **居場所の持ち帰りのパス形式**：Git Bashの`sh`の`pwd`はMSYS形式（`/c/Users/...`）を返し、pwshの`Set-Location`はそれを解釈できない。Windowsでは持ち帰り行を`pwd -W`（失敗したら素の`pwd`にフォールバック）にして、Windows形式（`C:/Users/...`）で書き出す（`internal/run/run.go`）
-- **シグナル系のテストはWindowsで一旦Skip**：`kill -TERM $$`がGit Bashの`sh.exe`経由でGoの`syscall.WaitStatus`にどう見えるか、実機Windowsで未確認のため（`internal/run/run_test.go`・`e2e/run_test.go`）。`windows-latest`のCIで確認できたら、Skipを外して実際の値をassertする
-- 手元（Linux devcontainer）ではWindows実機の検証はできないので、**Windows固有の変更はクロスコンパイル（`GOOS=windows go build ./...`）で構文・型チェックだけ行い、実際の動作確認はCIの`windows-latest`に委ねる**
+- **qsokufileのコマンドはWindowsでも常に`sh`で実行する**（CLAUDE.md「実行は常にsh」を維持。Git for Windowsの`sh.exe`が`PATH`にある前提）。PowerShellは呼び出し元シェルとしてのみ対応する（`qsoku .shell pwsh`、`pwsh`＝PowerShell 7+を全OS共通で対応。Windows標準の旧PowerShell 5.1は検証しない）
+- 手元（Linux devcontainer）ではWindows実機の検証はできない。**Windows固有の変更はクロスコンパイル（`GOOS=windows go build ./...`）で構文・型チェックを行い、実際の動作確認はCIの`windows-latest`で行う**——手元での確認とCIでの確認は別物と考える
+
+### Windowsでの落とし穴（実機CIで反復修正して分かったこと。経緯は`docs/design/history.md`）
+
+- **パスの比較は、生の文字列ではなく`filepath.EvalSymlinks`（`os.SameFile`でもよい）を通してから行う。** 同じディレクトリでも、macOSの`/tmp`→`/private/tmp`のようなシンボリックリンクのエイリアスや、Windowsの8.3短縮名（`RUNNER~1`）と実際の長い名前（`runneradmin`）など、表記の違うパスが混在する
+- **pwshは物理パス（シンボリックリンクを解決した実体）を返し、bash・zsh・fishは論理パス（`cd`した通りの文字列）を保つ。** 同じ操作でも、どのシェルで確かめるかによって期待値の作り方を変える必要がある
+- **Windowsのbash・zshの`pwd`はMSYS形式（`/c/Users/...`）を返す。** これは`internal/run`が使う`pwd -W`（Windows形式`C:/Users/...`）とは別物なので、テストで比較する際は変換が要る（`e2e/shell_test.go`の`toMsysPath`）
+- **ネイティブなWindowsパス（バックスラッシュ）を、引用符なしで`sh`のスクリプト文字列に直接埋め込まない。** `sh`は引用符の外のバックスラッシュを次の1文字へのエスケープとして読むため、`C:\Users\...`が`C:Users...`のように文字化けする
+- **パスの区切り文字にまつわる変更は、`internal/*/*_test.go`も含めて横断的にgrepして洗い出す。** Windows以外ではバックスラッシュとフォワードスラッシュが一致してしまうため、`e2e/`だけ直して安心すると、Linux・macOSでは何度実行しても検知できない見落としが残る
+- **pwshの出力には、DECCKMなどの端末制御シーケンス（`\x1b[?1h`等）や行末の`\r`が混ざることがある。** 標準出力がパイプでも起きる。`e2e/shell_test.go`の`cleanPwshOutput`で除去してからパースする
+- **Git Bash（MSYS）は、ネイティブ（MSYS非対応）プログラムに渡す前に、`/`で始まる引数を書き換えることがある。** `docs/reference/`の実行例をGit Bash経由で動かすテストには`MSYS_NO_PATHCONV=1`が要る（`e2e/examples_test.go`）
+- **WindowsにはPOSIXパーミッションビットが無い。** `os.Chmod`は読み取り専用属性の切り替えにしかならないため、パーミッションを検証するテストはWindowsで`t.Skip`にする
+- **シグナル系のテストはWindowsで一旦Skip**：`kill -TERM $$`がGit Bashの`sh.exe`経由でGoの`syscall.WaitStatus`にどう見えるか、実機Windowsで未確認のため（`internal/run/run_test.go`・`e2e/run_test.go`）。確認・Skip解除はtodo `6fa5476e`
 
 ## Trivy・ShellCheckの運用
 
@@ -44,4 +53,4 @@
 
 ## `-race`の運用
 
-- devcontainerは`CGO_ENABLED=0`。`-race`が要るときはcgoを有効にして走らせる（`Makefile`ができたら`make race`として分ける）
+- devcontainerは`CGO_ENABLED=0`。`-race`が要るときは`make race`（`CGO_ENABLED=1`にして走らせる）で分けている。CIの`race`ジョブはLinux・macOSのみ（Windowsはcgoにmingwが要るため対象外）

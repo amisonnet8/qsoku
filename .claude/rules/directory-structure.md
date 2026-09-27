@@ -15,7 +15,7 @@ qsoku/
 ◯                          設定が壊れていないかは.github/workflows/ci.yml の
 ◯                          goreleaserジョブ（make goreleaser-check）が毎pushで確認
 ◯ README.md / README_ja.md 看板（ロゴ・バッジ・目次・特徴・デモ・実行例・インストール・
-                            tour/reference/examplesへのリンク）。Step 9で作成、v0.1.0公開後に
+                            tour/reference/examplesへのリンク）。v0.1.0公開後に
                             「映え対応」で作り直した。冒頭の「開発初期」の注意書きはv0.1.0公開
                             後に外した（人間の判断）
 ◯ qsokufile                Makefileの主なターゲットを写した見本（`build`・`fmt`・`vet`・
@@ -25,18 +25,18 @@ qsoku/
                             `test`は看板READMEのデモGIFが依存する`(cd //; go test ./...)`の
                             まま（Makefileの`unit`相当。名前がMakefile側のe2eターゲットと
                             ずれるため、そちらは`e2e`という名前にした）
-◯                          Windowsでも実行はsh（Git for Windows）のまま——
-                            qsokufile自身の書式・実行方式にWindowsは影響しない
 ◯ Makefile                ビルド・テストの入口（`make build`・`make check`など）
 ◯ go.mod                   `go.sum`はまだ無い（依存が無いため）
+◯ .mtqg/                   mtqgの記録（journal.jsonl・SCHEMA.md・version・
+                            .gitattributes・.gitignore）。`.local/`はコミットされない
+                            （マシンごとのロック・一時ファイル。`.claude/rules/mtqg.md`）
 ◯ docs/
 ◯ ├── assets/               看板READMEが使う画像。`logo.svg`（手書きのSVG。
 ◯ │                          `@media (prefers-color-scheme: dark)`を埋め込み、ラスター画像は
 ◯ │                          置かない）と`demo.gif`（`vhs`で録画した本物のターミナル操作。
 ◯ │                          このリポジトリ自身の`qsokufile`を`internal/cli/`から実行し、
-◯ │                          `//`でルートに戻って`go test ./...`が走る様子。録画の手順は
-◯ │                          `docs/design/history.md`参照、リポジトリには残さない一回限りの
-◯ │                          セットアップ）
+◯ │                          `//`でルートに戻って`go test ./...`が走る様子。リポジトリには
+◯ │                          残さない一回限りのセットアップ）
 ◯ ├── design/              設計判断と理由の記録（日本語）。README.md
 ◯ │   ├── README.md         このディレクトリの位置づけと索引
 ◯ │   ├── note.md           最初の設計メモ（原文のまま。qsokuとは何か、`//`の規則など）
@@ -45,7 +45,7 @@ qsoku/
 ◯ │                          `e2e/examples_test.go`が実測して書き込む
 ◯ │   └── README.md         置き場所の決まりと、実行例の印の書き方
 ◯ ├── tour/                 歩いて回る入門（README.md/README_ja.md）。`.init`から
-◯ │                          シェル連携・補完まで、実行例つきで手を動かして追う（Step 9）
+◯ │                          シェル連携・補完まで、実行例つきで手を動かして追う
 ◯ └── examples/             実例（README.md/README_ja.md＋go/node/monorepoの
 ◯                            qsokufile）。コピーして使える。パースだけ`e2e/run_test.go`の
 ◯                            `TestDocsExamplesQsokufilesParse`が確かめる（実行はしない）
@@ -60,8 +60,7 @@ qsoku/
 ◯                            （`go:embed`。mtqgの`internal/cli/completions/`に相当）。
 ◯                            居場所を持ち帰る`qsoku`関数と、そのシェルの補完を1本に
 ◯                            まとめて持つ。`qsoku.ps1`はpwsh（PowerShell 7+）向けで、
-◯                            対応OSはWindows・Linux・macOS共通（2026-09-27、
-◯                            todo `a251592e2c`）
+◯                            対応OSはWindows・Linux・macOS共通（2026-09-27）
 ◯ internal/qsokufile/        qsokufileの探索（`Find`）と解析（`Parse`）、両方をまとめた
 ◯                            `Load`、名前引き（`Lookup`）、`//`の置き換え（`Substitute`・
 ◯                            `SubstituteArg`）、書き込み（`SetEntry`・`RemoveEntry`。
@@ -73,29 +72,28 @@ qsoku/
 ◯                            `.golangci.yaml`のdepguardで3層の依存の向きを強制）
 ◯ e2e/                      本物のバイナリと本物のシェル（bash・zsh・fish・pwsh）で動かす
 ◯                            テスト（`e2e_test.go`が`TestMain`でバイナリを1回ビルド。
-◯                            Windowsでは`qsoku.exe`）。土台は予定より前倒しでStep 7に
-◯                            作った（`.mtqg`のhistory参照）。
-◯ ├── shell_test.go          シェル連携・補完（Step 7）
+◯                            Windowsでは`qsoku.exe`）
+◯ ├── shell_test.go          シェル連携・補完
 ◯ ├── run_test.go            本物のバイナリを直接実行（終了コードの素通し・シグナル・
-◯                            `//`置き換え・`QSOKU_CWD_FILE`の受け渡し。Step 8）。
+◯                            `//`置き換え・`QSOKU_CWD_FILE`の受け渡し）。
 ◯                            `docs/examples/*/qsokufile`とリポジトリ直下の`qsokufile`が
 ◯                            パースできることも、ここで（`qsoku .list`を走らせるだけで）
 ◯                            確かめる（コマンドの中身は実行しない）
 ◯ ├── examples_test.go       docs/reference/・README・docs/tour/の実行例を実測で確かめる
 ◯                            （`make docs-examples`で出力を文書へ書き込む。対象文書は
-◯                            `documentPairs`。mtqgの`e2e/examples_test.go`の簡素化版。
-◯                            Step 8で作り、Step 9でREADME・tour/にも対象を広げた）
+◯                            `documentPairs`。mtqgの`e2e/examples_test.go`の簡素化版）
 ◯ └── testdata/examples/     ↑の例が使うfixture（言語非依存。英日どちらの文書からも参照）
 ◯ .devcontainer/           devcontainer.json・postCreate.sh。mtqgのインストール（タグが
                             まだ無いためコミットへの固定）、pwsh（Microsoft自身のapt
-                            リポジトリから。2026-09-27、todo `a251592e2c`）もここ
+                            リポジトリから。2026-09-27）もここ
 ◯ .mcp.json                mtqgのMCPサーバー（`mtqg mcp`）の起動設定。`mtqg init --agent
                             claude-code`が作った（2026-09-25）
 ◯ .github/workflows/
 ◯ ├── ci.yml                 CI（check・race・shellcheck・trivy・goreleaser
-◯ │                            （make goreleaser-checkの安全網）の5系統。checkだけ
-◯ │                            windows-latestも含む3OSマトリクス、残り4系統は
-◯ │                            Linux・macOSのまま。2026-09-27、todo `a251592e2c`）
+◯ │                            （make goreleaser-checkの安全網）の5系統。
+◯ │                            checkはLinux・macOS・Windowsの3OS、raceは
+◯ │                            Linux・macOS、shellcheck・trivy・goreleaserは
+◯ │                            Linuxのみ（Windowsは2026-09-27に対象に加えた）
 ◯ └── release.yml            v*タグのpushだけで動く。goreleaser-actionで実際に
 ◯                            ビルド・GitHub Releaseの公開まで行う
 ◯ .claude/
@@ -118,11 +116,11 @@ qsoku/
 | `tour/` | qsokuを初めて触る人が、手を動かしながら一通り追える入門 | 利用者（読み物） |
 | `examples/` | 動く実例の置き場（コピーして使える`qsokufile`など） | 利用者（コピー元） |
 
-`tour/`・`examples/`は、mtqg本体の`docs/tour/`・`docs/examples/`と同じ役割分担を踏襲している（実装完了後に作る、英日2本立てで作る、という決まりも同じ。Step 9で作った）。
+`tour/`・`examples/`は、mtqg本体の`docs/tour/`・`docs/examples/`と同じ役割分担を踏襲している（実装完了後に作る、英日2本立てで作る、という決まりも同じ）。
 
 ## 配置の判断基準
 
 - **`internal/`**：Goの仕組みとして、リポジトリの外からimportできない。外との約束は、配布物（`go install`で入るバイナリ）とデータ形式（`qsokufile`の書式）だけ
 - **配布物（ビルド済みバイナリ）はコミットしない**（`.gitignore`にルート直下限定で`/qsoku`・`/qsoku.exe`・`/dist/`）
-- **シェル連携・補完のスクリプト**は`internal/cli/shells/`に埋め込み（`go:embed`）で配る（mtqgの`internal/cli/completions/`と同じやり方）。対応シェルはbash・zsh・fish・pwsh（2026-09-27、todo `a251592e2c`。以前はPowerShell対象外としていたが、方針を改めた）
-- **看板としてのREADME・`tour/`・`examples/`は実装完了後（Step 9）に作った。** 未完成の間の注意書きは看板の冒頭に残す
+- **シェル連携・補完のスクリプト**は`internal/cli/shells/`に埋め込み（`go:embed`）で配る（mtqgの`internal/cli/completions/`と同じやり方）。対応シェルはbash・zsh・fish・pwsh（pwshは2026-09-27に追加。以前はPowerShell対象外としていたが、方針を改めた）
+- **看板としてのREADME・`tour/`・`examples/`は実装完了後に作った。**
