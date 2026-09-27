@@ -42,6 +42,11 @@ For the file format itself, see [qsokufile.md](qsokufile.md).
      on, exactly as `sh` itself would expand them.
    - Standard input, standard output and standard error are passed straight
      through; qsoku does not read or alter them.
+   - On Windows, `sh` means Git for Windows' MSYS `sh.exe` (on `PATH`); the
+     `pwd` in the second line above becomes `pwd -W` there so the location
+     comes out in Windows form (`C:/Users/...`), not MSYS form
+     (`/c/Users/...`) — see [Bringing the working directory
+     back](#bringing-the-working-directory-back).
    - A `qsokufile` entry should not itself call `exit`: since the second
      line is appended to the *same* script, an `exit` inside the entry's own
      command ends the whole script right there, before qsoku's own line
@@ -96,6 +101,11 @@ move the caller's shell. The shell integration function reads the location
 - The location written is the **logical** working directory (`pwd`, not
   `pwd -P`): qsoku follows a symlinked path the same way an interactive
   shell's own `cd` does, rather than resolving it away.
+- On Windows, `pwd -W` is used instead of plain `pwd` (still the logical
+  directory, just in Windows path form). A plain POSIX `sh` (Linux, macOS)
+  does not know that flag; it is tried first with its own error discarded,
+  falling back to plain `pwd` — so the same binary works either way without
+  needing to know which `sh` it is talking to.
 - When qsoku's own errors happen **before** the command runs (see
   [Exit codes](#exit-codes)) — the name isn't found, the `qsokufile` can't be
   found or parsed, `sh` can't be started — nothing is written to
@@ -117,7 +127,7 @@ user's own names.
 | `qsoku .edit` | Opens the `qsokufile` in use with `$EDITOR`; if unset, falls back to `nano`; if `nano` is not on `PATH` either, errors (exit 1) instead of guessing further |
 | `qsoku .where` | Prints the absolute path of the directory holding the `qsokufile` in use (what `//` and `QSOKU_ROOT` expand to) |
 | `qsoku .version` | Prints qsoku's own version, from `runtime/debug.ReadBuildInfo` (see [distribution.md](../../.claude/rules/distribution.md) design note — this is why `go install` alone, without `-ldflags`, still reports a meaningful version) |
-| `qsoku .shell <shell>` | Prints shell code for the given shell (`bash`, `zsh`, `fish`) that defines the `qsoku` function described below, to `eval`. Unknown `<shell>` is a command-line error (exit 2) |
+| `qsoku .shell <shell>` | Prints shell code for the given shell (`bash`, `zsh`, `fish`, `pwsh`) that defines the `qsoku` function described below, to `eval`. Unknown `<shell>` is a command-line error (exit 2) |
 | `qsoku .help` | Prints usage and the list of defined names. Running `qsoku` with **no arguments at all** prints the same thing (the `git`/`git --help` convention, without an option to spell) |
 
 - `.add` and `.rm` write to the `qsokufile` found by walking up from the
@@ -169,6 +179,7 @@ eval "$(qsoku .shell bash)"
 | bash | `~/.bashrc` |
 | zsh | `~/.zshrc` |
 | fish | `~/.config/fish/config.fish` (using `qsoku .shell fish \| source`, fish's own idiom) |
+| pwsh | `$PROFILE` (using `Invoke-Expression (& qsoku .shell pwsh \| Out-String)`, since pwsh has no `eval`) |
 
 This defines a shell function named `qsoku` (not a single letter — short
 enough already, and `command qsoku` inside it reaches the real binary
@@ -185,17 +196,22 @@ qsoku() {
 }
 ```
 
-(fish's equivalent function is spelled differently but does the same three
-things: run the real binary with `QSOKU_CWD_FILE` set, read it back, `cd` if
-it changed.)
+(fish's and pwsh's equivalent functions are spelled differently but do the
+same three things: run the real binary with `QSOKU_CWD_FILE` set, read it
+back, move if it changed.)
 
 The same `.shell` output also defines that shell's completion for qsoku's
-defined names (see [Shell completion](#shell-completion)) — one `eval`
-covers both.
+defined names (see [Shell completion](#shell-completion)) — one `eval` (or,
+for pwsh, `Invoke-Expression`) covers both.
 
-PowerShell is not a target: `qsokufile` commands always run under `sh` (see
-[qsokufile.md](qsokufile.md)), which on Windows means Git Bash or WSL, both
-of which already have bash.
+pwsh here is only ever the **caller's** shell: `qsokufile` commands
+themselves always run under `sh` (see [qsokufile.md](qsokufile.md)) on every
+platform, including Windows, where that means Git for Windows' `sh.exe` —
+install Git for Windows (which most Windows development setups already
+have) and make sure its `sh.exe` is on `PATH`. WSL also works, the same way
+it would for any other Linux tool. Windows PowerShell 5.1 (the version that
+ships with Windows) is not tested; PowerShell 7+ (`pwsh`) is the target, the
+same on Windows, Linux and macOS.
 
 ## Shell completion
 
@@ -222,6 +238,10 @@ with.
   not by whether a candidate is a file. So `qsoku <TAB>` on fish offers only
   the defined names; `qsoku .<TAB>` is needed to see the management
   commands. bash and zsh have no such rule and offer both at once.
+- **pwsh**: uses `Register-ArgumentCompleter`, the same mechanism as any
+  other pwsh command's tab completion. Like bash and zsh, it offers the
+  defined names and the management commands together, with no `.`-hiding
+  rule.
 
 ## Exit codes
 

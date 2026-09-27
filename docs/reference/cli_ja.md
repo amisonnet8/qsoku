@@ -25,6 +25,7 @@ qsoku <名前> [引数...]
    - `pwd`の行がある場合、`;`ではなく**改行**でつなぐ——コマンド末尾の`# …`コメントがこの行まで飲み込んでしまうのを避けるため。
    - `"$@"`が`[引数...]`をそのままコマンドへ渡し、`$1`・`$2`……として、`sh`自身が展開するのと同じように使える。
    - 標準入出力・標準エラー出力はそのまま素通しする。qsokuは読みも変えもしない。
+   - Windowsでは`sh`はGit for Windowsの（`PATH`にある）MSYS `sh.exe`を指す。上の2行目の`pwd`は、Windowsではそこだけ`pwd -W`になり、居場所がMSYS形式（`/c/Users/...`）ではなくWindows形式（`C:/Users/...`）で出る——[居場所を持ち帰る](#居場所を持ち帰る)参照。
    - **qsokufileの項目自身は`exit`を呼んではいけない**：2行目はその**同じスクリプト**に足されるので、項目のコマンドの中で`exit`を呼ぶと、qsoku自身の行に届く前にスクリプト全体がそこで終わってしまう。成否は、項目の最後のコマンド自身の終了コードに委ねること（`make`のレシピや、普通のシェルスクリプトと同じ考え方）。下の例の`cd //src && make build`もそうしている。
 3. `sh`はほかの子プロセスと同じく`PATH`から探す。
 
@@ -62,6 +63,7 @@ hello, everyone
   - `(cd //; make build)`は括弧の中で移動するので、成否にかかわらず`pwd`に影響しない（[qsokufile_ja.md](qsokufile_ja.md#qsokufileの置いてある場所)参照）。
   - `cd //src && make build`のように括弧**なし**で書いてビルドが失敗した場合は、そこまで進んだ居場所を持ち帰る——利用者が括弧を付けずに書いた以上、失敗しても移動すること自体は意図されているとみなす。
 - 書き出す居場所は**論理パス**（`pwd`。`pwd -P`ではない）：qsokuは対話シェル自身の`cd`と同じく、シンボリックリンクをたどったままのパスを扱い、解決して消したりはしない。
+- Windowsでは、素の`pwd`の代わりに`pwd -W`を使う（論理パスであることは変わらず、Windows形式になるだけ）。素のPOSIX `sh`（Linux・macOS）はこのオプションを知らずエラーになるので、まず`pwd -W`を試してそのエラーは捨て、失敗したら素の`pwd`に落ちる——どちらの`sh`と話しているか知らなくても、同じバイナリで両方に対応できる。
 - コマンドが実行される**前**にqsoku自身のエラーが起きたとき（[終了コード](#終了コード)参照）——名前が見つからない、`qsokufile`が見つからない・解析できない、`sh`を起動できない——は、`QSOKU_CWD_FILE`には何も書かれない。シェル関数は、読んだ内容が空なら「移動しない」として扱う。
 
 ## 管理用コマンド
@@ -78,7 +80,7 @@ hello, everyone
 | `qsoku .edit` | 使われている`qsokufile`を`$EDITOR`で開く。未設定なら`nano`に落とす。`nano`も`PATH`に無ければ、それ以上推測せずエラーにする（終了コード1） |
 | `qsoku .where` | 使われている`qsokufile`が置いてあるディレクトリの絶対パスを表示する（`//`・`QSOKU_ROOT`が展開される先） |
 | `qsoku .version` | qsoku自身のバージョンを`runtime/debug.ReadBuildInfo`から表示する（[distribution.md](../../.claude/rules/distribution.md)の設計メモを参照——これにより`-ldflags`なしの`go install`だけでも意味のあるバージョンが出る） |
-| `qsoku .shell <shell>` | 指定したシェル（`bash`・`zsh`・`fish`）向けに、下記の`qsoku`関数を定義するシェルコードを`eval`用に表示する。未知の`<shell>`はコマンドラインの誤り（終了コード2） |
+| `qsoku .shell <shell>` | 指定したシェル（`bash`・`zsh`・`fish`・`pwsh`）向けに、下記の`qsoku`関数を定義するシェルコードを`eval`用に表示する。未知の`<shell>`はコマンドラインの誤り（終了コード2） |
 | `qsoku .help` | 使い方と、定義されている名前の一覧を表示する。**引数なしで**`qsoku`とだけ打った場合も同じものを表示する（`git`・`git --help`と同じ考え方。オプションのつづりは要らない） |
 
 - `.add`・`.rm`は、カレントディレクトリから親へたどって見つかった`qsokufile`に書き込む。見つからなければ、作らずにエラーとし、`.init`を案内する。
@@ -120,6 +122,7 @@ eval "$(qsoku .shell bash)"
 | bash | `~/.bashrc` |
 | zsh | `~/.zshrc` |
 | fish | `~/.config/fish/config.fish`（`qsoku .shell fish \| source`というfish自身の書き方を使う） |
+| pwsh | `$PROFILE`（`Invoke-Expression (& qsoku .shell pwsh \| Out-String)`を使う。pwshには`eval`が無いため） |
 
 これは`qsoku`という名前のシェル関数を定義する（1文字などに短縮しない——元々4文字で十分短く、関数の中の`command qsoku`は本物のバイナリを呼び、自分自身を再帰呼び出ししない）：
 
@@ -134,11 +137,11 @@ qsoku() {
 }
 ```
 
-（fish版の関数は書き方こそ違うが、本物のバイナリを`QSOKU_CWD_FILE`つきで実行し、読み戻し、変わっていれば`cd`する、という同じ3つのことをする。）
+（fish版・pwsh版の関数は書き方こそ違うが、本物のバイナリを`QSOKU_CWD_FILE`つきで実行し、読み戻し、変わっていれば移動する、という同じ3つのことをする。）
 
-`.shell`の同じ出力には、そのシェル向けのqsokuの名前の補完も定義されている（[シェル補完](#シェル補完)参照）——1回の`eval`で両方そろう。
+`.shell`の同じ出力には、そのシェル向けのqsokuの名前の補完も定義されている（[シェル補完](#シェル補完)参照）——1回の`eval`（pwshなら`Invoke-Expression`）で両方そろう。
 
-PowerShellは対象外：`qsokufile`のコマンドは常に`sh`で実行される（[qsokufile_ja.md](qsokufile_ja.md)参照）ため、Windowsでは元々bashを持つGit BashかWSLが必要になる。
+ここでのpwshはあくまで**呼び出し元**のシェルにすぎない：`qsokufile`のコマンド自体は、どのプラットフォームでも（Windowsを含めて）常に`sh`で実行される（[qsokufile_ja.md](qsokufile_ja.md)参照）——Windowsでの`sh`はGit for Windowsの`sh.exe`を指す。Git for Windows（Windowsの開発環境にはたいてい元々入っている）を入れて、その`sh.exe`が`PATH`に通っていることを確かめること。WSLでも、ほかのLinuxツールと同じように動く。Windows標準の旧PowerShell 5.1は動作確認の対象外で、PowerShell 7以降（`pwsh`）がWindows・Linux・macOS共通の対象。
 
 ## シェル補完
 
@@ -147,6 +150,7 @@ PowerShellは対象外：`qsokufile`のコマンドは常に`sh`で実行され�
 管理用コマンド（`.init`・`.add`など）も、`qsoku`の後に打てる名前として補完の対象になる。これが補完の中で唯一の**固定**部分で、`qsoku`から取得せずシェルスクリプトに直接書き込む：定義済みの名前と違い、この一覧が変わるのはqsoku自身の新しいリリースのときだけで、スクリプトはそのリリースに埋め込まれ一緒に配られるので、古いスクリプトが新しいqsokuと食い違うことがない。
 
 - **fish**：`.`で始まる候補は、打っている語自体が`.`で始まるまで隠される——fishがパス補完でドットファイルに使うのと同じ規則が、ここでも（ファイルかどうかではなく）先頭の文字だけを見て適用される。そのため`qsoku <TAB>`は定義済みの名前だけを出し、管理用コマンドを見るには`qsoku .<TAB>`が要る。bash・zshにはこの規則が無く、両方を一度に出す。
+- **pwsh**：`Register-ArgumentCompleter`を使う。これはpwshのほかのコマンドのTAB補完と同じ仕組み。bash・zshと同じく、定義済みの名前と管理用コマンドを`.`による隠し規則なしで一度に出す。
 
 ## 終了コード
 
