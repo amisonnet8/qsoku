@@ -102,6 +102,10 @@ eval "$(qsoku .shell bash)"   # ~/.bashrc (zsh: ~/.zshrc)
 qsoku .shell fish | source    # ~/.config/fish/config.fish
 ```
 
+```powershell
+Invoke-Expression (& qsoku .shell pwsh | Out-String)   # $PROFILE
+```
+
 This defines a `qsoku` shell function that runs the real binary, brings the
 working directory back, and also turns on Tab completion for every name in
 the `qsokufile` in use (plus qsoku's own management commands). See

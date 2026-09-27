@@ -73,7 +73,7 @@ test: (cd //; echo "testing from $QSOKU_ROOT")
 go install github.com/amisonnet8/qsoku/cmd/qsoku@latest
 ```
 
-シェルの起動ファイルに1行足す（bash・zsh・fishそれぞれの詳細は
+シェルの起動ファイルに1行足す（bash・zsh・fish・pwshそれぞれの詳細は
 [cli_ja.md](docs/reference/cli_ja.md#シェル連携)を参照）：
 
 ```sh
@@ -81,6 +81,8 @@ eval "$(qsoku .shell bash)"
 ```
 
 これで、`qsokufile`に定義した名前のシェル補完も一緒に有効になる。
+
+Windowsでも`qsokufile`のコマンドは引き続き`sh`（Git for Windows）で実行される。`qsoku .shell pwsh`は、呼び出し元のシェルとしてのPowerShell対応。
 
 <details>
 <summary>近道を足す一連の流れ（クリックで展開）</summary>

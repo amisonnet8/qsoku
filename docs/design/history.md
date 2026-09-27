@@ -150,3 +150,16 @@ v0.1.1リリース後、「このリポジトリ自身のqsokufileをCIに導入
 - Makefileの`test`（e2eテスト）に相当する項目は`test`という名前にできない（`qsokufile`側の`test`は先に決まっていたMakefileの`unit`相当のまま動かせないため）ので、`e2e`という名前にした。Makefileとqsokufileで同じ名前が違うものを指す唯一の箇所であり、qsokufileの先頭コメントに理由を書いた
 
 **見本として広げたことで、壊れたままコミットされる危険も増えた**（項目数が2→12に増え、typoや`:`抜けが起きやすくなった）。CIには組み込まない（コマンドの中身は実行しない）という決定は変えず、`docs/examples/*/qsokufile`と同じやり方——`qsoku .list`が成功する（パースできる）ことだけを確かめる——を`e2e/run_test.go`の`TestRootQsokufileParses`として足した。`TestDocsExamplesQsokufilesParse`を拡張せず別関数にしたのは、対象が「コピーして使う配布物」と「このリポジトリ自身の見本」で性質が違うため。
+
+## 2026-09-27　Windows・PowerShellを対象に加えた
+
+todo `a251592e2c`（人間が登録）で、これまで「対象外」としてきたWindows・PowerShellへの対応を決めた。2026-09-23の設計時点（`testing.md`・`distribution.md`・`cli.md`・`note.md`に「PowerShellは対象外」「CI・配布ともWindows対象外」と明記）から方針を改めたが、**設計の芯は崩していない**：
+
+- **qsokufileのコマンドはWindowsでも常に`sh`で実行する。** 「実行は常にsh」（CLAUDE.md）を維持し、Windows向けに別の解釈を持たせることはしなかった。Windowsでの`sh`はGit for Windowsの`sh.exe`（`PATH`にある前提）を指す
+- **PowerShellは、qsokufileのコマンドを実行するシェルではなく、あくまで呼び出し元のシェルとして対応する。** `qsoku .shell pwsh`（PowerShell 7以降、`pwsh`）が、bash・zsh・fishの`.shell`出力と同じ役割（居場所の持ち帰り・補完）を果たす。Windows標準の旧PowerShell 5.1は対象にしない。pwshはクロスプラットフォームなので、Linux・macOSでも同じスクリプトが使える
+
+この2つの判断（実行方式・PowerShell対応の範囲）と、CI・配布をどこまでやるか（`windows-latest`をCIに追加、GoReleaserでWindows版のzipも配布）は、プランモード中に`AskUserQuestion`で問い、`mtqg q`（`348a589e`・`7da0b7fa`・`e46770f3`）に記録した。
+
+**居場所の持ち帰りのパス形式の食い違い：** Git Bashの`sh`の`pwd`はMSYS形式のパス（`/c/Users/...`）を返すが、pwshの`Set-Location`はこの形式を解釈できない。`internal/run`の持ち帰り行を、Windowsでは`pwd -W`（Windows形式のパス`C:/Users/...`を返す。素のPOSIX `sh`はこのオプションを知らずエラーになるので、まず試してエラーを捨て、失敗したら素の`pwd`にフォールバックする）に変えて解決した。
+
+手元の開発環境はLinuxのdevcontainerだけなので、Windows固有の変更は`GOOS=windows`でのクロスコンパイルによる構文・型チェックまでしか確かめられない。シグナル系のテスト（`kill -TERM $$`がGoの`syscall.WaitStatus`にどう見えるか）は実機Windowsでの検証がまだ無いため、CI（`windows-latest`）で確認できるまでSkipにした。CIへの`windows-latest`追加・GoReleaserのWindows対応（`.zip`）は`make goreleaser-check`で手元確認済み。

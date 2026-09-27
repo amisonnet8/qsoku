@@ -14,9 +14,9 @@ go install github.com/amisonnet8/qsoku/cmd/qsoku@latest
 
 `.goreleaser.yaml`（リポジトリ直下）と`.github/workflows/release.yml`で、`go install`が使えない・使いたくない人向けに、ビルド済みバイナリを配れるようにしてある。**動くのは人間が`v*`のタグをpushしたときだけ**（`release.yml`のトリガー）。
 
-- **対象OS・アーキテクチャはlinux・darwinのamd64・arm64のみ（Windowsは対象外）。** CIの検証OS（`testing.md`）、`qsokufile`が常に`sh`実行前提であること（Windowsでの利用にはGit Bash/WSLが要る）と揃えた
+- **対象OS・アーキテクチャはlinux・darwin・windowsのamd64・arm64。** CIの検証OS（`testing.md`）と揃えた。Windowsも2026-09-27にtodo `a251592e2c`で対象に加えた（以前はWindows対象外だったが、方針を改めた。`qsokufile`のコマンド自体は引き続きWindowsでも`sh`実行——Git for Windowsが要る——のまま）
 - 純粋なGo（`CGO_ENABLED=0`）でクロスコンパイルする（本節の「純粋なGoにする」のまま）
-- 配布物は`.tar.gz`1本（アーカイブの中身はGoReleaserの既定glob——`LICENSE*`・`README*`——に任せている。`LICENSE`・`README.md`・`README_ja.md`が実際に入ることを`make goreleaser-check`で確認済み）
+- 配布物は、windows向けだけ`.zip`（`format_overrides`）、それ以外は`.tar.gz`1本（アーカイブの中身はGoReleaserの既定glob——`LICENSE*`・`README*`——に任せている。`LICENSE`・`README.md`・`README_ja.md`、windowsでは`qsoku.exe`が実際に入ることを`make goreleaser-check`で確認済み）
 - **設定が壊れていないかは、タグを打つ前にCIで分かる。** `.github/workflows/ci.yml`の`goreleaser`ジョブが、通常のpush・PRのたびに`make goreleaser-check`（`goreleaser check`＋`goreleaser release --snapshot --clean --skip=publish`。タグ不要・公開なし）を実行する。手元でも同じコマンドで確認できる（`goreleaser`は`postCreate.sh`で入る）
 
 ## 純粋なGoにする（cgoを使わない）

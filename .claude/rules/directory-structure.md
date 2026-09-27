@@ -25,6 +25,8 @@ qsoku/
                             `test`は看板READMEのデモGIFが依存する`(cd //; go test ./...)`の
                             まま（Makefileの`unit`相当。名前がMakefile側のe2eターゲットと
                             ずれるため、そちらは`e2e`という名前にした）
+◯                          Windowsでも実行はsh（Git for Windows）のまま——
+                            qsokufile自身の書式・実行方式にWindowsは影響しない
 ◯ Makefile                ビルド・テストの入口（`make build`・`make check`など）
 ◯ go.mod                   `go.sum`はまだ無い（依存が無いため）
 ◯ docs/
@@ -54,9 +56,12 @@ qsoku/
 ◯                            `.edit`・`.where`・`.shell`・`.help`／引数なし）を1コマンド
 ◯                            1ファイルで実装（mtqgの`internal/cli/`に倣う）。未知の`.foo`は
 ◯                            終了コード2
-◯ internal/cli/shells/        `qsoku.bash`・`qsoku.zsh`・`qsoku.fish`（`go:embed`。
-◯                            mtqgの`internal/cli/completions/`に相当）。居場所を持ち帰る
-◯                            `qsoku`関数と、そのシェルの補完を1本にまとめて持つ
+◯ internal/cli/shells/        `qsoku.bash`・`qsoku.zsh`・`qsoku.fish`・`qsoku.ps1`
+◯                            （`go:embed`。mtqgの`internal/cli/completions/`に相当）。
+◯                            居場所を持ち帰る`qsoku`関数と、そのシェルの補完を1本に
+◯                            まとめて持つ。`qsoku.ps1`はpwsh（PowerShell 7+）向けで、
+◯                            対応OSはWindows・Linux・macOS共通（2026-09-27、
+◯                            todo `a251592e2c`）
 ◯ internal/qsokufile/        qsokufileの探索（`Find`）と解析（`Parse`）、両方をまとめた
 ◯                            `Load`、名前引き（`Lookup`）、`//`の置き換え（`Substitute`・
 ◯                            `SubstituteArg`）、書き込み（`SetEntry`・`RemoveEntry`。
@@ -66,9 +71,10 @@ qsoku/
 ◯                            何かは知らない。居場所の持ち帰り・終了コードの素通しを担う
 ◯                            （`internal/qsokufile`・`internal/cli`のどちらも知らない。
 ◯                            `.golangci.yaml`のdepguardで3層の依存の向きを強制）
-◯ e2e/                      本物のバイナリと本物のシェル（bash・zsh・fish）で動かすテスト
-◯                            （`e2e_test.go`が`TestMain`でバイナリを1回ビルド）。土台は
-◯                            予定より前倒しでStep 7に作った（`.mtqg`のhistory参照）。
+◯ e2e/                      本物のバイナリと本物のシェル（bash・zsh・fish・pwsh）で動かす
+◯                            テスト（`e2e_test.go`が`TestMain`でバイナリを1回ビルド。
+◯                            Windowsでは`qsoku.exe`）。土台は予定より前倒しでStep 7に
+◯                            作った（`.mtqg`のhistory参照）。
 ◯ ├── shell_test.go          シェル連携・補完（Step 7）
 ◯ ├── run_test.go            本物のバイナリを直接実行（終了コードの素通し・シグナル・
 ◯                            `//`置き換え・`QSOKU_CWD_FILE`の受け渡し。Step 8）。
@@ -81,12 +87,15 @@ qsoku/
 ◯                            Step 8で作り、Step 9でREADME・tour/にも対象を広げた）
 ◯ └── testdata/examples/     ↑の例が使うfixture（言語非依存。英日どちらの文書からも参照）
 ◯ .devcontainer/           devcontainer.json・postCreate.sh。mtqgのインストール（タグが
-                            まだ無いためコミットへの固定）もここ
+                            まだ無いためコミットへの固定）、pwsh（Microsoft自身のapt
+                            リポジトリから。2026-09-27、todo `a251592e2c`）もここ
 ◯ .mcp.json                mtqgのMCPサーバー（`mtqg mcp`）の起動設定。`mtqg init --agent
                             claude-code`が作った（2026-09-25）
 ◯ .github/workflows/
-◯ ├── ci.yml                 CI（Linux・macOSのマトリクス。check・race・shellcheck・
-◯ │                            trivy・goreleaser（make goreleaser-checkの安全網）の5系統）
+◯ ├── ci.yml                 CI（check・race・shellcheck・trivy・goreleaser
+◯ │                            （make goreleaser-checkの安全網）の5系統。checkだけ
+◯ │                            windows-latestも含む3OSマトリクス、残り4系統は
+◯ │                            Linux・macOSのまま。2026-09-27、todo `a251592e2c`）
 ◯ └── release.yml            v*タグのpushだけで動く。goreleaser-actionで実際に
 ◯                            ビルド・GitHub Releaseの公開まで行う
 ◯ .claude/
@@ -115,5 +124,5 @@ qsoku/
 
 - **`internal/`**：Goの仕組みとして、リポジトリの外からimportできない。外との約束は、配布物（`go install`で入るバイナリ）とデータ形式（`qsokufile`の書式）だけ
 - **配布物（ビルド済みバイナリ）はコミットしない**（`.gitignore`にルート直下限定で`/qsoku`・`/qsoku.exe`・`/dist/`）
-- **シェル連携・補完のスクリプト**は`internal/cli/shells/`に埋め込み（`go:embed`）で配る（mtqgの`internal/cli/completions/`と同じやり方）。対応シェルはbash・zsh・fish（PowerShellは対象外）
+- **シェル連携・補完のスクリプト**は`internal/cli/shells/`に埋め込み（`go:embed`）で配る（mtqgの`internal/cli/completions/`と同じやり方）。対応シェルはbash・zsh・fish・pwsh（2026-09-27、todo `a251592e2c`。以前はPowerShell対象外としていたが、方針を改めた）
 - **看板としてのREADME・`tour/`・`examples/`は実装完了後（Step 9）に作った。** 未完成の間の注意書きは看板の冒頭に残す

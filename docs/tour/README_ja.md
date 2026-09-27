@@ -98,6 +98,10 @@ eval "$(qsoku .shell bash)"   # ~/.bashrc（zshは~/.zshrc）
 qsoku .shell fish | source    # ~/.config/fish/config.fish
 ```
 
+```powershell
+Invoke-Expression (& qsoku .shell pwsh | Out-String)   # $PROFILE
+```
+
 これは`qsoku`というシェル関数を定義し、本物のバイナリを実行し、居場所を
 持ち帰り、さらに使われている`qsokufile`の名前（と管理用コマンド）への
 TAB補完も有効にする。関数が実際にしていることは

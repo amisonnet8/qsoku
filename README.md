@@ -81,7 +81,7 @@ go install github.com/amisonnet8/qsoku/cmd/qsoku@latest
 ```
 
 Then add one line to your shell's startup file (see
-[cli.md](docs/reference/cli.md#shell-integration) for bash/zsh/fish
+[cli.md](docs/reference/cli.md#shell-integration) for bash/zsh/fish/pwsh
 specifics):
 
 ```sh
@@ -89,6 +89,9 @@ eval "$(qsoku .shell bash)"
 ```
 
 This also wires up shell completion for the names in your `qsokufile`.
+
+On Windows, `qsokufile` commands still run under `sh` (Git for Windows);
+`qsoku .shell pwsh` covers PowerShell as the caller's own shell.
 
 <details>
 <summary>Adding a shortcut, start to finish (click to expand)</summary>
