@@ -42,11 +42,6 @@ For the file format itself, see [qsokufile.md](qsokufile.md).
      on, exactly as `sh` itself would expand them.
    - Standard input, standard output and standard error are passed straight
      through; qsoku does not read or alter them.
-   - On Windows, `sh` means Git for Windows' MSYS `sh.exe` (on `PATH`); the
-     `pwd` in the second line above becomes `pwd -W` there so the location
-     comes out in Windows form (`C:/Users/...`), not MSYS form
-     (`/c/Users/...`) — see [Bringing the working directory
-     back](#bringing-the-working-directory-back).
    - A `qsokufile` entry should not itself call `exit`: since the second
      line is appended to the *same* script, an `exit` inside the entry's own
      command ends the whole script right there, before qsoku's own line
@@ -54,7 +49,9 @@ For the file format itself, see [qsokufile.md](qsokufile.md).
      success or failure instead (as `make` recipes and ordinary shell
      scripts do), the same way `cd //src && make build` in the example below
      does.
-3. `sh` is located via `PATH`, like any other subprocess.
+3. `sh` is located via `PATH`, like any other subprocess — on Windows,
+   that's Git for Windows' MSYS `sh.exe` (see [On Windows](#on-windows) for
+   what setting that up involves).
 
 ### Example
 
@@ -78,7 +75,7 @@ hello, everyone
 
 | Variable | Value |
 |---|---|
-| `QSOKU_ROOT` | The absolute path of the directory holding the `qsokufile` in use (what `//` expands to) |
+| `QSOKU_ROOT` | The absolute path of the directory holding the `qsokufile` in use (what `//` expands to). On Windows this is always the Windows form (`C:/Users/...`, forward slashes — see [On Windows](#on-windows)), which does not string-match `sh`'s own `$PWD`/`pwd` there (MSYS form, `/c/Users/...`) even when they name the same directory |
 | `QSOKU_CWD_FILE` | Set by the shell integration function (see [Shell integration](#shell-integration)) to a temporary file's path. When set, the command above appends the `pwd` line. When unset (for example, qsoku run directly without the shell function), the `pwd` line is left out entirely — appending it regardless would redirect `pwd`'s output to an empty filename, which `sh` reports as an error, for no benefit: nothing would read the file anyway |
 
 ### Bringing the working directory back
@@ -88,8 +85,7 @@ move the caller's shell. The shell integration function reads the location
 `qsoku` finishes in from `QSOKU_CWD_FILE` and `cd`s there itself:
 
 - The location is written to `QSOKU_CWD_FILE` **whether the command
-  succeeds or fails**, and whether the process substitution itself succeeded — this
-  is not conditional. Examples:
+  succeeds or fails** — this is not conditional. Examples:
   - `cd //src` failing (no such directory) leaves `pwd` unchanged, so
     nothing moves when it's read back.
   - `(cd //; make build)` moves inside a subshell, so `pwd` is unaffected
@@ -101,11 +97,13 @@ move the caller's shell. The shell integration function reads the location
 - The location written is the **logical** working directory (`pwd`, not
   `pwd -P`): qsoku follows a symlinked path the same way an interactive
   shell's own `cd` does, rather than resolving it away.
-- On Windows, `pwd -W` is used instead of plain `pwd` (still the logical
-  directory, just in Windows path form). A plain POSIX `sh` (Linux, macOS)
-  does not know that flag; it is tried first with its own error discarded,
-  falling back to plain `pwd` — so the same binary works either way without
-  needing to know which `sh` it is talking to.
+- On Windows, the line is `{ pwd -W 2>/dev/null || pwd; }` instead of plain
+  `pwd`: still the logical directory, just in Windows path form
+  (`C:/Users/...`), which is what a Windows caller (pwsh's `Set-Location`,
+  for one) needs — MSYS form (`/c/Users/...`) doesn't resolve there. Linux
+  and macOS always use plain `pwd`; the fallback only matters if a
+  non-MSYS `sh` (Cygwin, BusyBox, …) is used on Windows instead, since it
+  won't know `-W`.
 - When qsoku's own errors happen **before** the command runs (see
   [Exit codes](#exit-codes)) — the name isn't found, the `qsokufile` can't be
   found or parsed, `sh` can't be started — nothing is written to
@@ -124,10 +122,10 @@ user's own names.
 | `qsoku .rm <name>` | Removes that one line. Error if `<name>` is not defined |
 | `qsoku .list` | Lists the defined names and their commands, one per line, in file order |
 | `qsoku .names` | Lists just the names, one per line — nothing else, ever (see [Shell completion](#shell-completion)) |
-| `qsoku .edit` | Opens the `qsokufile` in use with `$EDITOR`; if unset, falls back to `nano`; if `nano` is not on `PATH` either, errors (exit 1) instead of guessing further |
+| `qsoku .edit` | Opens the `qsokufile` in use with `$EDITOR`; if unset, falls back to `nano`; if `nano` is not on `PATH` either, errors (exit 1) instead of guessing further. `$EDITOR`'s value is spliced into the `sh` command unquoted (see [On Windows](#on-windows) for what that means for an absolute path there), and `nano` is rarely on `PATH` on Windows, so setting `$EDITOR` (or `$env:EDITOR` in pwsh) explicitly is the practical option |
 | `qsoku .where` | Prints the absolute path of the directory holding the `qsokufile` in use (what `//` and `QSOKU_ROOT` expand to) |
 | `qsoku .version` | Prints qsoku's own version, from `runtime/debug.ReadBuildInfo` (see [distribution.md](../../.claude/rules/distribution.md) design note — this is why `go install` alone, without `-ldflags`, still reports a meaningful version) |
-| `qsoku .shell <shell>` | Prints shell code for the given shell (`bash`, `zsh`, `fish`, `pwsh`) that defines the `qsoku` function described below, to `eval`. Unknown `<shell>` is a command-line error (exit 2) |
+| `qsoku .shell <shell>` | Prints shell code for the given shell (`bash`, `zsh`, `fish`, `pwsh`) that defines the `qsoku` function described below, to `eval` (pwsh: `Invoke-Expression`, which has no `eval`). Unknown `<shell>` is a command-line error (exit 2) |
 | `qsoku .help` | Prints usage and the list of defined names. Running `qsoku` with **no arguments at all** prints the same thing (the `git`/`git --help` convention, without an option to spell) |
 
 - `.add` and `.rm` write to the `qsokufile` found by walking up from the
@@ -168,7 +166,7 @@ build: go build ./...
 
 ## Shell integration
 
-`.bashrc` (or the equivalent for your shell) needs one line:
+Your shell's startup file needs one line. For bash:
 
 ```sh
 eval "$(qsoku .shell bash)"
@@ -176,7 +174,7 @@ eval "$(qsoku .shell bash)"
 
 | Shell | Typical file |
 |---|---|
-| bash | `~/.bashrc` |
+| bash | `~/.bashrc` (also Git Bash on Windows — see [On Windows](#on-windows)) |
 | zsh | `~/.zshrc` |
 | fish | `~/.config/fish/config.fish` (using `qsoku .shell fish \| source`, fish's own idiom) |
 | pwsh | `$PROFILE` (using `Invoke-Expression (& qsoku .shell pwsh \| Out-String)`, since pwsh has no `eval`) |
@@ -204,14 +202,24 @@ The same `.shell` output also defines that shell's completion for qsoku's
 defined names (see [Shell completion](#shell-completion)) — one `eval` (or,
 for pwsh, `Invoke-Expression`) covers both.
 
-pwsh here is only ever the **caller's** shell: `qsokufile` commands
-themselves always run under `sh` (see [qsokufile.md](qsokufile.md)) on every
-platform, including Windows, where that means Git for Windows' `sh.exe` —
-install Git for Windows (which most Windows development setups already
-have) and make sure its `sh.exe` is on `PATH`. WSL also works, the same way
-it would for any other Linux tool. Windows PowerShell 5.1 (the version that
-ships with Windows) is not tested; PowerShell 7+ (`pwsh`) is the target, the
-same on Windows, Linux and macOS.
+### On Windows
+
+`qsokufile` commands themselves always run under `sh` (see
+[qsokufile.md](qsokufile.md)) — on every platform, Windows included. That
+`sh` is Git for Windows' MSYS `sh.exe`, which the default Git for Windows
+installer does not put on `PATH` by itself (it adds `Git\cmd`, not
+`Git\bin`, where `sh.exe` lives): add `Git\bin` (typically
+`C:\Program Files\Git\bin`) to `PATH` explicitly. WSL also works, the same
+way it would for any other Linux tool.
+
+The *caller's* shell — the one running the `qsoku` function above, never
+the one running `qsokufile` entries — can be either Git Bash (`bash`, same
+setup as any other bash) or pwsh (PowerShell 7+; Windows PowerShell 5.1,
+the version that ships with Windows, is not tested). pwsh is cross-platform
+and uses the same `.shell pwsh` script on Windows, Linux and macOS.
+Git Bash has one extra caveat of its own: see
+[qsokufile.md](qsokufile.md#-the-qsokufiles-location) on MSYS rewriting a
+`//`-prefixed argument before qsoku ever sees it.
 
 ## Shell completion
 
@@ -250,7 +258,7 @@ with.
 | 0 | Success |
 | 1 | qsoku could not do what was asked: no `qsokufile` found, the `qsokufile` fails to parse (bad line, duplicate name), `sh` could not be started, `$EDITOR`/`nano` not found for `.edit`, and so on |
 | 2 | The command line is wrong: the given name is not defined in the `qsokufile` (management commands included — an unknown `.foo`), or a management command got the wrong number of arguments |
-| *(other)* | Once `sh` starts running the entry's command, qsoku's own exit code stops applying: the command's exit code (0-255) is returned unchanged, including 128+*n* if it was killed by signal *n*. qsoku never substitutes its own value once the command has actually run |
+| *(other)* | Once `sh` starts running the entry's command, qsoku's own exit code stops applying: the command's exit code (0-255) is returned unchanged, including 128+*n* if it was killed by signal *n*. qsoku never substitutes its own value once the command has actually run. On Windows, whether a signal to `sh` surfaces this way is not yet confirmed on real hardware (tests are skipped there for now) |
 
 This mirrors mtqg's own convention (0 / 1 / 2) rather than inventing a
 separate scheme (see [CLAUDE.md](../../CLAUDE.md) "独自の決まりを増やさない").

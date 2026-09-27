@@ -100,17 +100,22 @@ and is never affected by this rule.
 - **Arguments typed by the user**: `qsoku cd //src` passes `//src` as an
   argument to the `cd` entry's command (after the user's own shell has
   already removed any quotes). qsoku substitutes it the same way, so `$1`
-  inside the qsokufile's command receives `/path/to/qsokufile/dir/src`.
+  inside the qsokufile's command receives `/path/to/qsokufile/dir/src`
+  (`C:/Users/you/project/src` on Windows).
   - **On Windows, from Git Bash**: MSYS (the environment behind Git for
-    Windows' `sh.exe`/`bash.exe`) automatically rewrites an argument that
-    looks like a POSIX absolute path — one starting with `/` — before a
-    native (non-MSYS) program such as `qsoku.exe` ever sees it. Since `//src`
-    starts that way too, it can be caught by this unrelated MSYS behavior
-    and arrive already altered. Set `MSYS_NO_PATHCONV=1` (or the more
-    targeted `MSYS2_ARG_CONV_EXCL=//`) to turn this off. This is a property
-    of the calling shell, not something qsoku itself can detect or correct
-    — by the time qsoku reads its arguments, the conversion has already
-    happened.
+    Windows' `sh.exe`/`bash.exe`) treats a *leading* `//` in an argument as
+    a signal to leave the rest unconverted when calling a native (non-MSYS)
+    program such as `qsoku.exe` — it consumes one of the two slashes as
+    that signal and passes the remainder through as-is. So `//src` arrives
+    at qsoku as plain `/src`: one `/`, not two, and so already outside
+    qsoku's own `//` rule (`SubstituteArg` only rewrites an argument that
+    still starts with `//`) — qsoku passes it through unchanged, unrelated
+    to qsoku's own substitution logic. Set `MSYS_NO_PATHCONV=1` to turn this
+    MSYS behavior off (verified in this project's own tests); the more
+    targeted `MSYS2_ARG_CONV_EXCL=//` is not verified here but should work
+    the same way. This is a property of the calling shell, not something
+    qsoku itself can detect or correct — by the time qsoku reads its
+    arguments, the conversion has already happened.
 - Implementation note: recognizing quotes needs only to track whether the
   lexer is inside single quotes, double quotes, or after a backslash — full
   shell grammar is not required.

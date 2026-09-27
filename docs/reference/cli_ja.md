@@ -25,9 +25,8 @@ qsoku <名前> [引数...]
    - `pwd`の行がある場合、`;`ではなく**改行**でつなぐ——コマンド末尾の`# …`コメントがこの行まで飲み込んでしまうのを避けるため。
    - `"$@"`が`[引数...]`をそのままコマンドへ渡し、`$1`・`$2`……として、`sh`自身が展開するのと同じように使える。
    - 標準入出力・標準エラー出力はそのまま素通しする。qsokuは読みも変えもしない。
-   - Windowsでは`sh`はGit for Windowsの（`PATH`にある）MSYS `sh.exe`を指す。上の2行目の`pwd`は、Windowsではそこだけ`pwd -W`になり、居場所がMSYS形式（`/c/Users/...`）ではなくWindows形式（`C:/Users/...`）で出る——[居場所を持ち帰る](#居場所を持ち帰る)参照。
    - **qsokufileの項目自身は`exit`を呼んではいけない**：2行目はその**同じスクリプト**に足されるので、項目のコマンドの中で`exit`を呼ぶと、qsoku自身の行に届く前にスクリプト全体がそこで終わってしまう。成否は、項目の最後のコマンド自身の終了コードに委ねること（`make`のレシピや、普通のシェルスクリプトと同じ考え方）。下の例の`cd //src && make build`もそうしている。
-3. `sh`はほかの子プロセスと同じく`PATH`から探す。
+3. `sh`はほかの子プロセスと同じく`PATH`から探す——Windowsでは、これはGit for WindowsのMSYS `sh.exe`を指す（設定については[Windowsでは](#windowsでは)参照）。
 
 ### 例
 
@@ -51,7 +50,7 @@ hello, everyone
 
 | 変数 | 値 |
 |---|---|
-| `QSOKU_ROOT` | 使われている`qsokufile`が置いてあるディレクトリの絶対パス（`//`が展開される先） |
+| `QSOKU_ROOT` | 使われている`qsokufile`が置いてあるディレクトリの絶対パス（`//`が展開される先）。Windowsでは常にWindows形式（`C:/Users/...`。フォワードスラッシュ——[Windowsでは](#windowsでは)参照）になり、同じディレクトリを指していても`sh`自身の`$PWD`・`pwd`（MSYS形式`/c/Users/...`）とは文字列として一致しない |
 | `QSOKU_CWD_FILE` | シェル連携の関数（[シェル連携](#シェル連携)参照）が一時ファイルのパスに設定する。設定されているとき、上のコマンドに`pwd`の行が足される。設定されていないとき（たとえばシェル関数を介さず直接qsokuを実行したとき）は、`pwd`の行そのものを付けない——構わず付けると、`pwd`の出力を空文字列のファイル名へリダイレクトすることになり、`sh`がエラーを報告する。付けたところでどのみち誰も読まないので、付けない |
 
 ### 居場所を持ち帰る
@@ -63,7 +62,7 @@ hello, everyone
   - `(cd //; make build)`は括弧の中で移動するので、成否にかかわらず`pwd`に影響しない（[qsokufile_ja.md](qsokufile_ja.md#qsokufileの置いてある場所)参照）。
   - `cd //src && make build`のように括弧**なし**で書いてビルドが失敗した場合は、そこまで進んだ居場所を持ち帰る——利用者が括弧を付けずに書いた以上、失敗しても移動すること自体は意図されているとみなす。
 - 書き出す居場所は**論理パス**（`pwd`。`pwd -P`ではない）：qsokuは対話シェル自身の`cd`と同じく、シンボリックリンクをたどったままのパスを扱い、解決して消したりはしない。
-- Windowsでは、素の`pwd`の代わりに`pwd -W`を使う（論理パスであることは変わらず、Windows形式になるだけ）。素のPOSIX `sh`（Linux・macOS）はこのオプションを知らずエラーになるので、まず`pwd -W`を試してそのエラーは捨て、失敗したら素の`pwd`に落ちる——どちらの`sh`と話しているか知らなくても、同じバイナリで両方に対応できる。
+- Windowsでは、この行が素の`pwd`の代わりに`{ pwd -W 2>/dev/null || pwd; }`になる：論理パスであることは変わらず、Windows形式（`C:/Users/...`）になるだけ——Windows側の呼び出し元（pwshの`Set-Location`など）が必要とする形で、MSYS形式（`/c/Users/...`）はそこでは解決できない。Linux・macOSでは常に素の`pwd`を使う。フォールバックが効くのは、Windowsで（MSYSではなく）Cygwin・BusyBoxなど`-W`を知らない別の`sh`を使った場合だけ。
 - コマンドが実行される**前**にqsoku自身のエラーが起きたとき（[終了コード](#終了コード)参照）——名前が見つからない、`qsokufile`が見つからない・解析できない、`sh`を起動できない——は、`QSOKU_CWD_FILE`には何も書かれない。シェル関数は、読んだ内容が空なら「移動しない」として扱う。
 
 ## 管理用コマンド
@@ -77,10 +76,10 @@ hello, everyone
 | `qsoku .rm <名前>` | その1行を消す。`<名前>`が定義されていなければエラー |
 | `qsoku .list` | 定義されている名前とそのコマンドを、ファイルに書かれた順で1行ずつ一覧する |
 | `qsoku .names` | 名前だけを1行ずつ一覧する——それ以外は何も出さない、常に（[シェル補完](#シェル補完)参照） |
-| `qsoku .edit` | 使われている`qsokufile`を`$EDITOR`で開く。未設定なら`nano`に落とす。`nano`も`PATH`に無ければ、それ以上推測せずエラーにする（終了コード1） |
+| `qsoku .edit` | 使われている`qsokufile`を`$EDITOR`で開く。未設定なら`nano`に落とす。`nano`も`PATH`に無ければ、それ以上推測せずエラーにする（終了コード1）。`$EDITOR`の値は引用符を付けずに`sh`のコマンドへ埋め込む（Windowsでの絶対パス指定にどう影響するかは[Windowsでは](#windowsでは)参照）。Windowsでは`nano`が`PATH`に無いことが多いので、`$EDITOR`（pwshなら`$env:EDITOR`）を明示的に設定するのが現実的 |
 | `qsoku .where` | 使われている`qsokufile`が置いてあるディレクトリの絶対パスを表示する（`//`・`QSOKU_ROOT`が展開される先） |
 | `qsoku .version` | qsoku自身のバージョンを`runtime/debug.ReadBuildInfo`から表示する（[distribution.md](../../.claude/rules/distribution.md)の設計メモを参照——これにより`-ldflags`なしの`go install`だけでも意味のあるバージョンが出る） |
-| `qsoku .shell <shell>` | 指定したシェル（`bash`・`zsh`・`fish`・`pwsh`）向けに、下記の`qsoku`関数を定義するシェルコードを`eval`用に表示する。未知の`<shell>`はコマンドラインの誤り（終了コード2） |
+| `qsoku .shell <shell>` | 指定したシェル（`bash`・`zsh`・`fish`・`pwsh`）向けに、下記の`qsoku`関数を定義するシェルコードを`eval`用に表示する（pwshには`eval`が無いので`Invoke-Expression`）。未知の`<shell>`はコマンドラインの誤り（終了コード2） |
 | `qsoku .help` | 使い方と、定義されている名前の一覧を表示する。**引数なしで**`qsoku`とだけ打った場合も同じものを表示する（`git`・`git --help`と同じ考え方。オプションのつづりは要らない） |
 
 - `.add`・`.rm`は、カレントディレクトリから親へたどって見つかった`qsokufile`に書き込む。見つからなければ、作らずにエラーとし、`.init`を案内する。
@@ -111,7 +110,7 @@ build: go build ./...
 
 ## シェル連携
 
-`.bashrc`（や各シェルの相当ファイル）に1行書けばよい：
+使っているシェルの起動ファイルに1行書けばよい。bashなら：
 
 ```sh
 eval "$(qsoku .shell bash)"
@@ -119,7 +118,7 @@ eval "$(qsoku .shell bash)"
 
 | シェル | 典型的なファイル |
 |---|---|
-| bash | `~/.bashrc` |
+| bash | `~/.bashrc`（WindowsのGit Bashも含む——[Windowsでは](#windowsでは)参照） |
 | zsh | `~/.zshrc` |
 | fish | `~/.config/fish/config.fish`（`qsoku .shell fish \| source`というfish自身の書き方を使う） |
 | pwsh | `$PROFILE`（`Invoke-Expression (& qsoku .shell pwsh \| Out-String)`を使う。pwshには`eval`が無いため） |
@@ -141,7 +140,11 @@ qsoku() {
 
 `.shell`の同じ出力には、そのシェル向けのqsokuの名前の補完も定義されている（[シェル補完](#シェル補完)参照）——1回の`eval`（pwshなら`Invoke-Expression`）で両方そろう。
 
-ここでのpwshはあくまで**呼び出し元**のシェルにすぎない：`qsokufile`のコマンド自体は、どのプラットフォームでも（Windowsを含めて）常に`sh`で実行される（[qsokufile_ja.md](qsokufile_ja.md)参照）——Windowsでの`sh`はGit for Windowsの`sh.exe`を指す。Git for Windows（Windowsの開発環境にはたいてい元々入っている）を入れて、その`sh.exe`が`PATH`に通っていることを確かめること。WSLでも、ほかのLinuxツールと同じように動く。Windows標準の旧PowerShell 5.1は動作確認の対象外で、PowerShell 7以降（`pwsh`）がWindows・Linux・macOS共通の対象。
+### Windowsでは
+
+`qsokufile`のコマンド自体は、どのプラットフォームでも（Windowsを含めて）常に`sh`で実行される（[qsokufile_ja.md](qsokufile_ja.md)参照）。その`sh`はGit for WindowsのMSYS `sh.exe`で、Git for Windowsの既定のインストーラはこれを自動では`PATH`に通さない（通すのは`sh.exe`のある`Git\bin`ではなく`Git\cmd`の方）——`Git\bin`（典型的には`C:\Program Files\Git\bin`）を自分で`PATH`に足すこと。WSLでも、ほかのLinuxツールと同じように動く。
+
+**呼び出し元**のシェル——上の`qsoku`関数を実行する側のシェルで、`qsokufile`の項目を実行するシェルとは別物——は、Git Bash（`bash`。ほかのbashと同じ設定）でもpwsh（PowerShell 7以降。Windows標準の旧PowerShell 5.1は動作確認の対象外）でもよい。pwshはクロスプラットフォームで、Windows・Linux・macOSで同じ`.shell pwsh`のスクリプトを使う。Git Bashにはもう1つ、それ自身の注意点がある：`//`から始まる引数をqsokuが受け取る前にMSYSが書き換えてしまう件について、[qsokufile_ja.md](qsokufile_ja.md#qsokufileの置いてある場所)を参照。
 
 ## シェル補完
 
@@ -159,6 +162,6 @@ qsoku() {
 | 0 | 成功 |
 | 1 | qsokuが頼まれたことを実行できなかった：`qsokufile`が見つからない、`qsokufile`が解析できない（不正な行、名前の重複）、`sh`を起動できない、`.edit`で`$EDITOR`/`nano`が見つからない、など |
 | 2 | コマンドラインの誤り：与えられた名前が`qsokufile`に定義されていない（管理用コマンドを含む——未知の`.foo`）、管理用コマンドの引数の数が違う |
-| *(それ以外)* | `sh`がその項目のコマンドを実行し始めた後は、qsoku自身の終了コードの決まりは適用されない：コマンドの終了コード（0〜255。シグナル*n*で終わった場合は128+*n*を含む）をそのまま返す。コマンドが実際に実行された後、qsokuが自分の値に差し替えることは決してない |
+| *(それ以外)* | `sh`がその項目のコマンドを実行し始めた後は、qsoku自身の終了コードの決まりは適用されない：コマンドの終了コード（0〜255。シグナル*n*で終わった場合は128+*n*を含む）をそのまま返す。コマンドが実際に実行された後、qsokuが自分の値に差し替えることは決してない。Windowsでは、`sh`へのシグナルがこの形で見えるかどうかは実機でまだ確認できていない（今のところテストをSkipしている） |
 
 これはmakeのように失敗したレシピに一律`2`を返す決まりとは違い、mtqg自身の決まり（0／1／2）に揃えたもので、独自の体系を新しく作らない（[CLAUDE.md](../../CLAUDE.md)「独自の決まりを増やさない」参照）。qsokuは薄いラッパーなので、CIで`qsoku test`を実行すれば、`go test`自身が出す終了コードがそのまま見える。
