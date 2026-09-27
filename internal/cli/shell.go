@@ -16,23 +16,26 @@ import (
 //go:embed shells
 var shellScripts embed.FS
 
-var shellFiles = map[string]string{
+var shellFiles = map[string]string{ //nolint:gosec // G101 false positive: "pwsh" is PowerShell's executable name, not a credential
 	"bash": "shells/qsoku.bash",
 	"zsh":  "shells/qsoku.zsh",
 	"fish": "shells/qsoku.fish",
+	"pwsh": "shells/qsoku.ps1",
 }
 
 // runShell implements "qsoku .shell <shell>" (docs/reference/cli.md
 // "Management commands"): prints that shell's integration and completion
-// script, to eval.
+// script, to eval. "pwsh" is PowerShell (7+, cross-platform); it is not
+// where qsokufile commands run (that is always sh -- CLAUDE.md), only the
+// caller's own shell.
 func runShell(args []string, stdout, stderr io.Writer) int {
 	if len(args) != 1 {
-		_, _ = fmt.Fprintln(stderr, "usage: qsoku .shell <bash|zsh|fish>")
+		_, _ = fmt.Fprintln(stderr, "usage: qsoku .shell <bash|zsh|fish|pwsh>")
 		return exitCommandLine
 	}
 	path, ok := shellFiles[args[0]]
 	if !ok {
-		_, _ = fmt.Fprintf(stderr, "qsoku: unknown shell %q (want bash, zsh, or fish)\n", args[0])
+		_, _ = fmt.Fprintf(stderr, "qsoku: unknown shell %q (want bash, zsh, fish, or pwsh)\n", args[0])
 		return exitCommandLine
 	}
 

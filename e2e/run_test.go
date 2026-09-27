@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 )
@@ -67,6 +68,11 @@ func TestRunPassesThroughExitCode(t *testing.T) {
 // TestRunSignaledCommand checks that a command killed by a signal reports
 // 128+n, the same convention mtqg itself uses.
 func TestRunSignaledCommand(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		// See the same skip in internal/run/run_test.go: unconfirmed on
+		// real Windows CI yet (todo a251592e2c).
+		t.Skip("signal delivery to sh on Windows is not confirmed yet")
+	}
 	dir := resolvedTempDir(t)
 	writeQsokufile(t, dir, "term: kill -TERM $$\n")
 

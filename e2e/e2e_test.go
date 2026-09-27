@@ -13,6 +13,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"testing"
 )
 
@@ -25,7 +26,11 @@ func TestMain(m *testing.M) {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
-	binary = filepath.Join(dir, "qsoku")
+	name := "qsoku"
+	if runtime.GOOS == "windows" {
+		name = "qsoku.exe"
+	}
+	binary = filepath.Join(dir, name)
 
 	build := exec.Command("go", "build", "-o", binary, "github.com/amisonnet8/qsoku/cmd/qsoku") //nolint:gosec // fixed arguments building the real qsoku binary under test, not user input
 	build.Stdout, build.Stderr = os.Stderr, os.Stderr

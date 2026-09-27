@@ -14,6 +14,7 @@ func TestRun_shell(t *testing.T) {
 		{"bash", "qsoku()"},
 		{"zsh", "qsoku()"},
 		{"fish", "function qsoku"},
+		{"pwsh", "function qsoku"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.shell, func(t *testing.T) {

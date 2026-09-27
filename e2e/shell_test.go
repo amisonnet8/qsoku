@@ -280,3 +280,37 @@ func TestCompletionInFish(t *testing.T) {
 		}
 	})
 }
+
+// quotePwsh quotes a string as a PowerShell single-quoted string literal
+// (only ' itself needs doubling; unlike sh, PowerShell does no other
+// expansion inside single quotes).
+func quotePwsh(s string) string {
+	return "'" + strings.ReplaceAll(s, "'", "''") + "'"
+}
+
+func TestShellIntegrationPwsh(t *testing.T) {
+	pwsh := shellPath(t, "pwsh")
+	dir, sub := newShellRepo(t)
+
+	var b strings.Builder
+	b.WriteString("Invoke-Expression (& qsoku .shell pwsh | Out-String)\n")
+	for _, c := range cwdCases {
+		b.WriteString("Set-Location -LiteralPath " + quotePwsh(dir) + "\n")
+		b.WriteString("qsoku " + c.name + "\n")
+		b.WriteString("Write-Output (\"STATUS:\" + $LASTEXITCODE)\n")
+		b.WriteString("Write-Output (Get-Location).Path\n")
+	}
+	out := runShellScript(t, dir, b.String(), pwsh, "-NoProfile", "-NoLogo", "-Command", "-")
+	checkCwdResults(t, dir, sub, parseCwdOutput(t, out))
+}
+
+func TestCompletionInPwsh(t *testing.T) {
+	pwsh := shellPath(t, "pwsh")
+	dir, _ := newShellRepo(t)
+
+	script := "Invoke-Expression (& qsoku .shell pwsh | Out-String)\n" +
+		"$r = TabExpansion2 -inputScript 'qsoku ' -cursorColumn 6\n" +
+		"$r.CompletionMatches | ForEach-Object { $_.CompletionText }\n"
+	out := runShellScript(t, dir, script, pwsh, "-NoProfile", "-NoLogo", "-Command", "-")
+	checkCandidates(t, strings.Split(strings.TrimRight(out, "\n"), "\n"))
+}

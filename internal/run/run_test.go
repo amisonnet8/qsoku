@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 )
@@ -132,6 +133,14 @@ func TestExecute_noCwdFile(t *testing.T) {
 }
 
 func TestExecute_signal(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		// sh on Windows is Git for Windows' MSYS sh.exe; whether "kill -TERM
+		// $$" against it still surfaces as 128+SIGTERM through Go's
+		// syscall.WaitStatus (which on Windows has no real signal concept)
+		// has not been confirmed on real Windows CI yet (see todo
+		// a251592e2c). Skip rather than assert something unverified.
+		t.Skip("signal delivery to sh on Windows is not confirmed yet")
+	}
 	var stdout, stderr bytes.Buffer
 	code, err := Execute("kill -TERM $$; sleep 1", t.TempDir(), nil, nil, &stdout, &stderr)
 	if err != nil {

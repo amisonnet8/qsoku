@@ -8,6 +8,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"runtime"
 	"syscall"
 )
 
@@ -15,7 +16,15 @@ import (
 // (docs/reference/cli.md "Bringing the working directory back"). It is
 // joined to the command with a newline, not ';', so a trailing '#' comment
 // on the command can't swallow it.
+//
+// On Windows, `sh` is Git for Windows' MSYS `sh.exe`: its own `pwd` prints
+// the MSYS path form (/c/Users/...), which the shell integration's
+// Set-Location/cd cannot use. `pwd -W` prints the Windows form (C:/Users/...)
+// instead; a plain POSIX sh (Linux, macOS) does not know that flag and
+// exits 1 with a message on stderr, so it is written first with stderr
+// discarded, falling back to plain `pwd` if it fails.
 const trailer = "\n__status=$?; pwd > \"$QSOKU_CWD_FILE\"; exit $__status"
+const trailerWindows = "\n__status=$?; { pwd -W 2>/dev/null || pwd; } > \"$QSOKU_CWD_FILE\"; exit $__status"
 
 // Execute runs command with sh, from the current directory, with root
 // available to it as QSOKU_ROOT. args become $1, $2, and so on inside
@@ -35,7 +44,11 @@ const trailer = "\n__status=$?; pwd > \"$QSOKU_CWD_FILE\"; exit $__status"
 func Execute(command, root string, args []string, stdin io.Reader, stdout, stderr io.Writer) (int, error) {
 	script := command
 	if _, ok := os.LookupEnv("QSOKU_CWD_FILE"); ok {
-		script += trailer
+		if runtime.GOOS == "windows" {
+			script += trailerWindows
+		} else {
+			script += trailer
+		}
 	}
 
 	cmdArgs := append([]string{"-c", script, "qsoku"}, args...)
