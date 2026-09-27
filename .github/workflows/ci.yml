@@ -19,7 +19,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-go@v7
@@ -29,12 +29,30 @@ jobs:
         with:
           version: v2.13.2
           install-only: true
+      # windows-latest has no `make` (Makefile assumes a POSIX shell -- see
+      # its own header comment), so its steps call go/golangci-lint
+      # directly instead of through make check/make test. sh itself (Git
+      # for Windows) and pwsh are both present on windows-latest by default
+      # (docs/reference/cli.md "Shell integration"); zsh/fish e2e tests skip
+      # themselves there (e2e/shell_test.go shellPath).
       - name: make check
+        if: runner.os != 'Windows'
         run: make check
+      - name: check (windows)
+        if: runner.os == 'Windows'
+        run: |
+          go vet ./...
+          go vet -tags e2e ./e2e/...
+          golangci-lint run
+          go test ./...
       # e2e (started in Step 7, docs/reference/ examples added in Step 8)
       # runs the real binary against real shells, on every OS in the matrix.
       - name: make test
+        if: runner.os != 'Windows'
         run: make test
+      - name: test (windows)
+        if: runner.os == 'Windows'
+        run: go test -tags e2e -count=1 ./e2e/...
 
   race:
     name: race (${{ matrix.os }})

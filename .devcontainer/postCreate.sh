@@ -10,11 +10,12 @@ set -euo pipefail
 # ShellCheck:     Static analysis of tracked *.sh and *.bash files.
 #                 Comment lines must not start with the lowercase directive word,
 #                 or ShellCheck parses them as directives (SC1072/SC1073).
-# zsh, fish:      Two of the three shells qsoku's completion and shell integration
-#                 support (.claude/rules/testing.md). PowerShell is not a target
-#                 (qsokufile commands always run under sh).
+# zsh, fish:      Two of the shells qsoku's completion and shell integration
+#                 support (.claude/rules/testing.md). PowerShell (pwsh) is
+#                 the third; it is installed separately below (Microsoft's
+#                 own apt repository, not Debian's).
 sudo apt-get update
-sudo apt-get install -y make wget gnupg lsb-release gcc jq shellcheck zsh fish
+sudo apt-get install -y make wget gnupg lsb-release gcc jq shellcheck zsh fish apt-transport-https software-properties-common
 
 # Trivy: known vulnerabilities (CVE) and license compatibility of dependencies.
 # Installed from the official apt repository.
@@ -31,6 +32,17 @@ sudo chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg
 echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list >/dev/null
 sudo apt-get update
 sudo apt-get install -y gh
+
+# PowerShell (pwsh): the third shell qsoku's shell integration and
+# completion support (docs/reference/cli.md "Shell integration"). It is
+# only ever the *caller's* shell -- qsokufile commands themselves always
+# run under sh, on every OS (CLAUDE.md "実行は常にsh"). Installed from
+# Microsoft's own apt repository (same pattern as Trivy and gh above).
+wget -q "https://packages.microsoft.com/config/debian/12/packages-microsoft-prod.deb" -O /tmp/packages-microsoft-prod.deb
+sudo dpkg -i /tmp/packages-microsoft-prod.deb
+rm /tmp/packages-microsoft-prod.deb
+sudo apt-get update
+sudo apt-get install -y powershell
 
 # golangci-lint: lint (.golangci.yaml). The official install script puts the
 # binary into GOPATH/bin. The version is pinned so that lint results do not

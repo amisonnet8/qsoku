@@ -11,6 +11,7 @@ builds:
     goos:
       - linux
       - darwin
+      - windows
     goarch:
       - amd64
       - arm64
@@ -20,6 +21,10 @@ builds:
 archives:
   - id: qsoku
     formats: [tar.gz]
+    # Windows users expect a .zip, not a .tar.gz (distribution.md).
+    format_overrides:
+      - goos: windows
+        formats: [zip]
 
 checksum:
   name_template: "checksums.txt"
