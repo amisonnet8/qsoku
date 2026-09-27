@@ -8,7 +8,15 @@ import (
 )
 
 // fakeEditor writes a shell script that appends a marker line to whatever
-// file it's given as $1, and returns its absolute path.
+// file it's given as $1, and returns its absolute path in forward-slash
+// form. runEdit splices $EDITOR into the sh script text unquoted (so a
+// multi-word value like "code --wait" still splits into arguments --
+// docs/reference/cli.md ".edit"); on Windows, sh (Git for Windows' MSYS
+// sh.exe) would otherwise parse t.TempDir()'s native backslashes as
+// escapes and mangle the path. A real Windows $EDITOR pointing at an
+// absolute path needs the same forward-slash form for the same reason --
+// this fixture matches that, rather than working around a test-only
+// artifact.
 func fakeEditor(t *testing.T) string {
 	t.Helper()
 	path := filepath.Join(t.TempDir(), "fake-editor.sh")
@@ -16,7 +24,7 @@ func fakeEditor(t *testing.T) string {
 	if err := os.WriteFile(path, []byte(script), 0o700); err != nil { //nolint:gosec // an executable test fixture needs the execute bit
 		t.Fatal(err)
 	}
-	return path
+	return filepath.ToSlash(path)
 }
 
 func TestRun_edit(t *testing.T) {

@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"slices"
 	"strconv"
 	"strings"
@@ -288,6 +289,28 @@ func quotePwsh(s string) string {
 	return "'" + strings.ReplaceAll(s, "'", "''") + "'"
 }
 
+// ansiEscape matches a terminal control sequence (CSI, e.g. "\x1b[?1h").
+// pwsh emits these around running a native command (qsoku, here) even when
+// its own standard output is a pipe rather than a real terminal -- observed
+// on both Linux and macOS CI runners, not just interactively. cleanPwshOutput
+// strips them and drops any line that turns out to be empty once they are
+// gone (a sequence that landed on a line of its own), so the real output
+// lines this package's other parsing helpers expect line up exactly as if
+// pwsh had never touched the terminal at all.
+var ansiEscape = regexp.MustCompile(`\x1b\[[0-9;?]*[a-zA-Z]`)
+
+func cleanPwshOutput(s string) string {
+	s = ansiEscape.ReplaceAllString(s, "")
+	lines := strings.Split(s, "\n")
+	kept := lines[:0]
+	for _, l := range lines {
+		if l != "" {
+			kept = append(kept, l)
+		}
+	}
+	return strings.Join(kept, "\n")
+}
+
 func TestShellIntegrationPwsh(t *testing.T) {
 	pwsh := shellPath(t, "pwsh")
 	dir, sub := newShellRepo(t)
@@ -301,7 +324,7 @@ func TestShellIntegrationPwsh(t *testing.T) {
 		b.WriteString("Write-Output (Get-Location).Path\n")
 	}
 	out := runShellScript(t, dir, b.String(), pwsh, "-NoProfile", "-NoLogo", "-Command", "-")
-	checkCwdResults(t, dir, sub, parseCwdOutput(t, out))
+	checkCwdResults(t, dir, sub, parseCwdOutput(t, cleanPwshOutput(out)))
 }
 
 func TestCompletionInPwsh(t *testing.T) {
@@ -312,5 +335,6 @@ func TestCompletionInPwsh(t *testing.T) {
 		"$r = TabExpansion2 -inputScript 'qsoku ' -cursorColumn 6\n" +
 		"$r.CompletionMatches | ForEach-Object { $_.CompletionText }\n"
 	out := runShellScript(t, dir, script, pwsh, "-NoProfile", "-NoLogo", "-Command", "-")
+	out = cleanPwshOutput(out)
 	checkCandidates(t, strings.Split(strings.TrimRight(out, "\n"), "\n"))
 }

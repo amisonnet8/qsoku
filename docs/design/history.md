@@ -163,3 +163,15 @@ todo `a251592e2c`（人間が登録）で、これまで「対象外」として
 **居場所の持ち帰りのパス形式の食い違い：** Git Bashの`sh`の`pwd`はMSYS形式のパス（`/c/Users/...`）を返すが、pwshの`Set-Location`はこの形式を解釈できない。`internal/run`の持ち帰り行を、Windowsでは`pwd -W`（Windows形式のパス`C:/Users/...`を返す。素のPOSIX `sh`はこのオプションを知らずエラーになるので、まず試してエラーを捨て、失敗したら素の`pwd`にフォールバックする）に変えて解決した。
 
 手元の開発環境はLinuxのdevcontainerだけなので、Windows固有の変更は`GOOS=windows`でのクロスコンパイルによる構文・型チェックまでしか確かめられない。シグナル系のテスト（`kill -TERM $$`がGoの`syscall.WaitStatus`にどう見えるか）は実機Windowsでの検証がまだ無いため、CI（`windows-latest`）で確認できるまでSkipにした。CIへの`windows-latest`追加・GoReleaserのWindows対応（`.zip`）は`make goreleaser-check`で手元確認済み。
+
+## 2026-09-27　Windows・PowerShell対応のCI初回実行で見つかった不具合
+
+上のエントリの内容をpushしたところ、`windows-latest`・`ubuntu-latest`・`macos-latest`のCIで以下が判明した。
+
+- **`ubuntu-latest`・`macos-latest`：`TestShellIntegrationPwsh`・`TestCompletionInPwsh`が、pwshの出力に混ざる終端制御シーケンス（`\x1b[?1h`・`\x1b[?1l`。DECCKM、カーソルキーモードの切り替え）でパース結果が崩れて落ちた。** pwshは、標準出力がパイプ（実端末ではない）でも、ネイティブコマンド（ここでは`qsoku`本体）を呼ぶ前後でこの制御シーケンスを出すことがある。`e2e/shell_test.go`に`cleanPwshOutput`（正規表現でCSIシーケンスを取り除き、それだけで空行になった行は捨てる）を足し、この2つのテストの出力に通してから既存のパース処理へ渡すようにした。実際にこの環境へpwsh 7.6.6を導入し、修正後に本当にPASSすることを確認済み
+- **`windows-latest`：`t.TempDir()`が返すバックスラッシュ形式のパスを、引用符なしでシェルスクリプトのテキストへ直接埋め込んでいた箇所が、Windows特有の壊れ方をした。** `sh`（Git for WindowsのMSYS `sh.exe`）は、引用符の外のバックスラッシュを次の1文字へのエスケープとして読むため、`C:\Users\...`のようなパスが`C:Users...`のように文字化けする。3か所で直した：
+  - `internal/run/run_test.go`の`TestExecute_cwdHandoff`：テスト自身が組み立てる`cd <path>`のコマンド文字列と、比較に使う期待値の両方を`filepath.ToSlash`で正規化した（Windowsでの持ち帰り行`pwd -W`もフォワードスラッシュ形式を返すため、両者が噛み合う）。ドライブレターの大文字・小文字はWindows上では区別しないため、比較もWindowsのときだけ`strings.EqualFold`にした
+  - `internal/cli/edit_test.go`の`fakeEditor`：返すパスを`filepath.ToSlash`に変えた。`runEdit`（本体側）は`$EDITOR`の値をそのまま——複数語（`code --wait`など）が引数分割されるよう、あえて引用符を付けずに——スクリプトへ埋め込む設計のままにした（Git Bash利用者が元々知っておくべき慣習と同じで、qsoku固有の欠陥ではないため）。実際にWindowsで`$EDITOR`へ絶対パスを設定する場合も、フォワードスラッシュ形式にする必要があることを意味する
+  - `internal/qsokufile/write_test.go`の`TestSetEntry_preservesPermissions`：これはパスの問題ではなく、**Windowsに`chmod`相当のPOSIXパーミッションビットが無い**（Goの`os.Chmod`はWindowsでは読み取り専用属性の切り替えにしかならない）ための失敗。テストの前提そのものがWindowsでは成立しないため、Windowsでは`t.Skip`にした
+
+手元のLinux devcontainerでは実機Windowsを再現できないため、パス関連の修正は`GOOS=windows`のクロスコンパイルでの型・構文チェックまでしか確かめられていない。次のpush後のCI（`windows-latest`）で実際に通るか確認する必要がある。

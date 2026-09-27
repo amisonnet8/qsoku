@@ -58,6 +58,28 @@ func TestExecute_root(t *testing.T) {
 func TestExecute_cwdHandoff(t *testing.T) {
 	target := t.TempDir()
 	start := t.TempDir()
+	// Windows: these paths are spliced into the sh script text below
+	// unquoted, and sh (Git for Windows' MSYS sh.exe) parses a backslash
+	// outside quotes as an escape, stripping it -- t.TempDir()'s native
+	// backslash form would arrive at "cd" mangled (C:\Users\... becomes
+	// C:Users...). The trailer this package itself appends on Windows
+	// (trailerWindows) reports the location via "pwd -W" in the same
+	// forward-slash form regardless, so both the command text and the
+	// expected values below are normalized with it. This is a no-op on
+	// Linux/macOS, where the path already uses '/'.
+	targetSh := filepath.ToSlash(target)
+	startSh := filepath.ToSlash(start)
+
+	// Windows paths are case-insensitive; whether "pwd -W" happens to
+	// report the drive letter in the same case Go's own t.TempDir() used is
+	// not something this package controls, so the comparison below ignores
+	// case there. Elsewhere, exact case is expected as before.
+	pathsEqual := func(a, b string) bool {
+		if runtime.GOOS == "windows" {
+			return strings.EqualFold(a, b)
+		}
+		return a == b
+	}
 
 	readCwdFile := func(t *testing.T, command string, wantCode int) string {
 		t.Helper()
@@ -84,9 +106,9 @@ func TestExecute_cwdHandoff(t *testing.T) {
 	}
 
 	t.Run("no parens, success: location is brought back", func(t *testing.T) {
-		got := readCwdFile(t, "cd "+target, 0)
-		if got != target {
-			t.Errorf("cwd = %q, want %q", got, target)
+		got := readCwdFile(t, "cd "+targetSh, 0)
+		if !pathsEqual(got, targetSh) {
+			t.Errorf("cwd = %q, want %q", got, targetSh)
 		}
 	})
 
@@ -97,16 +119,16 @@ func TestExecute_cwdHandoff(t *testing.T) {
 	// qsokufile entry would -- the natural exit status of its own last
 	// command, here a nested sh -c that itself exits 3.
 	t.Run("no parens, failure: location is still brought back", func(t *testing.T) {
-		got := readCwdFile(t, "cd "+target+`; sh -c "exit 3"`, 3)
-		if got != target {
-			t.Errorf("cwd = %q, want %q", got, target)
+		got := readCwdFile(t, "cd "+targetSh+`; sh -c "exit 3"`, 3)
+		if !pathsEqual(got, targetSh) {
+			t.Errorf("cwd = %q, want %q", got, targetSh)
 		}
 	})
 
 	t.Run("parens: a subshell cd does not affect the outer location", func(t *testing.T) {
-		got := readCwdFile(t, "(cd "+target+`; sh -c "exit 5")`, 5)
-		if got != start {
-			t.Errorf("cwd = %q, want %q (unchanged)", got, start)
+		got := readCwdFile(t, "(cd "+targetSh+`; sh -c "exit 5")`, 5)
+		if !pathsEqual(got, startSh) {
+			t.Errorf("cwd = %q, want %q (unchanged)", got, startSh)
 		}
 	})
 }

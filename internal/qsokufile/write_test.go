@@ -4,6 +4,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 )
 
@@ -151,6 +152,13 @@ func TestRemoveEntry(t *testing.T) {
 }
 
 func TestSetEntry_preservesPermissions(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		// Windows has no POSIX permission bits: os.Chmod there only toggles
+		// the read-only attribute, so the group/other bits this test relies
+		// on (0640) cannot be set or observed at all (os.Stat reports 0666
+		// or 0444 regardless of what was requested).
+		t.Skip("POSIX permission bits do not exist on Windows")
+	}
 	path := writeTestFile(t, "root: cd //\n")
 	if err := os.Chmod(path, 0o640); err != nil { //nolint:gosec // deliberately testing that a non-default, group-readable mode on a t.TempDir() fixture survives SetEntry unchanged
 		t.Fatal(err)
