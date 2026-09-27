@@ -64,14 +64,17 @@ build: echo "building the project"
 test: (cd //; echo "testing from $QSOKU_ROOT")
 ```
 
-`test`は`//`でリポジトリのルートへたどり着く——`qsoku build`は、リポジトリの
-ルートで実行しても3階層下で実行しても同じ近道として動く。
+`test`は`//`でリポジトリのルートへたどり着くので、リポジトリのルートで
+実行しても3階層下で実行しても同じ動きになる。
 
 ## インストール
 
 ```sh
 go install github.com/amisonnet8/qsoku/cmd/qsoku@latest
 ```
+
+または[Releases](https://github.com/amisonnet8/qsoku/releases)からビルド
+済みバイナリをダウンロードする（Linux・macOS・Windows）。
 
 シェルの起動ファイルに1行足す（bash・zsh・fish・pwshそれぞれの詳細は
 [cli_ja.md](docs/reference/cli_ja.md#シェル連携)を参照）：
@@ -82,7 +85,10 @@ eval "$(qsoku .shell bash)"
 
 これで、`qsokufile`に定義した名前のシェル補完も一緒に有効になる。
 
-Windowsでも`qsokufile`のコマンドは引き続き`sh`（Git for Windows）で実行される。`qsoku .shell pwsh`は、呼び出し元のシェルとしてのPowerShell対応。
+Windowsでも`qsokufile`のコマンドは引き続き`sh`で実行される——Git for
+Windowsの`sh.exe`を`PATH`に通しておくこと。PowerShell 7以降からは、
+代わりに`$PROFILE`へ`Invoke-Expression (& qsoku .shell pwsh | Out-String)`
+を足す。Git Bashも、Linux・macOSと同じやり方でそのまま使える。
 
 <details>
 <summary>近道を足す一連の流れ（クリックで展開）</summary>

@@ -51,7 +51,8 @@ running with arg: everyone
 Every argument after the name is passed straight through to the command, as
 `$1`, `$2`, and so on — exactly as `sh` itself would expand them. The
 command always runs with `sh`, no matter which shell you typed `qsoku`
-from, so a `qsokufile` behaves the same for the whole team.
+from, so a `qsokufile` behaves the same for the whole team (on Windows,
+that's Git for Windows' `sh.exe`, which needs to be on `PATH`).
 
 ## `//` is the qsokufile's own location
 

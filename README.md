@@ -70,15 +70,18 @@ build: echo "building the project"
 test: (cd //; echo "testing from $QSOKU_ROOT")
 ```
 
-`test` uses `//` to reach the repository root — from `qsoku build` you get the
-same shortcut whether you run it from the repository root or three
-directories down.
+`test` uses `//` to reach the repository root, so it behaves the same
+whether you run it from the root or three directories down.
 
 ## Install
 
 ```sh
 go install github.com/amisonnet8/qsoku/cmd/qsoku@latest
 ```
+
+Or download a prebuilt binary from
+[Releases](https://github.com/amisonnet8/qsoku/releases) (Linux, macOS,
+Windows).
 
 Then add one line to your shell's startup file (see
 [cli.md](docs/reference/cli.md#shell-integration) for bash/zsh/fish/pwsh
@@ -90,8 +93,10 @@ eval "$(qsoku .shell bash)"
 
 This also wires up shell completion for the names in your `qsokufile`.
 
-On Windows, `qsokufile` commands still run under `sh` (Git for Windows);
-`qsoku .shell pwsh` covers PowerShell as the caller's own shell.
+On Windows, `qsokufile` commands still run under `sh` — put Git for
+Windows' `sh.exe` on `PATH`. From PowerShell 7+, add
+`Invoke-Expression (& qsoku .shell pwsh | Out-String)` to `$PROFILE`
+instead; Git Bash works too, the same way as on Linux/macOS.
 
 <details>
 <summary>Adding a shortcut, start to finish (click to expand)</summary>

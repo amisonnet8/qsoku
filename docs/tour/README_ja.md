@@ -49,7 +49,9 @@ running with arg: everyone
 
 名前の後の引数はすべて、`$1`・`$2`……として、そのまま`sh`自身が展開する
 のと同じようにコマンドへ渡る。コマンドは`qsoku`をどのシェルから打っても
-必ず`sh`で実行されるので、`qsokufile`はチーム全員にとって同じように動く。
+必ず`sh`で実行されるので、`qsokufile`はチーム全員にとって同じように動く
+（Windowsでは、これはGit for Windowsの`sh.exe`を指す。`PATH`に通しておく
+必要がある）。
 
 ## `//`はqsokufile自身の置き場所
 
@@ -106,7 +108,7 @@ Invoke-Expression (& qsoku .shell pwsh | Out-String)   # $PROFILE
 持ち帰り、さらに使われている`qsokufile`の名前（と管理用コマンド）への
 TAB補完も有効にする。関数が実際にしていることは
 [cli_ja.md](../reference/cli_ja.md#シェル連携)、シェルごとの補完の挙動は
-[cli_ja.md](../reference/cli_ja.md#シェル補完)を参照（fishは特に、先頭が
+[cli_ja.md](../reference/cli_ja.md#シェル補完)を参照（fishは特に、先頭に
 `.`を打つまで管理用コマンドを隠す）。
 
 ## 直す、場所を確かめる
