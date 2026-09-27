@@ -142,7 +142,7 @@ __status=$?; pwd > "$QSOKU_CWD_FILE"; exit $__status' qsoku "$@"
 - **一時ファイルで受け渡す**：zoxideやdirenvは「シェルのコードを出力して`eval`させる」方式だが、qsokuは実行したコマンド自身の出力（`make build`のログなど）が標準出力に流れるので混ぜられない。環境変数`QSOKU_CWD_FILE`で一時ファイルの場所を渡し、qsokuが終了時の居場所をそこに書く。コマンドの出力は素通しで、パイプもリダイレクトもそのまま使える
 - **名前は`.shell`**（`.init`は`qsokufile`を作るほうに使うため）。zoxideの`zoxide init bash`と同じく、シェル名を引数に取る
 - **関数名は`qsoku`のまま**。zoxideの`z`のような1文字にはしない。`s`は利用者の`alias`とぶつかりやすく、`qsoku`は元々4文字。短くしたい人は自分で`alias s=qsoku`と書けばよい。`command qsoku`で関数自身を呼ばないようにする
-- 対応するシェルは**bash・zsh**（同じ関数が使える）と**fish**（書き方が違うだけ）。**PowerShellは対象外**（qsokuは`sh`で実行するので、WindowsではGit BashやWSLが要る）
+- 対応するシェルは**bash・zsh**（同じ関数が使える）・**fish**（書き方が違うだけ）・**pwsh**（PowerShell 7以降。Windows・Linux・macOS共通で、qsokufileのコマンド自体は引き続き`sh`で実行する——Windowsでは`sh.exe`が要る。2026-09-27に方針を改め対象に加えた。詳細は`history.md`）
 - READMEには、シェルごとに「どのファイルに何を書くか」の表を必ず載せる（direnv・zoxideと同じ）
 - 近いツール：zoxide（`eval "$(zoxide init bash)"`で`z`関数を定義し、打ったときだけ動く）が一番近い。direnvは形は同じだが、プロンプトのたびに自動で走るフック。Oh My Zshはzshの設定の枠組みで、別物
 - **シェル補完をやる**（登録されている名前を補完する）。対応するシェルは連携と同じ
