@@ -55,9 +55,26 @@ func TestExecute_root(t *testing.T) {
 	}
 }
 
+// canonicalPath resolves p to the form the OS itself reports for it once a
+// real cwd lookup is involved (filepath.EvalSymlinks resolves symlinks on
+// Linux/macOS -- notably macOS's /tmp -> /private/tmp -- and, on Windows,
+// also normalizes a short 8.3-style path segment such as "RUNNER~1" to its
+// real long name, which "pwd -W" reports rather than preserving the form
+// t.TempDir() happened to return). Comparing against this instead of the
+// raw t.TempDir() value directly is what lets the expectations below match
+// what actually comes back on every platform.
+func canonicalPath(t *testing.T, p string) string {
+	t.Helper()
+	resolved, err := filepath.EvalSymlinks(p)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return resolved
+}
+
 func TestExecute_cwdHandoff(t *testing.T) {
-	target := t.TempDir()
-	start := t.TempDir()
+	target := canonicalPath(t, t.TempDir())
+	start := canonicalPath(t, t.TempDir())
 	// Windows: these paths are spliced into the sh script text below
 	// unquoted, and sh (Git for Windows' MSYS sh.exe) parses a backslash
 	// outside quotes as an escape, stripping it -- t.TempDir()'s native

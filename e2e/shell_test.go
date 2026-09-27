@@ -311,9 +311,25 @@ func cleanPwshOutput(s string) string {
 	return strings.Join(kept, "\n")
 }
 
+// resolveSymlinks resolves an existing directory (already created by
+// newShellRepo) to its canonical form -- unlike bash/zsh/fish, pwsh's
+// Set-Location/current-directory tracking does not preserve a "logical",
+// possibly-symlinked path the way a POSIX shell's own $PWD does, so on
+// macOS (whose /tmp is a symlink to /private/tmp) it reports the resolved
+// form back regardless of what was passed to it.
+func resolveSymlinks(t *testing.T, dir string) string {
+	t.Helper()
+	resolved, err := filepath.EvalSymlinks(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return resolved
+}
+
 func TestShellIntegrationPwsh(t *testing.T) {
 	pwsh := shellPath(t, "pwsh")
 	dir, sub := newShellRepo(t)
+	dir, sub = resolveSymlinks(t, dir), resolveSymlinks(t, sub)
 
 	var b strings.Builder
 	b.WriteString("Invoke-Expression (& qsoku .shell pwsh | Out-String)\n")

@@ -175,3 +175,12 @@ todo `a251592e2c`（人間が登録）で、これまで「対象外」として
   - `internal/qsokufile/write_test.go`の`TestSetEntry_preservesPermissions`：これはパスの問題ではなく、**Windowsに`chmod`相当のPOSIXパーミッションビットが無い**（Goの`os.Chmod`はWindowsでは読み取り専用属性の切り替えにしかならない）ための失敗。テストの前提そのものがWindowsでは成立しないため、Windowsでは`t.Skip`にした
 
 手元のLinux devcontainerでは実機Windowsを再現できないため、パス関連の修正は`GOOS=windows`のクロスコンパイルでの型・構文チェックまでしか確かめられていない。次のpush後のCI（`windows-latest`）で実際に通るか確認する必要がある。
+
+## 2026-09-27　2回目のCI実行で見つかった不具合：論理pwdと物理pwdの食い違い
+
+1回目の修正をpushした後の2回目のCIで、`macos-latest`と`windows-latest`に残っていた不具合はどちらも根が同じだった：**同じディレクトリを指す複数の正当な表記**（シンボリックリンクのエイリアス、Windowsの8.3短縮名）を、文字列としてそのまま比較していたこと。
+
+- **`macos-latest`：`TestShellIntegrationPwsh`が、`/var/folders/...`（`t.TempDir()`の生の値）と`/private/var/folders/...`（実際に`cd`した後の値）の食い違いで落ちた。** bash・zsh・fishは自分の`$PWD`を論理パス（`cd`した通りの文字列）として保つが、**pwshの`Set-Location`／カレントディレクトリの管理は物理パスに解決する**（シンボリックリンクを辿った実体を返す）ため、macOSの`/tmp`→`/private/tmp`のようなエイリアスで両者が食い違う。`e2e/shell_test.go`に`resolveSymlinks`を足し、pwshのテストで比較に使う`dir`・`sub`をあらかじめ`filepath.EvalSymlinks`で解決してから使うようにした
+- **`windows-latest`：`TestExecute_cwdHandoff`が、`RUNNER~1`（Go自身の`t.TempDir()`が返す8.3短縮名）と`runneradmin`（`pwd -W`が返す実際の長いユーザー名）の食い違いで落ちた。** `pwd -W`はWindowsのAPI経由で正規化した実際のパスを返すため、短縮名をそのまま`cd`しても、戻ってくる値は長い名前に解決されている。`internal/run/run_test.go`に`canonicalPath`（`filepath.EvalSymlinks`。Windowsでは短縮名の正規化も兼ねる）を足し、比較の期待値をこれで正規化した
+
+**教訓：** 同じディレクトリを指す文字列表現は、シェル・OSによって「入力した通り（論理）」を返すものと「実体に解決したもの（物理）」を返すものが混在する。テストでパスを比較するときは、`os.SameFile`や`filepath.EvalSymlinks`のような、表記の違いを吸収する手段を最初から使うべきだった——1回目の修正時点で、Windowsのバックスラッシュ問題は直したが、この論理／物理の違いには気づけていなかった。
