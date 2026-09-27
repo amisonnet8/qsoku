@@ -200,3 +200,9 @@ todo `a251592e2c`（人間が登録）で、これまで「対象外」として
 - `e2e/shell_test.go`：pwshが出す行末の`\r`（Windowsの改行既定）を`cleanPwshOutput`で追加除去。bash・zshの`pwd`はMSYS独自の表記（`/c/Users/...`。ドライブレターを小文字化した仮想ルート）を返す——`pwd -W`とは別物——ため、`toMsysPath`を新設してbash・zshのテストの比較にだけ使う。`newShellRepo`自体も、返す`dir`をあらかじめ`filepath.EvalSymlinks`で正規化するよう変えた（前回のエントリで`TestShellIntegrationPwsh`用に個別対応していたシンボリックリンク解決・8.3短縮名の正規化を、ここに一本化した）
 
 3回連続でWindows特有の不具合が出たことから、**「手元のLinux環境では検証できない領域が、当初の想定より広い」**ことが分かった。パスの区切り文字・表記（ネイティブ／フォワードスラッシュ／MSYS形式／短縮名／長い名前）という、Windows特有の"当たり前"をどれだけ推測で埋めても、実機・実CIでしか最終確認できない不確実性が残ることを踏まえ、今後もCIの結果を見ながら反復することにする。
+
+## 2026-09-27　4回目のCI実行：単体テスト側の期待値の直し忘れ
+
+`qsokufile.Find`をフォワードスラッシュ返却に変えた際、e2eテスト（`e2e/run_test.go`・`e2e/shell_test.go`）の期待値は直したが、**同じ変更の影響を受ける通常の単体テスト**（`internal/cli/where_test.go`の`TestRun_where`、`internal/qsokufile/find_test.go`の`TestFind`）を見落としていた。`go test ./...`（`make check`に含まれる、`-tags e2e`を付けない方）はこの環境でも普段から走らせていたはずだが、**Windows以外ではバックスラッシュとフォワードスラッシュが一致するため、Linux／macOSでは何度実行しても検知できない**——`qsokufile.Find`の変更点そのものが、Windows以外では观测できない類の変更だった。
+
+`filepath.ToSlash(want)`で期待値を直し、`make check`で確認。**教訓：** パスの区切り文字にまつわる変更は、そのテストが実際に`os.PathSeparator`に依存する箇所を洗い出すために、変更したファイルだけでなく`grep`で横断的に確認する必要がある（`e2e/`だけでなく`internal/*/​*_test.go`も含めて）。今回は`e2e`ディレクトリだけを見て「テストは直した」と判断したのが甘かった。

@@ -31,7 +31,9 @@ func TestFind(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Find() error: %v", err)
 		}
-		if got != want {
+		// Find always returns a '/'-separated path, even on Windows; a
+		// no-op on Linux/macOS.
+		if want := filepath.ToSlash(want); got != want {
 			t.Errorf("Find() = %q, want %q", got, want)
 		}
 	})
@@ -48,7 +50,7 @@ func TestFind(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Find() error: %v", err)
 		}
-		if got != want {
+		if want := filepath.ToSlash(want); got != want {
 			t.Errorf("Find() = %q, want %q", got, want)
 		}
 	})
@@ -65,7 +67,7 @@ func TestFind(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Find() error: %v", err)
 		}
-		if got != want {
+		if want := filepath.ToSlash(want); got != want {
 			t.Errorf("Find() = %q, want %q", got, want)
 		}
 	})

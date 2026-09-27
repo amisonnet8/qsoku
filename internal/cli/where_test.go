@@ -22,7 +22,9 @@ func TestRun_where(t *testing.T) {
 		if got != 0 {
 			t.Fatalf("Run(.where) = %d, want 0; stderr: %s", got, stderr.String())
 		}
-		if want := dir + "\n"; stdout.String() != want {
+		// .where always prints with '/' (qsokufile.Find), even on Windows;
+		// a no-op on Linux/macOS.
+		if want := filepath.ToSlash(dir) + "\n"; stdout.String() != want {
 			t.Errorf("stdout = %q, want %q", stdout.String(), want)
 		}
 	})
@@ -37,7 +39,7 @@ func TestRun_where(t *testing.T) {
 		if got != 0 {
 			t.Fatalf("Run(.where) = %d, want 0; stderr: %s", got, stderr.String())
 		}
-		if want := dir + "\n"; stdout.String() != want {
+		if want := filepath.ToSlash(dir) + "\n"; stdout.String() != want {
 			t.Errorf("stdout = %q, want %q", stdout.String(), want)
 		}
 	})
