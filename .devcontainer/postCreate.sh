@@ -59,6 +59,16 @@ go install github.com/goreleaser/goreleaser/v2@v2.18.2
 
 # mtqg: this repository's own process-recording tool (CLAUDE.md,
 # .claude/rules/mtqg.md). Also wires up the Claude Code hook and MCP server
-# (.claude/settings.json, .mcp.json; "mtqg init --agent claude-code").
-# Pinned to a commit, not a version tag: mtqg has not tagged a release yet.
-go install github.com/amisonnet8/mtqg/cmd/mtqg@56b331c65e1406bd17b6d357eb04341973d36579
+# (.claude/settings.json, .mcp.json; "mtqg init --agent claude-code"). mtqg
+# has tagged v1 (2026-09-29); the VS Code extension (amisonnet8.mtqg, listed
+# above) is installed by the devcontainer's extensions list, not here.
+go install github.com/amisonnet8/mtqg/cmd/mtqg@latest
+
+# qsoku: this repository's own binary, built from the local source (not a
+# published version) so that it always matches the code in this checkout.
+# Same pattern mtqg's own devcontainer uses for itself. postCreate runs once
+# at container creation, so this does not track edits made afterward --
+# .claude/hooks/build.sh keeps the separate ./qsoku at the repository root
+# (used for manual testing, the demo GIF, and so on) up to date on every Go
+# edit instead.
+go install ./cmd/qsoku

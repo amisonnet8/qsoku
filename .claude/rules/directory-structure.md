@@ -85,9 +85,11 @@ qsoku/
 ◯                            （`make docs-examples`で出力を文書へ書き込む。対象文書は
 ◯                            `documentPairs`。mtqgの`e2e/examples_test.go`の簡素化版）
 ◯ └── testdata/examples/     ↑の例が使うfixture（言語非依存。英日どちらの文書からも参照）
-◯ .devcontainer/           devcontainer.json・postCreate.sh。mtqgのインストール（タグが
-                            まだ無いためコミットへの固定）、pwsh（Microsoft自身のapt
-                            リポジトリから。2026-09-27）もここ
+◯ .devcontainer/           devcontainer.json・postCreate.sh。mtqgのインストール
+                            （v1タグ公開後は`@latest`。2026-09-29）、qsoku自身のインストール
+                            （ローカルソースから`go install ./cmd/qsoku`。mtqg自身の
+                            devcontainerと同じやり方。2026-09-29）、pwsh（Microsoft自身の
+                            aptリポジトリから。2026-09-27）もここ
 ◯ .mcp.json                mtqgのMCPサーバー（`mtqg mcp`）の起動設定。`mtqg init --agent
                             claude-code`が作った（2026-09-25）
 ◯ .github/workflows/

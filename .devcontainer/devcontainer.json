@@ -7,7 +7,8 @@
         "golang.Go",
         "ms-vscode.makefile-tools",
         "github.vscode-github-actions",
-        "timonwong.shellcheck"
+        "timonwong.shellcheck",
+        "amisonnet8.mtqg"
       ],
       "settings": {
         "go.useLanguageServer": true,

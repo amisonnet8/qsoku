@@ -1,6 +1,6 @@
 # mtqgの使い方（このリポジトリの運用）
 
-このリポジトリは、mtqg（`github.com/amisonnet8/mtqg`）を使って開発の過程を記録する。mtqg自身はこのリポジトリのコードではなく、`.devcontainer/postCreate.sh`が`go install`で入れるバイナリをPATH越しに使う（タグがまだ無いため、コミットに固定してインストールしている）。
+このリポジトリは、mtqg（`github.com/amisonnet8/mtqg`）を使って開発の過程を記録する。mtqg自身はこのリポジトリのコードではなく、`.devcontainer/postCreate.sh`が`go install .../mtqg/cmd/mtqg@latest`で入れるバイナリをPATH越しに使う（mtqgがv1タグを公開したため、2026-09-29にコミット固定から`@latest`へ変更した）。VS Code拡張（`amisonnet8.mtqg`）は`devcontainer.json`の`extensions`から入る。
 
 ## 最初にやること
 
