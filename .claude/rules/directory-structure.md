@@ -86,10 +86,13 @@ qsoku/
 ◯                            `documentPairs`。mtqgの`e2e/examples_test.go`の簡素化版）
 ◯ └── testdata/examples/     ↑の例が使うfixture（言語非依存。英日どちらの文書からも参照）
 ◯ .devcontainer/           devcontainer.json・postCreate.sh。mtqgのインストール
-                            （v1タグ公開後は`@latest`。2026-09-29）、qsoku自身のインストール
-                            （ローカルソースから`go install ./cmd/qsoku`。mtqg自身の
-                            devcontainerと同じやり方。2026-09-29）、pwsh（Microsoft自身の
-                            aptリポジトリから。2026-09-27）もここ
+                            （v1タグ公開後は`@latest`。2026-09-29）とbash補完（`mtqg
+                            completion bash`）、qsoku自身のインストール（ローカルソース
+                            から`go install ./cmd/qsoku`。mtqg自身のdevcontainerと同じ
+                            やり方。2026-09-29）とシェル連携（`~/.bashrc`に`qsoku .shell
+                            bash`。リポジトリ直下のqsokufileはあくまで見本で実開発はmake
+                            のまま——動作確認・dogfooding目的。2026-09-29）、pwsh
+                            （Microsoft自身のaptリポジトリから。2026-09-27）もここ
 ◯ .mcp.json                mtqgのMCPサーバー（`mtqg mcp`）の起動設定。`mtqg init --agent
                             claude-code`が作った（2026-09-25）
 ◯ .github/workflows/

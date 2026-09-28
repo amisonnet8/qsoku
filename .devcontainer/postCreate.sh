@@ -64,6 +64,9 @@ go install github.com/goreleaser/goreleaser/v2@v2.18.2
 # above) is installed by the devcontainer's extensions list, not here.
 go install github.com/amisonnet8/mtqg/cmd/mtqg@latest
 
+mkdir -p ~/.local/share/bash-completion/completions
+mtqg completion bash >~/.local/share/bash-completion/completions/mtqg
+
 # qsoku: this repository's own binary, built from the local source (not a
 # published version) so that it always matches the code in this checkout.
 # Same pattern mtqg's own devcontainer uses for itself. postCreate runs once
@@ -72,3 +75,11 @@ go install github.com/amisonnet8/mtqg/cmd/mtqg@latest
 # (used for manual testing, the demo GIF, and so on) up to date on every Go
 # edit instead.
 go install ./cmd/qsoku
+
+# Wire up qsoku's own shell integration and completion for this repository's
+# qsokufile (the "sample" one at the repository root -- CLAUDE.md, directory-
+# structure.md; real development still goes through make). This is for
+# dogfooding and checking that the integration itself actually works, not a
+# replacement for make.
+# shellcheck disable=SC2016 # single-quoted on purpose: written literally so it expands at bash startup, not now
+grep -qF 'qsoku .shell bash' ~/.bashrc 2>/dev/null || echo 'eval "$(qsoku .shell bash)"' >>~/.bashrc
