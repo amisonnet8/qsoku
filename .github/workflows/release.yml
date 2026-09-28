@@ -25,7 +25,10 @@ jobs:
           go-version-file: go.mod
       - uses: goreleaser/goreleaser-action@v7
         with:
-          version: v2.18.2
+          # "~> v2" tracks the latest v2.x release automatically. Same
+          # constraint ci.yml's "goreleaser" job uses, so a real release
+          # runs the same goreleaser the pre-tag check already validated.
+          version: "~> v2"
           args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -53,9 +53,12 @@ go install golang.org/x/tools/gopls@latest
 go install golang.org/x/tools/cmd/goimports@latest
 
 # goreleaser: builds and validates the release (.goreleaser.yaml,
-# distribution.md, "make goreleaser-check"). Same version .github/workflows/
-# pins, so a local check matches CI.
-go install github.com/goreleaser/goreleaser/v2@v2.18.2
+# distribution.md, "make goreleaser-check"). @latest here only ever resolves
+# within v2 (the major version is part of the Go import path), matching
+# .github/workflows/'s own "~> v2" constraint on goreleaser-action -- both
+# stay current automatically without drifting to a v3 that might break
+# .goreleaser.yaml's v2-schema config.
+go install github.com/goreleaser/goreleaser/v2@latest
 
 # mtqg: this repository's own process-recording tool (CLAUDE.md,
 # .claude/rules/mtqg.md). Also wires up the Claude Code hook and MCP server

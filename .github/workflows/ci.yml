@@ -100,7 +100,12 @@ jobs:
           go-version-file: go.mod
       - uses: goreleaser/goreleaser-action@v7
         with:
-          version: v2.18.2
+          # "~> v2" tracks the latest v2.x release automatically (never v3,
+          # which could break .goreleaser.yaml's v2-schema config). Same
+          # constraint release.yml uses, and matches .devcontainer/
+          # postCreate.sh's "go install .../goreleaser/v2@latest" (that
+          # import path is likewise pinned to v2).
+          version: "~> v2"
           install-only: true
       - name: make goreleaser-check
         run: make goreleaser-check
