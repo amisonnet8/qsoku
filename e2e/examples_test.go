@@ -3,7 +3,7 @@
 package e2e
 
 // The examples in the documents documentPairs lists (docs/reference/,
-// README.md, docs/tour/, and their _ja counterparts) are run against the
+// README.md, docs/examples/, and their _ja counterparts) are run against the
 // built qsoku binary, and what they show has to be what qsoku actually
 // prints. Every example is a code block that starts with "$ qsoku ...",
 // and the line before it says which fixture to run it against:
@@ -44,7 +44,7 @@ var documentPairs = [][2]string{
 	{"docs/reference/cli.md", "docs/reference/cli_ja.md"},
 	{"docs/reference/qsokufile.md", "docs/reference/qsokufile_ja.md"},
 	{"README.md", "README_ja.md"},
-	{"docs/tour/README.md", "docs/tour/README_ja.md"},
+	{"docs/examples/README.md", "docs/examples/README_ja.md"},
 }
 
 // documents flattens documentPairs into the list TestDocExamples walks.

@@ -1,5 +1,5 @@
 # Copy this file into the root of a multi-package repository, and adjust
-# the package directories under "//packages/". See docs/tour/ for a
+# the package directories under "//packages/". See docs/examples/ for a
 # walk-through, docs/reference/ for the format.
 
 # Without parentheses: running this actually moves you into packages/api,

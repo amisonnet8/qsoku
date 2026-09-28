@@ -14,8 +14,8 @@
   qsokufileの無い空ディレクトリ）。各`$ `行は`qsoku`で始まるものに限る（任意の
   シェルセッションではなく、qsoku自身の出力を見せるため）。`make test`が
   `TestDocExamples`で文書と実際の出力の食い違いを検知する。この仕組みは
-  `docs/reference/`だけでなくトップの`README.md`・`docs/tour/`の実行例にも使う
-  （`e2e/examples_test.go`の`documentPairs`が対象文書の一覧）
+  `docs/reference/`だけでなくトップの`README.md`・`docs/examples/`の実行例にも
+  使う（`e2e/examples_test.go`の`documentPairs`が対象文書の一覧）
 - **実装しながら育てる文書。** 実装と仕様がずれたらここを更新する。設計判断を変えるときは、まずここを更新してから着手する
 
 ## ファイル
@@ -25,5 +25,5 @@
 | [qsokufile.md](qsokufile.md) / [qsokufile_ja.md](qsokufile_ja.md) | `qsokufile`の書式：置き場所と探し方、`名前: コマンド`の1行形式、コメント、名前に使える文字、`//`の置き換え規則 |
 | [cli.md](cli.md) / [cli_ja.md](cli_ja.md) | `qsoku <名前>`コマンドライン：実行のしくみと環境変数、管理用コマンド（`.init`〜`.help`）、シェル連携、シェル補完、終了コード |
 
-手を動かす入門は[docs/tour/](../tour/)、コピーして使える`qsokufile`は
+手を動かす入門と、コピーして使える`qsokufile`は
 [docs/examples/](../examples/)を参照。

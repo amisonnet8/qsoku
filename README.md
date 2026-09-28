@@ -112,7 +112,7 @@ build: echo "building the project"
 hello: echo "hello, $1"
 ```
 
-See [docs/tour/](docs/tour/) for a longer, hands-on walk-through.
+See [docs/examples/](docs/examples/) for a longer, hands-on walk-through.
 
 </details>
 
@@ -121,12 +121,11 @@ See [docs/tour/](docs/tour/) for a longer, hands-on walk-through.
 - [Interactive guide](https://notebook.google.com/notebook/7ae8788d-2942-4c0c-a1cf-6587cec9428e) —
   ask questions about qsoku and explore it conversationally (built with
   Gemini Notebook)
-- [docs/tour/](docs/tour/) — a hands-on walk through qsoku, from an empty
-  `qsokufile` to shell integration and completion
+- [docs/examples/](docs/examples/) — a hands-on walk through qsoku, from an
+  empty `qsokufile` to shell integration and completion, plus `qsokufile`s
+  you can copy into your own repository
 - [docs/reference/](docs/reference/) — the formal specification of the
   `qsokufile` format and the `qsoku` command line
-- [docs/examples/](docs/examples/) — `qsokufile`s you can copy into your own
-  repository
 
 ## License
 
@@ -135,7 +134,6 @@ MIT (see [LICENSE](LICENSE)).
 ---
 
 <p align="center">
-  <a href="docs/tour/">docs/tour/</a> ·
   <a href="docs/reference/">docs/reference/</a> ·
   <a href="docs/examples/">docs/examples/</a> ·
   <a href="LICENSE">LICENSE</a>

@@ -170,3 +170,13 @@ Windows対応の実装・CIでの検証を通じて、パスの扱いに関す�
 - **Git BashのMSYS環境が、ネイティブ（MSYS非対応）プログラムに渡す前に引数を書き換えることがある。** `//src`のような`/`で始まる引数は、MSYSが先頭の`/`を「変換除外」の合図として1文字消費し、残りの`/src`をそのまま（無変換で）qsoku.exeに渡す。qsoku側は`//`という接頭辞を保っていない`/src`をただの引数として素通しする——qsoku自身のコードの不具合ではなく、qsokuの`//`とは無関係のMSYSの挙動に巻き込まれるかたちになる。qsoku側では検知も訂正もできない（引数を受け取った時点で書き換えは終わっている）ため、`docs/reference/qsokufile.md`に利用者向けの注意書きとして残した。回避策は`MSYS_NO_PATHCONV=1`（CIで確認済み。より絞った`MSYS2_ARG_CONV_EXCL=//`は未確認）
 
 反復修正の経緯（CIで見つかった不具合とその都度の対処）はmtqgのmemo（`89e960f3`・`141f2383`・`4a25ec24`・`67e9e8c0`・`66684332`・`35d798f6`・`2bf5c125`）を参照。Windows実機でのシグナル系動作の検証はtodo`6fa5476e`として残っている（`internal/run/run_test.go`・`e2e/run_test.go`のWindows向けSkipは、それまでの措置）。
+
+## 2026-09-28　docs/tourをdocs/examplesに統合した
+
+`docs/tour/`（英日README1本ずつ、約140行）は独立したディレクトリにするには小さく、`docs/examples/`（実例表だけ、約14行＋qsokufile3本）と役割も近かったため、1つに統合した。
+
+- 並びは入門→実例の順（`docs/examples/README.md`の前半に旧tourの流れ、後半に実例表）。人間との対話で決定
+- 実行例のfixture`e2e/testdata/examples/tour/`は名前をそのまま残した（テスト内部の名前で利用者には見えないため、変更差分を最小にする判断）
+- `e2e/examples_test.go`の`documentPairs`を差し替え、`docs/reference/README.md`・トップの`README.md`・`.claude/rules/`の参照リンクも合わせて直した
+
+判断の経緯はmtqg q（`fe1ffd117c`・`944b3ee24c`）を参照。

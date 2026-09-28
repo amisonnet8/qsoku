@@ -1,4 +1,4 @@
-# Copy this file into a Node.js project's repository root. See docs/tour/
+# Copy this file into a Node.js project's repository root. See docs/examples/
 # for a walk-through, docs/reference/ for the format.
 
 install: npm install

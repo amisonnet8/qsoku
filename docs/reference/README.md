@@ -25,7 +25,7 @@ on.
   shell session. `make test` (`TestDocExamples`) catches a document that
   has drifted from what qsoku actually prints. This mechanism is not
   limited to `docs/reference/`: the top-level `README.md` and
-  `docs/tour/` use it too (see `e2e/examples_test.go`'s `documentPairs`
+  `docs/examples/` use it too (see `e2e/examples_test.go`'s `documentPairs`
   for the full list of documents it covers).
 - **This is a living document, grown alongside the implementation.**
   Update it when the implementation and the spec drift apart; when
@@ -38,5 +38,5 @@ on.
 | [qsokufile.md](qsokufile.md) / [qsokufile_ja.md](qsokufile_ja.md) | The `qsokufile` format: location and lookup, the `name: command` line format, comments, the characters allowed in a name, the `//` substitution rule |
 | [cli.md](cli.md) / [cli_ja.md](cli_ja.md) | The `qsoku <name>` command line: how running a name works and its environment variables, the management commands (`.init` through `.help`), shell integration, shell completion, exit codes |
 
-See also [docs/tour/](../tour/) for a hands-on walk-through, and
-[docs/examples/](../examples/) for `qsokufile`s you can copy.
+See also [docs/examples/](../examples/) for a hands-on walk-through and
+`qsokufile`s you can copy.

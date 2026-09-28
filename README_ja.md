@@ -104,7 +104,7 @@ build: echo "building the project"
 hello: echo "hello, $1"
 ```
 
-手を動かしながらの詳しい入門は[docs/tour/](docs/tour/)を参照。
+手を動かしながらの詳しい入門は[docs/examples/](docs/examples/)を参照。
 
 </details>
 
@@ -112,12 +112,11 @@ hello: echo "hello, $1"
 
 - [対話形式のガイド](https://notebook.google.com/notebook/7ae8788d-2942-4c0c-a1cf-6587cec9428e) —
   質問しながらqsokuを調べられる（Gemini Notebook製）
-- [docs/tour/](docs/tour/) — 空の`qsokufile`からシェル連携・補完までを
-  手を動かしながら追う入門
+- [docs/examples/](docs/examples/) — 空の`qsokufile`からシェル連携・補完
+  までを手を動かしながら追う入門と、自分のリポジトリにコピーして使える
+  `qsokufile`の実例
 - [docs/reference/](docs/reference/) — `qsokufile`の書式と`qsoku`
   コマンドラインの正式な仕様
-- [docs/examples/](docs/examples/) — 自分のリポジトリにコピーして使える
-  `qsokufile`の実例
 
 ## ライセンス
 
@@ -126,7 +125,6 @@ MIT（[LICENSE](LICENSE)参照）。
 ---
 
 <p align="center">
-  <a href="docs/tour/">docs/tour/</a> ·
   <a href="docs/reference/">docs/reference/</a> ·
   <a href="docs/examples/">docs/examples/</a> ·
   <a href="LICENSE">LICENSE</a>

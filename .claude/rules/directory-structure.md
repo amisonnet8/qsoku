@@ -15,7 +15,7 @@ qsoku/
 ◯                          設定が壊れていないかは.github/workflows/ci.yml の
 ◯                          goreleaserジョブ（make goreleaser-check）が毎pushで確認
 ◯ README.md / README_ja.md 看板（ロゴ・バッジ・目次・特徴・デモ・実行例・インストール・
-                            tour/reference/examplesへのリンク）。v0.1.0公開後に
+                            reference/examplesへのリンク）。v0.1.0公開後に
                             「映え対応」で作り直した。冒頭の「開発初期」の注意書きはv0.1.0公開
                             後に外した（人間の判断）
 ◯ qsokufile                Makefileの主なターゲットを写した見本（`build`・`fmt`・`vet`・
@@ -44,10 +44,12 @@ qsoku/
 ◯ ├── reference/            仕様。英語版（正）と日本語版`*_ja.md`の2本立て。実行例は
 ◯ │                          `e2e/examples_test.go`が実測して書き込む
 ◯ │   └── README.md         置き場所の決まりと、実行例の印の書き方
-◯ ├── tour/                 歩いて回る入門（README.md/README_ja.md）。`.init`から
-◯ │                          シェル連携・補完まで、実行例つきで手を動かして追う
-◯ └── examples/             実例（README.md/README_ja.md＋go/node/monorepoの
-◯                            qsokufile）。コピーして使える。パースだけ`e2e/run_test.go`の
+◯ └── examples/             歩いて回る入門（README.md/README_ja.mdの前半。`.init`から
+◯                            シェル連携・補完まで、実行例つきで手を動かして追う）と、
+◯                            コピーして使える実例（同後半＋go/node/monorepoの
+◯                            qsokufile）。旧`docs/tour/`を2026-09-28に統合した
+◯                            （小さすぎたため。`docs/design/history.md`参照）。実例の
+◯                            qsokufileのパースだけ`e2e/run_test.go`の
 ◯                            `TestDocsExamplesQsokufilesParse`が確かめる（実行はしない）
 ◯ cmd/qsoku/main.go        エントリポイント。引数を渡すだけ
 ◯ internal/cli/             実装本体。`.`で始まらない名前は実際に見つけて実行する
@@ -79,7 +81,7 @@ qsoku/
 ◯                            `docs/examples/*/qsokufile`とリポジトリ直下の`qsokufile`が
 ◯                            パースできることも、ここで（`qsoku .list`を走らせるだけで）
 ◯                            確かめる（コマンドの中身は実行しない）
-◯ ├── examples_test.go       docs/reference/・README・docs/tour/の実行例を実測で確かめる
+◯ ├── examples_test.go       docs/reference/・README・docs/examples/の実行例を実測で確かめる
 ◯                            （`make docs-examples`で出力を文書へ書き込む。対象文書は
 ◯                            `documentPairs`。mtqgの`e2e/examples_test.go`の簡素化版）
 ◯ └── testdata/examples/     ↑の例が使うfixture（言語非依存。英日どちらの文書からも参照）
@@ -113,14 +115,13 @@ qsoku/
 |---|---|---|
 | `design/` | **なぜこうなっているか**（判断の理由、経緯）。仕様と食い違えば`reference/`が正しい | 開発するAI・人間 |
 | `reference/` | **今、何をするか**（仕様そのもの）。正式な契約 | 利用者・実装者 |
-| `tour/` | qsokuを初めて触る人が、手を動かしながら一通り追える入門 | 利用者（読み物） |
-| `examples/` | 動く実例の置き場（コピーして使える`qsokufile`など） | 利用者（コピー元） |
+| `examples/` | qsokuを初めて触る人が手を動かしながら一通り追える入門と、動く実例の置き場（コピーして使える`qsokufile`など） | 利用者（読み物・コピー元） |
 
-`tour/`・`examples/`は、mtqg本体の`docs/tour/`・`docs/examples/`と同じ役割分担を踏襲している（実装完了後に作る、英日2本立てで作る、という決まりも同じ）。
+`examples/`は、mtqg本体の`docs/tour/`・`docs/examples/`の役割を1つにまとめたもの（qsoku側は入門を`tour/`として独立させていたが、小さすぎたため2026-09-28に`examples/`へ統合した。英日2本立てで作る、という決まりは変えていない）。
 
 ## 配置の判断基準
 
 - **`internal/`**：Goの仕組みとして、リポジトリの外からimportできない。外との約束は、配布物（`go install`で入るバイナリ）とデータ形式（`qsokufile`の書式）だけ
 - **配布物（ビルド済みバイナリ）はコミットしない**（`.gitignore`にルート直下限定で`/qsoku`・`/qsoku.exe`・`/dist/`）
 - **シェル連携・補完のスクリプト**は`internal/cli/shells/`に埋め込み（`go:embed`）で配る（mtqgの`internal/cli/completions/`と同じやり方）。対応シェルはbash・zsh・fish・pwsh（pwshは2026-09-27に追加。以前はPowerShell対象外としていたが、方針を改めた）
-- **看板としてのREADME・`tour/`・`examples/`は実装完了後に作った。**
+- **看板としてのREADME・`examples/`は実装完了後に作った。**
