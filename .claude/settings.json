@@ -36,17 +36,36 @@
       }
     ]
   },
+  "sandbox": {
+    "enabled": true,
+    "enableWeakerNestedSandbox": true,
+    "autoAllowBashIfSandboxed": true,
+    "allowUnsandboxedCommands": false,
+    "filesystem": {
+      "allowWrite": ["~/.cache/go-build", "~/go", "~/.cache/trivy"],
+      "denyRead": ["~/.ssh", "~/.aws", "~/.config/gh"]
+    },
+    "network": {
+      "allowedDomains": [
+        "proxy.golang.org",
+        "sum.golang.org",
+        "mirror.gcr.io",
+        "github.com",
+        "api.github.com"
+      ]
+    }
+  },
   "permissions": {
     "ask": [
       "Bash(git reset --hard*)",
       "Bash(git clean*)",
-      "Bash(curl*)",
-      "Bash(wget*)",
-      "Bash(go get*)",
-      "Bash(*sudo*)"
+      "Bash(*sudo*)",
+      "Bash(gh pr create*)"
     ],
     "deny": [
-      "Bash(git push*)"
+      "Bash(git push*)",
+      "Bash(gh pr merge*)",
+      "Bash(gh release create*)"
     ]
   }
 }

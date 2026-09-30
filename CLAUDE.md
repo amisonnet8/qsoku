@@ -72,10 +72,11 @@
 
 `.claude/settings.json`（人間が管理する）により、次の設定になっている。
 
-- 拒否（deny）：`git push`
-- 実行前に確認（ask）：`git reset --hard`、`git clean`、`curl`・`wget`、`go get`、`sudo`
+- **サンドボックス化**（2026-09-30、mtqg本体の`settings.json`を参考に変更）：ネットワークは許可したドメイン（`proxy.golang.org`・`sum.golang.org`・`mirror.gcr.io`・`github.com`・`api.github.com`）だけに制限され、書き込みは`~/.cache/go-build`・`~/go`・`~/.cache/trivy`だけに限られる（`~/.ssh`・`~/.aws`・`~/.config/gh`は読み取りも不可）。このおかげで`curl`・`wget`・`go get`は個別の確認なしで動く
+- 拒否（deny）：`git push`、`gh pr merge`、`gh release create`（タグを打つのは人間、という`distribution.md`の方針と揃えた）
+- 実行前に確認（ask）：`git reset --hard`、`git clean`、`sudo`、`gh pr create`
 
-確認を求められた場合、無理に実行しようとせず、指示を仰ぐこと。
+確認を求められた場合、無理に実行しようとせず、指示を仰ぐこと。サンドボックスの制限（許可ドメイン外のネットワーク・許可外のファイル書き込み）に引っかかった場合も、設定を変えるかどうかは人間の判断なので、その旨を伝えること。
 
 ## まだ無いもの
 

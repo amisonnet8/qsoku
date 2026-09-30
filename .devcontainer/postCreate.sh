@@ -24,6 +24,13 @@ echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.
 sudo apt-get update
 sudo apt-get install -y trivy
 
+# Pre-create trivy's DB cache directory. Claude Code's Bash sandbox
+# (.claude/settings.json "sandbox.filesystem.allowWrite") only grants write
+# access to a path that already exists -- it cannot mkdir a fresh directory
+# under a read-only parent (~/.cache itself is not writable). Without this,
+# "make trivy" fails on its very first run in a sandboxed session.
+mkdir -p ~/.cache/trivy
+
 # gh: GitHub CLI, for checking issues, pull requests and Actions runs.
 # Installed from the official apt repository (same pattern as Trivy).
 sudo mkdir -p -m 755 /etc/apt/keyrings
