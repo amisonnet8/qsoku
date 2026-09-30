@@ -92,7 +92,10 @@ qsoku/
                             やり方。2026-09-29）とシェル連携（`~/.bashrc`に`qsoku .shell
                             bash`。リポジトリ直下のqsokufileはあくまで見本で実開発はmake
                             のまま——動作確認・dogfooding目的。2026-09-29）、pwsh
-                            （Microsoft自身のaptリポジトリから。2026-09-27）もここ
+                            （Microsoft自身のaptリポジトリから。2026-09-27）もここ。
+                            `mkdir -p ~/.cache/trivy`（2026-09-30）は、Bashサンドボックスの
+                            書き込み許可が既存パスへのbindマウント式で、無いパスを新しく
+                            掘れないため——サンドボックス化後の`make trivy`初回失敗の対策
 ◯ .mcp.json                mtqgのMCPサーバー（`mtqg mcp`）の起動設定。`mtqg init --agent
                             claude-code`が作った（2026-09-25）
 ◯ .github/workflows/
@@ -104,8 +107,11 @@ qsoku/
 ◯ └── release.yml            v*タグのpushだけで動く。goreleaser-actionで実際に
 ◯                            ビルド・GitHub Releaseの公開まで行う
 ◯ .claude/
-◯ ├── settings.json         権限（deny/ask）とフックの設定。人間が管理する部分（permissions・
-◯                            build.shのPostToolUse）に加え、`mtqg init --agent claude-code`
+◯ ├── settings.json         権限（deny/ask）・サンドボックス（ネットワーク許可ドメイン・
+◯                            書き込み許可パス。2026-09-30、mtqg本体のsettings.jsonを参考に
+◯                            変更。CLAUDE.md「権限・自動化について」参照）・フックの設定。
+◯                            人間が管理する部分（permissions・sandbox・build.shの
+◯                            PostToolUse）に加え、`mtqg init --agent claude-code`
 ◯                            （2026-09-25）が`env`（記録者の自動設定）・`SessionStart`／
 ◯                            `Stop`フック（`mtqg hook claude-code`。`mtqg context`の自動
 ◯                            読み込みと、記録漏れがあれば終了時に促す）を足した

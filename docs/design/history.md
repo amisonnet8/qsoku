@@ -180,3 +180,12 @@ Windows対応の実装・CIでの検証を通じて、パスの扱いに関す�
 - `e2e/examples_test.go`の`documentPairs`を差し替え、`docs/reference/README.md`・トップの`README.md`・`.claude/rules/`の参照リンクも合わせて直した
 
 判断の経緯はmtqg q（`fe1ffd117c`・`944b3ee24c`）を参照。
+
+## 2026-09-30　`.claude/settings.json`をサンドボックス化した
+
+`curl`・`wget`・`go get`のたびに個別の確認（ask）が要る状態は確認回数が多すぎたため、mtqg本体の`settings.json`を参考に、OSレベルのサンドボックス（ネットワークは許可ドメインだけ、書き込みは許可パスだけに制限）へ切り替えた。ネットワーク先はqsokuの定常作業が実際に使うドメインに絞った：`proxy.golang.org`・`sum.golang.org`（`go install`系）、`mirror.gcr.io`（`make trivy`のDB取得先。`trivy --debug`で実際の取得元であることを確認済み）、`github.com`・`api.github.com`（`gh`系）。書き込みは`~/.cache/go-build`・`~/go`・`~/.cache/trivy`のみ。あわせて`gh pr create`を`ask`に、`gh pr merge`・`gh release create`を`deny`に追加した——後者は「タグを打つのは人間」という既存方針（本ファイル2026-09-23のエントリ）と揃えた。
+
+導入の過程で2つ判明した：
+
+- **サンドボックスの書き込み許可は、既存パスへのbindマウント式らしい。** `~/.cache/trivy`は誰も事前に作っていなかったため、`make trivy`が初回に`mkdir: read-only file system`で失敗した。`.devcontainer/postCreate.sh`に`mkdir -p ~/.cache/trivy`を足して解決（`~/go`・`~/.cache/go-build`は同じpostCreate.shの`go install`がサンドボックス外で副次的に作るため、元々問題にならなかった）
+- **`sudo`自体がこのサンドボックス下では機能しない。** uid remapping（アンプリビレッジドなユーザー名前空間）で、root所有のファイル（`/etc/sudo.conf`など）がnobody所有に見えてしまい、sudo自身の所有者チェックに失敗する。サンドボックス化前は同じセッションで`sudo apt-get install`等が成功していたため、これはサンドボックス化に伴う副作用。qsoku側では直せないため、`sudo`が要る操作は人間に依頼する運用にした（`CLAUDE.md`「権限・自動化について」に既知の制約として明記）
