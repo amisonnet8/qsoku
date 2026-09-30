@@ -54,3 +54,13 @@
 ## `-race`の運用
 
 - devcontainerは`CGO_ENABLED=0`。`-race`が要るときは`make race`（`CGO_ENABLED=1`にして走らせる）で分けている。CIの`race`ジョブはLinux・macOSのみ（Windowsはcgoにmingwが要るため対象外）
+
+## Bashサンドボックスの落とし穴
+
+> devcontainer内でClaude Codeが実行するBashコマンドは、既定でOSレベルのサンドボックス（Linux bubblewrap）にかかる。`.claude/settings.json`の`sandbox`でファイルシステムの書き込み先とネットワーク接続先を許可リストで絞っている（2026-09-30導入）。**設定の経緯・判断は人間が持つ**（`CLAUDE.md`「権限・自動化について」）。ここは、その設定の下で`make check`・`make test`・`make trivy`・`make shellcheck`・`make goreleaser-check`を実際に動かして見つかった落とし穴の記録（一部はmtqg本体の同種の記録を参考にした。2026-10-01）。
+
+- **Trivyの脆弱性DBの取得先は`ghcr.io`ではなく`mirror.gcr.io`（`mirror.gcr.io/aquasec/trivy-db:2`）。** 名前から`ghcr.io`（GitHub Container Registry）を許可すればよいと思い込むと`make trivy`が`sandbox_violations`で失敗する。`trivy --debug`の`--db-repository`既定値で実際の取得先を確認できる
+- **Trivyの脆弱性DBは`~/.cache/trivy`に書き込む。** `sandbox.filesystem.allowWrite`にこれが無いと、ネットワークを許可してもダウンロード後の書き込みで`read-only file system`になる（`make trivy`の初回失敗として実際に発生。`.devcontainer/postCreate.sh`の`mkdir -p ~/.cache/trivy`で対策済み——サンドボックスの書き込み許可は、既存パスへのbindマウント式らしく、存在しないパスを新しく掘れないため）
+- **golangci-lintのキャッシュは`~/.cache/golangci-lint`に書き込む。** `allowWrite`にこれが無いと書き込みが`read-only file system`になる。qsokuが固定している`golangci-lint` v2.13.2は、この書き込み失敗を警告なしで黙って無視する（`0 issues`・終了コード0のまま変わらない）——結果は壊れないが、キャッシュが効かず`make lint`・`make check`のたびに毎回フルスキャンになる
+- **`check.trivy.dev`への接続は、許可リストに無くても`make trivy`の結果・終了コードには影響しない。** Trivy自身のバージョン確認機能への接続で、`sandbox_violations`として拒否されるが、スキャン自体（脆弱性・ライセンスのレポート）は正常に完了する（mtqg本体の記録からの情報。qsoku側では`make trivy`がまだ最後まで通っていないため未検証）
+- **作業ディレクトリ直下に`.bashrc`・`.gitconfig`・`.claude/agents`などのダミーファイルが`git status`の未追跡ファイルとして現れることがある。** `ls -la`で見ると`/dev/null`相当のキャラクタデバイス（`crw-rw-rw-`）で、本来ホームディレクトリ側を指すはずのサンドボックスの書き込み保護パスが、作業ディレクトリ基準で解決されてしまったものと見られる。中身は空で`git add`しない限り無害。qsoku・mtqgの実装のどちらにも起因しない、サンドボックス機構側の挙動
