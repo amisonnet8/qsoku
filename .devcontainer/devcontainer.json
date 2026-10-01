@@ -1,6 +1,10 @@
 {
   "name": "qsoku",
   "image": "mcr.microsoft.com/devcontainers/go:1.27-bookworm",
+  "features": {
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/devcontainers/features/powershell:2": {}
+  },
   "customizations": {
     "vscode": {
       "extensions": [

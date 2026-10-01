@@ -9,7 +9,7 @@
 | 対象 | 進め方 |
 | :--- | :--- |
 | `qsokufile`の解析・`//`の置き換え・管理用コマンド | Linux・Goだけで単体テストを書く。字句解析（引用符の状態を追う部分）は、URL・引用符の中・括弧の中・`;`の後を表で押さえる |
-| シェル連携・補完（bash・zsh・fish・pwsh） | 4つとも devcontainer に入れてある（`postCreate.sh`。pwshはMicrosoft自身のaptリポジトリから）。**本物のシェルで動かして確かめる**（スクリプトを模したものに置き換えない）。`e2e/shell_test.go`（`go test -tags e2e`、`make test`）が実施。手元に無いシェルは`shellPath`ヘルパーで`exec.LookPath`が失敗すればSkipする（例：Windowsではzsh・fishが無いのでSkip） |
+| シェル連携・補完（bash・zsh・fish・pwsh） | 4つとも devcontainer に入れてある（`postCreate.sh`。pwshは公式feature`powershell`から）。**本物のシェルで動かして確かめる**（スクリプトを模したものに置き換えない）。`e2e/shell_test.go`（`go test -tags e2e`、`make test`）が実施。手元に無いシェルは`shellPath`ヘルパーで`exec.LookPath`が失敗すればSkipする（例：Windowsではzsh・fishが無いのでSkip） |
 | 本物のバイナリを直接実行（終了コード・シグナル・`//`置き換え・`QSOKU_CWD_FILE`） | `e2e/run_test.go`（`make test`）。`internal/cli`の単体テストは`Run`をプロセス内で呼ぶだけなので、ビルドした実バイナリでしか見えない部分をここで押さえる |
 | `docs/reference/`・`README.md`・`docs/examples/README.md`の実行例 | 手で書かない。`$ qsoku ...`の直前に`<!-- qsoku:example dir=<fixture> ... -->`を置くと、`e2e/examples_test.go`が実際にビルドしたqsokuで実行し、`make docs-examples`が出力を文書へ書き込む（`docs/reference/README.md`参照）。対象文書は`e2e/examples_test.go`の`documentPairs`。比較だけなら`make test`が実施 |
 | `docs/examples/`のqsokufile | 実行はしない（`go`・`npm`など、このリポジトリに無いツールを呼ぶため）。`e2e/run_test.go`の`TestDocsExamplesQsokufilesParse`が、各ディレクトリで`qsoku .list`が成功すること（解析できること）だけを確かめる |

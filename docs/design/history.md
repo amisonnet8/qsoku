@@ -189,3 +189,10 @@ Windows対応の実装・CIでの検証を通じて、パスの扱いに関す�
 
 - **サンドボックスの書き込み許可は、既存パスへのbindマウント式らしい。** `~/.cache/trivy`は誰も事前に作っていなかったため、`make trivy`が初回に`mkdir: read-only file system`で失敗した。`.devcontainer/postCreate.sh`に`mkdir -p ~/.cache/trivy`を足して解決（`~/go`・`~/.cache/go-build`は同じpostCreate.shの`go install`がサンドボックス外で副次的に作るため、元々問題にならなかった）
 - **`sudo`自体がこのサンドボックス下では機能しない。** uid remapping（アンプリビレッジドなユーザー名前空間）で、root所有のファイル（`/etc/sudo.conf`など）がnobody所有に見えてしまい、sudo自身の所有者チェックに失敗する。サンドボックス化前は同じセッションで`sudo apt-get install`等が成功していたため、これはサンドボックス化に伴う副作用。qsoku側では直せないため、`sudo`が要る操作は人間に依頼する運用にした（`CLAUDE.md`「権限・自動化について」に既知の制約として明記）
+
+## 2026-10-01　ghとpwshをdevcontainerの公式featureに置き換えた
+
+`.devcontainer/postCreate.sh`でaptリポジトリを手動で足して入れていた`gh`と`pwsh`を、公式feature（`ghcr.io/devcontainers/features/github-cli:1`・`powershell:2`）に置き換えた。リポジトリ追加・鍵管理・Debianバージョン固定のURL（`debian/12`）を自前で持たなくて済み、メンテナンス対象が減る。バージョン指定はメジャータグ（`:1`・`:2`）にし、featureの既定の`version: latest`で追従させる（goreleaserを`@latest`/`~> v2`にしたのと同じ「未来もそのままで動く」方針）。
+
+- ベースイメージ（`go:1.27-bookworm`）に`gh`は含まれない（実体の作成時刻がpostCreate.shの実行時刻と一致）ことを確認した上で置き換えた
+- 公式featureのうち`common-utils`・`git`・`go`はベースイメージが既に含むため追加しない。Trivy・ShellCheck・golangci-lint・goreleaser・mtqg・fishなどはfeatureに無いため、postCreate.shに残す

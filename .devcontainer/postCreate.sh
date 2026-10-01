@@ -3,7 +3,7 @@ set -euo pipefail
 
 # make:           Build and test entry points (once a Makefile exists).
 # wget, gnupg,
-# lsb-release:    Adding the Trivy and GitHub CLI apt repositories below.
+# lsb-release:    Adding the Trivy apt repository below.
 # gcc:            make race (CGO_ENABLED=1 go test -race) needs a C compiler.
 #                 The container itself runs with CGO_ENABLED=0 (.claude/rules/distribution.md).
 # jq:             Inspecting devcontainer.json / settings.json and --json output while debugging.
@@ -12,8 +12,8 @@ set -euo pipefail
 #                 or ShellCheck parses them as directives (SC1072/SC1073).
 # zsh, fish:      Two of the shells qsoku's completion and shell integration
 #                 support (.claude/rules/testing.md). PowerShell (pwsh) is
-#                 the third; it is installed separately below (Microsoft's
-#                 own apt repository, not Debian's).
+#                 the third; it comes from the devcontainer "powershell"
+#                 feature (devcontainer.json), as does gh ("github-cli").
 sudo apt-get update
 sudo apt-get install -y make wget gnupg lsb-release gcc jq shellcheck zsh fish apt-transport-https software-properties-common
 
@@ -30,26 +30,6 @@ sudo apt-get install -y trivy
 # under a read-only parent (~/.cache itself is not writable). Without this,
 # "make trivy" fails on its very first run in a sandboxed session.
 mkdir -p ~/.cache/trivy
-
-# gh: GitHub CLI, for checking issues, pull requests and Actions runs.
-# Installed from the official apt repository (same pattern as Trivy).
-sudo mkdir -p -m 755 /etc/apt/keyrings
-wget -qO - https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo tee /etc/apt/keyrings/githubcli-archive-keyring.gpg >/dev/null
-sudo chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg
-echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list >/dev/null
-sudo apt-get update
-sudo apt-get install -y gh
-
-# PowerShell (pwsh): the third shell qsoku's shell integration and
-# completion support (docs/reference/cli.md "Shell integration"). It is
-# only ever the *caller's* shell -- qsokufile commands themselves always
-# run under sh, on every OS (CLAUDE.md "実行は常にsh"). Installed from
-# Microsoft's own apt repository (same pattern as Trivy and gh above).
-wget -q "https://packages.microsoft.com/config/debian/12/packages-microsoft-prod.deb" -O /tmp/packages-microsoft-prod.deb
-sudo dpkg -i /tmp/packages-microsoft-prod.deb
-rm /tmp/packages-microsoft-prod.deb
-sudo apt-get update
-sudo apt-get install -y powershell
 
 # golangci-lint: lint (.golangci.yaml). The official install script puts the
 # binary into GOPATH/bin. The version is pinned so that lint results do not

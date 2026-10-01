@@ -91,8 +91,9 @@ qsoku/
                             から`go install ./cmd/qsoku`。mtqg自身のdevcontainerと同じ
                             やり方。2026-09-29）とシェル連携（`~/.bashrc`に`qsoku .shell
                             bash`。リポジトリ直下のqsokufileはあくまで見本で実開発はmake
-                            のまま——動作確認・dogfooding目的。2026-09-29）、pwsh
-                            （Microsoft自身のaptリポジトリから。2026-09-27）もここ。
+                            のまま——動作確認・dogfooding目的。2026-09-29）もここ。
+                            gh・pwshはdevcontainer.jsonの公式feature（`github-cli`・
+                            `powershell`、2026-10-01にaptの手動インストールから置換）
                             `mkdir -p ~/.cache/trivy`（2026-09-30）は、Bashサンドボックスの
                             書き込み許可が既存パスへのbindマウント式で、無いパスを新しく
                             掘れないため——サンドボックス化後の`make trivy`初回失敗の対策
