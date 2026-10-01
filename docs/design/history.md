@@ -202,3 +202,7 @@ Windows対応の実装・CIでの検証を通じて、パスの扱いに関す�
 ## 2026-10-01　postCreate.shがallowWriteの全パスを自動作成するようにした
 
 `mkdir -p ~/.cache/trivy`の1行（2026-09-30）を、`.claude/settings.json`の`sandbox.filesystem.allowWrite`を`jq`で読んで全パスを`mkdir -p`するブロックに一般化した（mtqg本体の同じ対応を取り込んだ）。`allowWrite`にパスを足してもpostCreate.shを直さなくてよい。あわせて、bwrap・socatが無ければ入れる確認を足した（Linuxのサンドボックスは、これらが無いと`enabled: true`でも黙って無効になる。今のベースイメージには両方あるので現状は何もしない保険）。
+
+## 2026-10-01　`.gitignore`のドットエントリをホワイトリスト方式にした
+
+Bashサンドボックスが作業ディレクトリ直下に残す`/dev/null`ダミー（`.bashrc`・`.gitconfig`・`.claude/agents`など）が`git status`に出ていたのを、`/.*`を無視して追跡中のもの（`.gitignore`・`.gitattributes`・`.golangci.yaml`・`.goreleaser.yaml`・`.mcp.json`・`.devcontainer/`・`.github/`・`.mtqg/`、`.claude/`は`settings.json`・`rules/`・`skills/`・`hooks/`だけ）を`!`で戻す形にして解消した（mtqg本体の同じ対応を取り込んだ）。個別にブラックリストへ足し続けると、サンドボックスが新しいダミーを作るたびに漏れる。代償として、新しいドットエントリを追跡するときは`.gitignore`への`!`行が要る。
