@@ -197,3 +197,4 @@ Windows対応の実装・CIでの検証を通じて、パスの扱いに関す�
 - ベースイメージ（`go:1.27-bookworm`）に`gh`は含まれない（実体の作成時刻がpostCreate.shの実行時刻と一致）ことを確認した上で置き換えた
 - 公式featureのうち`common-utils`・`git`・`go`はベースイメージが既に含むため追加しない。Trivy・ShellCheck・golangci-lint・goreleaser・mtqg・fishなどはfeatureに無いため、postCreate.shに残す
 - 追記：zshもベースイメージ（`common-utils`）に含まれる（`/usr/local/etc/vscode-dev-containers/common`の`ZSH_ALREADY_INSTALLED=true`）ため、postCreate.shのapt installから外した
+- 追記：`apt-transport-https`・`software-properties-common`もapt installから外した。pwsh導入時にMicrosoftの手順から持ち込んだ前提パッケージで、bookwormではaptがHTTPSを本体で扱い、`add-apt-repository`も使っていないため不要

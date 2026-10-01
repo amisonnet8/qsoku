@@ -16,7 +16,7 @@ set -euo pipefail
 #                 devcontainer "powershell" feature (devcontainer.json), as
 #                 does gh ("github-cli").
 sudo apt-get update
-sudo apt-get install -y make wget gnupg lsb-release gcc jq shellcheck fish apt-transport-https software-properties-common
+sudo apt-get install -y make wget gnupg lsb-release gcc jq shellcheck fish
 
 # Trivy: known vulnerabilities (CVE) and license compatibility of dependencies.
 # Installed from the official apt repository.
