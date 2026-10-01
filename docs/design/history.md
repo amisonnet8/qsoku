@@ -206,3 +206,4 @@ Windows対応の実装・CIでの検証を通じて、パスの扱いに関す�
 ## 2026-10-01　`.gitignore`のドットエントリをホワイトリスト方式にした
 
 Bashサンドボックスが作業ディレクトリ直下に残す`/dev/null`ダミー（`.bashrc`・`.gitconfig`・`.claude/agents`など）が`git status`に出ていたのを、`/.*`を無視して追跡中のもの（`.gitignore`・`.gitattributes`・`.golangci.yaml`・`.goreleaser.yaml`・`.mcp.json`・`.devcontainer/`・`.github/`・`.mtqg/`、`.claude/`は`settings.json`・`rules/`・`skills/`・`hooks/`だけ）を`!`で戻す形にして解消した（mtqg本体の同じ対応を取り込んだ）。個別にブラックリストへ足し続けると、サンドボックスが新しいダミーを作るたびに漏れる。代償として、新しいドットエントリを追跡するときは`.gitignore`への`!`行が要る。
+- 追記：VS Codeが生成する`.devcontainer/devcontainer-lock.json`（featureのバージョンとdigestのピン留め）はコミットする（人間の判断。リビルドの再現性を優先。featureの更新は`Dev Containers: Upgrade Lockfile`で意図的に行う。goreleaser等を`@latest`追従にした方針とは対象が異なる——featureは入れ替わるとコンテナ全体の土台が変わるため）
