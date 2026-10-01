@@ -25,13 +25,6 @@ echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.
 sudo apt-get update
 sudo apt-get install -y trivy
 
-# Pre-create trivy's DB cache directory. Claude Code's Bash sandbox
-# (.claude/settings.json "sandbox.filesystem.allowWrite") only grants write
-# access to a path that already exists -- it cannot mkdir a fresh directory
-# under a read-only parent (~/.cache itself is not writable). Without this,
-# "make trivy" fails on its very first run in a sandboxed session.
-mkdir -p ~/.cache/trivy
-
 # golangci-lint: lint (.golangci.yaml). The official install script puts the
 # binary into GOPATH/bin. The version is pinned so that lint results do not
 # change when the container is rebuilt.
@@ -74,3 +67,36 @@ go install ./cmd/qsoku
 # replacement for make.
 # shellcheck disable=SC2016 # single-quoted on purpose: written literally so it expands at bash startup, not now
 grep -qF 'qsoku .shell bash' ~/.bashrc 2>/dev/null || echo 'eval "$(qsoku .shell bash)"' >>~/.bashrc
+
+# The Bash sandbox (.claude/settings.json) only honours an allowWrite path that
+# already exists, and ~/.cache itself is read-only there. Create every
+# filesystem.allowWrite path up front, or the first make trivy / make lint in
+# a fresh container fails with "read-only file system" (.claude/rules/testing.md).
+# The list is read from settings.json, so this block needs no change when
+# allowWrite does. "~/x" is created under the home directory; other absolute
+# paths are created if they do not exist yet, and a failure only warns (no sudo
+# is used). Relative paths, "." and $TMPDIR, and /dev, /proc and /sys are left alone.
+sandbox_settings="$(dirname "$0")/../.claude/settings.json"
+tilde='~'
+if [ -f "$sandbox_settings" ]; then
+  while IFS= read -r allow_path; do
+    case "$allow_path" in
+      "$tilde/"*) allow_path="$HOME/${allow_path#"$tilde/"}" ;;
+      /dev/* | /proc/* | /sys/*) continue ;;
+      /*) ;;
+      *) continue ;;
+    esac
+    mkdir -p "$allow_path" || echo "warning: cannot create allowWrite path $allow_path" >&2
+  done < <(jq -r '.sandbox.filesystem.allowWrite[]?' "$sandbox_settings")
+fi
+
+# The Bash sandbox needs bubblewrap (bwrap) and socat on Linux; without them it
+# silently stays off even with "enabled": true. Install only what is missing,
+# since the base image may already have them (it does today).
+missing_sandbox_deps=()
+command -v bwrap >/dev/null 2>&1 || missing_sandbox_deps+=(bubblewrap)
+command -v socat >/dev/null 2>&1 || missing_sandbox_deps+=(socat)
+if [ "${#missing_sandbox_deps[@]}" -gt 0 ]; then
+  sudo apt-get update
+  sudo apt-get install -y "${missing_sandbox_deps[@]}"
+fi

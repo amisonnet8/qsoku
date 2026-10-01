@@ -198,3 +198,7 @@ Windows対応の実装・CIでの検証を通じて、パスの扱いに関す�
 - 公式featureのうち`common-utils`・`git`・`go`はベースイメージが既に含むため追加しない。Trivy・ShellCheck・golangci-lint・goreleaser・mtqg・fishなどはfeatureに無いため、postCreate.shに残す
 - 追記：zshもベースイメージ（`common-utils`）に含まれる（`/usr/local/etc/vscode-dev-containers/common`の`ZSH_ALREADY_INSTALLED=true`）ため、postCreate.shのapt installから外した
 - 追記：`apt-transport-https`・`software-properties-common`もapt installから外した。pwsh導入時にMicrosoftの手順から持ち込んだ前提パッケージで、bookwormではaptがHTTPSを本体で扱い、`add-apt-repository`も使っていないため不要
+
+## 2026-10-01　postCreate.shがallowWriteの全パスを自動作成するようにした
+
+`mkdir -p ~/.cache/trivy`の1行（2026-09-30）を、`.claude/settings.json`の`sandbox.filesystem.allowWrite`を`jq`で読んで全パスを`mkdir -p`するブロックに一般化した（mtqg本体の同じ対応を取り込んだ）。`allowWrite`にパスを足してもpostCreate.shを直さなくてよい。あわせて、bwrap・socatが無ければ入れる確認を足した（Linuxのサンドボックスは、これらが無いと`enabled: true`でも黙って無効になる。今のベースイメージには両方あるので現状は何もしない保険）。

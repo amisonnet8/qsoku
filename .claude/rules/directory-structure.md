@@ -93,10 +93,12 @@ qsoku/
                             bash`。リポジトリ直下のqsokufileはあくまで見本で実開発はmake
                             のまま——動作確認・dogfooding目的。2026-09-29）もここ。
                             gh・pwshはdevcontainer.jsonの公式feature（`github-cli`・
-                            `powershell`、2026-10-01にaptの手動インストールから置換）
-                            `mkdir -p ~/.cache/trivy`（2026-09-30）は、Bashサンドボックスの
-                            書き込み許可が既存パスへのbindマウント式で、無いパスを新しく
-                            掘れないため——サンドボックス化後の`make trivy`初回失敗の対策
+                            `powershell`、2026-10-01にaptの手動インストールから置換）。
+                            末尾で`settings.json`の`sandbox.filesystem.allowWrite`の全パスを
+                            `mkdir -p`する（Bashサンドボックスの書き込み許可が既存パスへの
+                            bindマウント式で、無いパスを新しく掘れないため。2026-09-30に
+                            trivyだけ、2026-10-01に全パスへ一般化）。bwrap・socatが無ければ
+                            入れる（サンドボックスが黙って無効になるのを防ぐ）
 ◯ .mcp.json                mtqgのMCPサーバー（`mtqg mcp`）の起動設定。`mtqg init --agent
                             claude-code`が作った（2026-09-25）
 ◯ .github/workflows/
