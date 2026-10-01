@@ -10,12 +10,13 @@ set -euo pipefail
 # ShellCheck:     Static analysis of tracked *.sh and *.bash files.
 #                 Comment lines must not start with the lowercase directive word,
 #                 or ShellCheck parses them as directives (SC1072/SC1073).
-# zsh, fish:      Two of the shells qsoku's completion and shell integration
-#                 support (.claude/rules/testing.md). PowerShell (pwsh) is
-#                 the third; it comes from the devcontainer "powershell"
-#                 feature (devcontainer.json), as does gh ("github-cli").
+# fish:           One of the shells qsoku's completion and shell integration
+#                 support (.claude/rules/testing.md). zsh already ships in the
+#                 base image (common-utils); PowerShell (pwsh) comes from the
+#                 devcontainer "powershell" feature (devcontainer.json), as
+#                 does gh ("github-cli").
 sudo apt-get update
-sudo apt-get install -y make wget gnupg lsb-release gcc jq shellcheck zsh fish apt-transport-https software-properties-common
+sudo apt-get install -y make wget gnupg lsb-release gcc jq shellcheck fish apt-transport-https software-properties-common
 
 # Trivy: known vulnerabilities (CVE) and license compatibility of dependencies.
 # Installed from the official apt repository.
