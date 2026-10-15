@@ -21,7 +21,7 @@ func fakeEditor(t *testing.T) string {
 	t.Helper()
 	path := filepath.Join(t.TempDir(), "fake-editor.sh")
 	script := "#!/bin/sh\necho edited-by-fake-editor >> \"$1\"\n"
-	if err := os.WriteFile(path, []byte(script), 0o700); err != nil { //nolint:gosec // an executable test fixture needs the execute bit
+	if err := os.WriteFile(path, []byte(script), 0o700); err != nil {
 		t.Fatal(err)
 	}
 	return filepath.ToSlash(path)

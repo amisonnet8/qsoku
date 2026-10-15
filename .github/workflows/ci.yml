@@ -27,7 +27,7 @@ jobs:
           go-version-file: go.mod
       - uses: golangci/golangci-lint-action@v9
         with:
-          version: v2.13.2
+          version: latest
           install-only: true
       # windows-latest has no `make` (Makefile assumes a POSIX shell -- see
       # its own header comment), so its steps call go/golangci-lint

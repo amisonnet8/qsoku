@@ -6,7 +6,8 @@ set -euo pipefail
 # lsb-release:    Adding the Trivy apt repository below.
 # gcc:            make race (CGO_ENABLED=1 go test -race) needs a C compiler.
 #                 The container itself runs with CGO_ENABLED=0 (.claude/rules/distribution.md).
-# jq:             Inspecting devcontainer.json / settings.json and --json output while debugging.
+# jq:             Used by .claude/hooks/ (build.sh, require-bcuz.sh) and for inspecting
+#                 devcontainer.json / settings.json and --json output while debugging.
 # ShellCheck:     Static analysis of tracked *.sh and *.bash files.
 #                 Comment lines must not start with the lowercase directive word,
 #                 or ShellCheck parses them as directives (SC1072/SC1073).
@@ -25,10 +26,15 @@ echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.
 sudo apt-get update
 sudo apt-get install -y trivy
 
-# golangci-lint: lint (.golangci.yaml). The official install script puts the
-# binary into GOPATH/bin. The version is pinned so that lint results do not
-# change when the container is rebuilt.
-wget -qO - https://raw.githubusercontent.com/golangci/golangci-lint/HEAD/install.sh | sh -s -- -b "$(go env GOPATH)/bin" v2.13.2
+# golangci-lint: lint (make check, .golangci.yaml). Built from source with the
+# container's Go (go install), not the prebuilt binary of install.sh. @latest,
+# not pinned: a golangci-lint reads the export data of the standard library only
+# up to the version of its own x/tools, so a pinned one stops working when the
+# container's Go moves on ("export data version 5 is greater than maximum
+# supported version 4"; building the same version again does not help). A newer
+# lint reads it. If lint still fails that way right after a Go update, the lint
+# is not out yet: `make lint` says so (Makefile, .claude/rules/testing.md).
+go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest
 
 go install golang.org/x/tools/gopls@latest
 go install golang.org/x/tools/cmd/goimports@latest
@@ -42,7 +48,7 @@ go install golang.org/x/tools/cmd/goimports@latest
 go install github.com/goreleaser/goreleaser/v2@latest
 
 # mtqg: this repository's own process-recording tool (CLAUDE.md,
-# .claude/rules/mtqg.md). Also wires up the Claude Code hook and MCP server
+# .claude/rules/mtqg-usage.md). Also wires up the Claude Code hook and MCP server
 # (.claude/settings.json, .mcp.json; "mtqg init --agent claude-code"). mtqg
 # has tagged v1 (2026-09-29); the VS Code extension (amisonnet8.mtqg, listed
 # above) is installed by the devcontainer's extensions list, not here.
@@ -50,6 +56,23 @@ go install github.com/amisonnet8/mtqg/cmd/mtqg@latest
 
 mkdir -p ~/.local/share/bash-completion/completions
 mtqg completion bash >~/.local/share/bash-completion/completions/mtqg
+
+# srwr: the AI's edits go through its look / edit / new tools, each with a
+# reason (why), and are recorded on a tape (.claude/rules/srwr-usage.md).
+# @latest, like mtqg above. srwr is 0.x, so after a rebuild that
+# picked up a new version, run `srwr init` once: it makes .claude/settings.json
+# follow any change in the tools' names.
+go install github.com/amisonnet8/srwr/cmd/srwr@latest
+
+# bcuz: every command Claude Code runs through the Bash tool goes through
+# `bcuz "<reason>" <command>`, which records when / why / what / result in
+# .bcuz/history.jsonl (.claude/rules/bcuz-usage.md; enforced by the PreToolUse
+# hook .claude/hooks/require-bcuz.sh). @latest, like the tools above.
+go install github.com/amisonnet8/bcuz/cmd/bcuz@latest
+
+# Create .bcuz/ at the repository root (idempotent: prints "already exists"
+# and succeeds if it is there). Without it, commands still run but are not recorded.
+(cd "$(dirname "$0")/.." && bcuz --init)
 
 # qsoku: this repository's own binary, built from the local source (not a
 # published version) so that it always matches the code in this checkout.
@@ -73,9 +96,10 @@ grep -qF 'qsoku .shell bash' ~/.bashrc 2>/dev/null || echo 'eval "$(qsoku .shell
 # filesystem.allowWrite path up front, or the first make trivy / make lint in
 # a fresh container fails with "read-only file system" (.claude/rules/testing.md).
 # The list is read from settings.json, so this block needs no change when
-# allowWrite does. "~/x" is created under the home directory; other absolute
-# paths are created if they do not exist yet, and a failure only warns (no sudo
-# is used). Relative paths, "." and $TMPDIR, and /dev, /proc and /sys are left alone.
+# allowWrite does. "~/x" and "$HOME/x" are created under the home directory;
+# other absolute paths (e.g. /go) are created if they do not exist yet, and a
+# failure only warns (no sudo is used). Relative paths, "." and $TMPDIR, and
+# /dev, /proc and /sys are left alone.
 sandbox_settings="$(dirname "$0")/../.claude/settings.json"
 tilde='~'
 if [ -f "$sandbox_settings" ]; then

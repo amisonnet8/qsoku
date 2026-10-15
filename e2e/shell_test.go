@@ -61,7 +61,7 @@ func shellEnv() []string {
 // dir, and returns what it printed on standard output.
 func runShellScript(t *testing.T, dir, script, program string, args ...string) string {
 	t.Helper()
-	cmd := exec.Command(program, args...) //nolint:gosec // program is a shell binary found via exec.LookPath in this same test file, not user input
+	cmd := exec.Command(program, args...)
 	cmd.Dir = dir
 	cmd.Env = shellEnv()
 	cmd.Stdin = strings.NewReader(script)

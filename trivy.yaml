@@ -1,4 +1,4 @@
-# Trivy configuration.
+# Trivy configuration (make trivy, .claude/rules/testing.md).
 # Usage: trivy fs --config trivy.yaml .
 #
 # Scans the Go module dependencies for known vulnerabilities (CVE) and for
@@ -17,6 +17,8 @@ scan:
 #   reciprocal -> MEDIUM    (e.g. MPL-2.0; file-level copyleft, allowed)
 #   notice     -> LOW       (e.g. MIT, BSD, Apache-2.0; allowed)
 # So GPL-family licenses fail the check and permissive ones pass.
+# Override the classification in the `license:` section below only after
+# deciding it explicitly and recording why.
 severity:
   - HIGH
   - CRITICAL

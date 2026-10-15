@@ -32,7 +32,7 @@ func TestMain(m *testing.M) {
 	}
 	binary = filepath.Join(dir, name)
 
-	build := exec.Command("go", "build", "-o", binary, "github.com/amisonnet8/qsoku/cmd/qsoku") //nolint:gosec // fixed arguments building the real qsoku binary under test, not user input
+	build := exec.Command("go", "build", "-o", binary, "github.com/amisonnet8/qsoku/cmd/qsoku")
 	build.Stdout, build.Stderr = os.Stderr, os.Stderr
 	if err := build.Run(); err != nil {
 		fmt.Fprintln(os.Stderr, "cannot build qsoku:", err)

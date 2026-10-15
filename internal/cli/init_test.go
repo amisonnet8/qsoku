@@ -18,7 +18,7 @@ func TestRun_init(t *testing.T) {
 			t.Fatalf("Run(.init) = %d, want 0; stderr: %s", got, stderr.String())
 		}
 
-		data, err := os.ReadFile(filepath.Join(dir, "qsokufile")) //nolint:gosec // dir is t.TempDir()
+		data, err := os.ReadFile(filepath.Join(dir, "qsokufile"))
 		if err != nil {
 			t.Fatalf("qsokufile was not created: %v", err)
 		}

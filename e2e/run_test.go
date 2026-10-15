@@ -17,7 +17,7 @@ import (
 // error and exit code.
 func runBinary(t *testing.T, dir string, extraEnv []string, args ...string) (stdout, stderr string, code int) {
 	t.Helper()
-	cmd := exec.Command(binary, args...) //nolint:gosec // binary is the qsoku this package's TestMain built, not user input
+	cmd := exec.Command(binary, args...)
 	cmd.Dir = dir
 	cmd.Env = append([]string{"PATH=" + os.Getenv("PATH")}, extraEnv...)
 	var out, errOut strings.Builder
@@ -180,7 +180,7 @@ func TestRunCwdHandoffDoesNotMixWithStdout(t *testing.T) {
 	if stdout != "hello\n" {
 		t.Errorf("stdout = %q, want %q", stdout, "hello\n")
 	}
-	got, err := os.ReadFile(cwdFile) //nolint:gosec // cwdFile is this test's own path, built from t.TempDir() a few lines above
+	got, err := os.ReadFile(cwdFile)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -235,7 +235,7 @@ func TestDocsExamplesQsokufilesParse(t *testing.T) {
 
 // TestRootQsokufileParses checks that this repository's own qsokufile (a
 // worked sample, not used for qsoku's own development — see
-// docs/design/history.md) parses: qsoku .list must succeed run from the
+// .claude/rules/qsoku-usage.md) parses: qsoku .list must succeed run from the
 // repository root. It does not run any of the entries.
 func TestRootQsokufileParses(t *testing.T) {
 	_, stderr, code := runBinary(t, "..", nil, ".list")

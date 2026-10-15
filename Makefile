@@ -1,7 +1,7 @@
 # Entry points for building and checking qsoku (.claude/rules/testing.md).
 # The recipes assume a POSIX shell (Git Bash on Windows).
 
-.PHONY: build fmt vet lint unit check test docs-examples race trivy shellcheck goreleaser-check
+.PHONY: build fmt vet lint unit check test docs-examples race trivy shellcheck hook goreleaser-check
 
 # Compile every package first: a package that cmd/qsoku does not import yet
 # would otherwise be skipped, and so would its build errors.
@@ -17,8 +17,15 @@ vet:
 	go vet ./...
 	go vet -tags e2e ./e2e/...
 
+# Also reports files that the formatters would change. If golangci-lint is older
+# than the Go in this container it cannot read the standard library (typecheck
+# errors "export data version N is greater than ..."); say what to do about it.
 lint:
-	golangci-lint run
+	@out=$$(golangci-lint run 2>&1); rc=$$?; printf '%s\n' "$$out"; \
+	if [ $$rc -ne 0 ] && printf '%s' "$$out" | grep -q 'export data version'; then \
+	  echo "hint: this golangci-lint is older than the Go in this container and cannot read its standard library. Update it: go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest (.claude/rules/testing.md)" >&2; \
+	fi; \
+	exit $$rc
 
 unit:
 	go test ./...
@@ -44,6 +51,10 @@ trivy:
 
 shellcheck:
 	git ls-files '*.sh' '*.bash' | xargs -r shellcheck
+
+# The decision table of the hook that forces commands through bcuz (needs jq).
+hook:
+	bash .claude/hooks/require-bcuz.test.sh
 
 # Validates .goreleaser.yaml and does a real build of every release target
 # (distribution.md), without publishing anything (--skip=publish) or

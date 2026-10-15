@@ -1,0 +1,25 @@
+{"v":1,"ts":"2026-10-15T10:46:36.859Z","why":"ルール共通化の変更内容を把握するため","cmd":["git","diff","--stat"],"dir":".","exit":0,"ms":6}
+{"v":1,"ts":"2026-10-15T10:46:38.952Z","why":"ルール共通化の変更内容を把握するため","cmd":["git","diff","--",".claude/hooks/build.sh",".claude/settings.json",".devcontainer",".gitattributes",".github",".gitignore",".golangci.yaml",".mcp.json","Makefile","qsokufile","trivy.yaml"],"dir":".","exit":0,"ms":3}
+{"v":1,"ts":"2026-10-15T10:46:41.798Z","why":"ルール文書側の変更点を把握するため","cmd":["git","diff","--","CLAUDE.md",".claude/rules/directory-structure.md",".claude/rules/distribution.md",".claude/rules/testing.md"],"dir":".","exit":0,"ms":3}
+{"v":1,"ts":"2026-10-15T10:46:50.671Z","why":"削除された mtqg.md や旧設定への参照が残っていないか探すため","cmd":["git","grep","-n","-e","rules/mtqg\\.md","-e","v2\\.13","-e","install\\.sh","-e","file_path","-e","Edit|Write","-e","~/go"],"dir":".","exit":0,"ms":4}
+{"v":1,"ts":"2026-10-15T10:46:54.229Z","why":"新しい.gitignoreのパターンが追跡中のファイルを隠さないか確かめるため","cmd":["git","ls-files","-ci","--exclude-standard"],"dir":".","exit":0,"ms":2}
+{"v":1,"ts":"2026-10-15T10:47:03.116Z","why":"Makefileの名前一覧を写している箇所を洗い出し、hookの追加漏れを探すため","cmd":["git","grep","-n","-e","shellcheck.*goreleaser-check","-e","make shellcheck","--",".",":!.mtqg",":!.bcuz"],"dir":".","exit":0,"ms":2}
+{"v":1,"ts":"2026-10-15T10:47:06.614Z","why":"新しく足したbcuz強制フックの判定表が通るか確かめるため","cmd":["make","hook"],"dir":".","exit":0,"ms":1644}
+{"v":1,"ts":"2026-10-15T10:47:08.395Z","why":"ルール共通化で変わったlint設定・Makefileでcheckが通るか確かめるため","cmd":["make","check"],"dir":".","exit":2,"ms":2579}
+{"v":1,"ts":"2026-10-15T10:47:30.521Z","why":"未使用のnolintを外したあとにcheckが通るか確かめるため","cmd":["make","check"],"dir":".","exit":0,"ms":2389}
+{"v":1,"ts":"2026-10-15T10:47:39.312Z","why":"e2eのテストファイルを直したので本物のバイナリとシェルで通るか確かめるため","cmd":["make","test"],"dir":".","exit":0,"ms":2189}
+{"v":1,"ts":"2026-10-15T10:47:41.637Z","why":"未追跡でmake shellcheckの対象外の新しいフック2本を検査するため","cmd":["shellcheck",".claude/hooks/require-bcuz.sh",".claude/hooks/require-bcuz.test.sh",".claude/hooks/build.sh",".devcontainer/postCreate.sh"],"dir":".","exit":0,"ms":113}
+{"v":1,"ts":"2026-10-15T10:47:46.311Z","why":"build.shがsrwrのedits[].file形式の入力でGoファイルを検知するか確かめるため","cmd":["jq","-rn","{tool_input:{edits:[{file:\"README.md\"},{file:\"internal/run/run.go\"}]}} | .tool_input | [.file, .file_path, (.edits[]?.file)] | .[] | strings"],"dir":".","exit":0,"ms":26}
+{"v":1,"ts":"2026-10-15T10:47:54.557Z","why":"案内文を直したあとも判定表が変わらず通るか確かめるため","cmd":["make","hook"],"dir":".","exit":0,"ms":1723}
+{"v":1,"ts":"2026-10-15T10:48:05.875Z","why":"設計文書・READMEがルールファイル名やhookの扱いに触れていないか確かめるため","cmd":["git","grep","-n","-e","\\.claude/rules","-e","require-bcuz","--","docs","README.md","README_ja.md",".github"],"dir":".","exit":0,"ms":3}
+{"v":1,"ts":"2026-10-15T10:53:06.910Z","why":"人間がCLIで付けたQAの回答がMCPに見えないため、ジャーナルを直接確かめるため","cmd":["mtqg","show","52a5ba13"],"dir":".","exit":0,"ms":4}
+{"v":1,"ts":"2026-10-15T10:53:08.721Z","why":"回答が別の質問や別の形で記録されていないか、最近の記録を確かめるため","cmd":["mtqg","log","-n","10"],"dir":".","exit":2,"ms":3}
+{"v":1,"ts":"2026-10-15T10:53:50.349Z","why":"history.mdを削除する前に、参照している箇所をすべて洗い出すため","cmd":["git","grep","-n","history\\.md","--",".",":!.mtqg",":!.bcuz"],"dir":".","exit":0,"ms":3}
+{"v":1,"ts":"2026-10-15T10:54:46.690Z","why":"q 52a5ba13の回答でhistory.mdをなくすと決まったため（重要な判断はmtqgのmemoに移済み）","cmd":["git","rm","-q","docs/design/history.md"],"dir":".","exit":0,"ms":2}
+{"v":1,"ts":"2026-10-15T10:54:49.864Z","why":"参照が残っていないか、ツリーの枝の形が崩れていないか確かめるため","cmd":["git","grep","-n","-e","history\\.md","-e","note\\.md  ","--",".",":!.mtqg",":!.bcuz"],"dir":".","exit":0,"ms":2}
+{"v":1,"ts":"2026-10-15T10:54:54.467Z","why":"e2eのコメントを直したので、念のためcheckとe2eをまとめて通すため","cmd":["sh","-c","make check && make test"],"dir":".","exit":0,"ms":2599}
+{"v":1,"ts":"2026-10-15T10:57:23.752Z","why":"コミットの前に記録者の設定が正しいか確かめるため","cmd":["git","config","user.email"],"dir":".","exit":0,"ms":1}
+{"v":1,"ts":"2026-10-15T10:57:23.937Z","why":"コミット前に、テープに無いのに変わったファイルが無いか確かめるため","cmd":["srwr","tapes","check"],"dir":".","exit":1,"ms":12}
+{"v":1,"ts":"2026-10-15T10:57:28.434Z","why":"コミットにテープを含めるため、今のテープを閉じて圧縮する","cmd":["srwr","tapes","new"],"dir":".","exit":0,"ms":20}
+{"v":1,"ts":"2026-10-15T10:57:28.640Z","why":"ルール共通化と追随の修正、記録類をまとめてステージするため","cmd":["git","add","-A"],"dir":".","exit":0,"ms":9}
+{"v":1,"ts":"2026-10-15T10:57:28.830Z","why":"ステージした内容に余計なファイルが混ざっていないか確かめるため","cmd":["git","status","--short"],"dir":".","exit":0,"ms":7}

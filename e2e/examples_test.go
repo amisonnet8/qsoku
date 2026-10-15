@@ -96,7 +96,7 @@ type document struct {
 
 func loadDocument(t *testing.T, name string) *document {
 	t.Helper()
-	data, err := os.ReadFile(filepath.Join("..", name)) //nolint:gosec // name is one of the fixed "documents" this file lists, not user input
+	data, err := os.ReadFile(filepath.Join("..", name))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -382,7 +382,7 @@ func (r *exampleRunner) outputs(t *testing.T, ex *example) []string {
 func (r *exampleRunner) run(t *testing.T, dir, text string) string {
 	t.Helper()
 	home := t.TempDir()
-	cmd := exec.Command("sh", "-c", text) //nolint:gosec // text is a "$ qsoku ..." line from docs/reference/, checked by checkInvocation to start with qsoku, run against a disposable fixture copy
+	cmd := exec.Command("sh", "-c", text)
 	cmd.Dir = dir
 	cmd.Env = []string{
 		"PATH=" + filepath.Dir(binary) + string(os.PathListSeparator) + os.Getenv("PATH"),
@@ -440,11 +440,11 @@ func (r *exampleRunner) copyOf(t *testing.T, fixture string) string {
 		if d.IsDir() {
 			return os.MkdirAll(filepath.Join(dst, rel), info.Mode().Perm()|0o700)
 		}
-		data, err := os.ReadFile(p) //nolint:gosec // p is walked from e2e/testdata/examples/<fixture>, a fixed test fixture tree, not user input
+		data, err := os.ReadFile(p)
 		if err != nil {
 			return err
 		}
-		return os.WriteFile(filepath.Join(dst, rel), data, info.Mode().Perm()|0o600) //nolint:gosec // dst is this test's own t.TempDir()-derived copy, and rel comes from the same fixed fixture walk above
+		return os.WriteFile(filepath.Join(dst, rel), data, info.Mode().Perm()|0o600)
 	})
 	if err != nil {
 		t.Fatal(err)

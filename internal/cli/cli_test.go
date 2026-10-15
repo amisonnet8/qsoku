@@ -92,7 +92,7 @@ func writeQsokufile(t *testing.T, dir, content string) {
 
 func readTestFile(t *testing.T, path string) string {
 	t.Helper()
-	data, err := os.ReadFile(path) //nolint:gosec // path is one writeQsokufile just built under t.TempDir()
+	data, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatal(err)
 	}

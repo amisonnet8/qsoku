@@ -1,5 +1,7 @@
 # ディレクトリ構成
 
+新しいファイルを追加する際は、どこに置くかをここで確かめる。**構成を変えたら、この文書も同じ変更の中で直す。**
+
 **◯は今あるもの、△はまだ無いもの**（実装しながら作る）。名前だけでは中身が分からないものに説明を添える。
 
 ```
@@ -7,6 +9,7 @@ qsoku/
 ◯ CLAUDE.md               プロジェクトルール（参照先の案内、mtqgでの記録の使い分け）
 ◯ LICENSE                 MIT
 ◯ .gitignore
+◯ .srwrignore             srwrがテープに記録しないファイル（`.mtqg/`・`.bcuz/`・生成物）
 ◯ .gitattributes          `* text=auto eol=lf`（Windowsでの改行コード変換による誤検知を防ぐ）
 ◯ .golangci.yaml          lintの設定
 ◯ trivy.yaml               依存の脆弱性・ライセンス検査の設定
@@ -20,16 +23,21 @@ qsoku/
                             後に外した（人間の判断）
 ◯ qsokufile                Makefileの主なターゲットを写した見本（`build`・`fmt`・`vet`・
                             `lint`・`test`・`check`・`e2e`・`docs-examples`・`race`・`trivy`・
-                            `shellcheck`・`goreleaser-check`）。**このリポジトリ自身の開発には
+                            `shellcheck`・`hook`・`goreleaser-check`）。**このリポジトリ自身の開発には
                             使わない**（実開発は引き続き`make`。CLAUDE.md・testing.md）。
                             `test`は看板READMEのデモGIFが依存する`(cd //; go test ./...)`の
                             まま（Makefileの`unit`相当。名前がMakefile側のe2eターゲットと
                             ずれるため、そちらは`e2e`という名前にした）
-◯ Makefile                ビルド・テストの入口（`make build`・`make check`など）
+◯ Makefile                ビルド・テストの入口（`make build`・`make check`など。一覧は
+                            `.claude/rules/qsoku-usage.md`）
 ◯ go.mod                   `go.sum`はまだ無い（依存が無いため）
 ◯ .mtqg/                   mtqgの記録（journal.jsonl・SCHEMA.md・version・
                             .gitattributes・.gitignore）。`.local/`はコミットされない
-                            （マシンごとのロック・一時ファイル。`.claude/rules/mtqg.md`）
+                            （マシンごとのロック・一時ファイル。`.claude/rules/mtqg-usage.md`）
+◯ .bcuz/                   bcuzの記録（`history.jsonl`）。`postCreate.sh`が`bcuz --init`で作る。
+                            **コミットする**（`merge=union`。`.claude/rules/bcuz-usage.md`）
+◯ .srwr/                   srwrの鍵・ロック・テープ（最初のhook・MCPの呼び出しでできる）。
+                            **閉じた`tapes/*.gz`だけコミットする**（`.claude/rules/srwr-usage.md`）
 ◯ docs/
 ◯ ├── assets/               看板READMEが使う画像。`logo.svg`（手書きのSVG。
 ◯ │                          `@media (prefers-color-scheme: dark)`を埋め込み、ラスター画像は
@@ -39,8 +47,7 @@ qsoku/
 ◯ │                          残さない一回限りのセットアップ）
 ◯ ├── design/              設計判断と理由の記録（日本語）。README.md
 ◯ │   ├── README.md         このディレクトリの位置づけと索引
-◯ │   ├── note.md           最初の設計メモ（原文のまま。qsokuとは何か、`//`の規則など）
-◯ │   └── history.md        決めたことの時系列
+◯ │   └── note.md           最初の設計メモ（原文のまま。qsokuとは何か、`//`の規則など）
 ◯ ├── reference/            仕様。英語版（正）と日本語版`*_ja.md`の2本立て。実行例は
 ◯ │                          `e2e/examples_test.go`が実測して書き込む
 ◯ │   └── README.md         置き場所の決まりと、実行例の印の書き方
@@ -48,7 +55,7 @@ qsoku/
 ◯                            シェル連携・補完まで、実行例つきで手を動かして追う）と、
 ◯                            コピーして使える実例（同後半＋go/node/monorepoの
 ◯                            qsokufile）。旧`docs/tour/`を2026-09-28に統合した
-◯                            （小さすぎたため。`docs/design/history.md`参照）。実例の
+◯                            （小さすぎたため）。実例の
 ◯                            qsokufileのパースだけ`e2e/run_test.go`の
 ◯                            `TestDocsExamplesQsokufilesParse`が確かめる（実行はしない）
 ◯ cmd/qsoku/main.go        エントリポイント。引数を渡すだけ
@@ -85,7 +92,9 @@ qsoku/
 ◯                            （`make docs-examples`で出力を文書へ書き込む。対象文書は
 ◯                            `documentPairs`。mtqgの`e2e/examples_test.go`の簡素化版）
 ◯ └── testdata/examples/     ↑の例が使うfixture（言語非依存。英日どちらの文書からも参照）
-◯ .devcontainer/           devcontainer.json・postCreate.sh。mtqgのインストール
+◯ .devcontainer/           devcontainer.json・devcontainer-lock.json（featureの版。コミットする）・
+                            postCreate.sh。srwr・bcuzのインストール（`@latest`）と`bcuz --init`、
+                            golangci-lint（`@latest`）、mtqgのインストール
                             （v1タグ公開後は`@latest`。2026-09-29）とbash補完（`mtqg
                             completion bash`）、qsoku自身のインストール（ローカルソース
                             から`go install ./cmd/qsoku`。mtqg自身のdevcontainerと同じ
@@ -99,8 +108,9 @@ qsoku/
                             bindマウント式で、無いパスを新しく掘れないため。2026-09-30に
                             trivyだけ、2026-10-01に全パスへ一般化）。bwrap・socatが無ければ
                             入れる（サンドボックスが黙って無効になるのを防ぐ）
-◯ .mcp.json                mtqgのMCPサーバー（`mtqg mcp`）の起動設定。`mtqg init --agent
-                            claude-code`が作った（2026-09-25）
+◯ .mcp.json                mtqgとsrwrのMCPサーバー（`mtqg mcp`・`srwr mcp`）の起動設定。
+                            mtqgの分は`mtqg init --agent claude-code`が作った（2026-09-25）。
+                            srwrの分は`srwr init`が書くものと同じ（2026-10-15）
 ◯ .github/workflows/
 ◯ ├── ci.yml                 CI（check・race・shellcheck・trivy・goreleaser
 ◯ │                            （make goreleaser-checkの安全網）の5系統。
@@ -118,9 +128,13 @@ qsoku/
 ◯                            （2026-09-25）が`env`（記録者の自動設定）・`SessionStart`／
 ◯                            `Stop`フック（`mtqg hook claude-code`。`mtqg context`の自動
 ◯                            読み込みと、記録漏れがあれば終了時に促す）を足した
+◯                            （2026-10-15、fleet-sync）srwrの厳格モード（`Edit`・`Write`などの
+◯                            deny、`mcp__srwr__*`のallow、`PostToolUse`の`srwr hook`）と、
+◯                            bcuzを強制する`PreToolUse`フック（`require-bcuz.sh`）を足した
 ◯ ├── rules/                 このファイルを含む、育てていくルール
-◯ └── hooks/                 build.sh：`.go`・`go.mod`・`go.sum`編集後に`make build`する
-◯                            （mtqgの`.claude/hooks/build.sh`と同じ）
+◯ └── hooks/                 build.sh：srwrの`edit`・`new`で`.go`・`go.mod`・`go.sum`を
+◯                            変えたあと`make build`する。require-bcuz.sh：`bcuz`を通さない
+◯                            Bashのコマンドを断る（判定の表は`require-bcuz.test.sh`、`make hook`）
 ```
 
 ## `docs/`の4つの違い（迷いやすいので明記）
@@ -139,3 +153,14 @@ qsoku/
 - **配布物（ビルド済みバイナリ）はコミットしない**（`.gitignore`にルート直下限定で`/qsoku`・`/qsoku.exe`・`/dist/`）
 - **シェル連携・補完のスクリプト**は`internal/cli/shells/`に埋め込み（`go:embed`）で配る（mtqgの`internal/cli/completions/`と同じやり方）。対応シェルはbash・zsh・fish・pwsh（pwshは2026-09-27に追加。以前はPowerShell対象外としていたが、方針を改めた）
 - **看板としてのREADME・`examples/`は実装完了後に作った。**
+
+## 各ファイル・ディレクトリの補足
+
+- **`.bcuz/`**: bcuzが`.bcuz/history.jsonl`に追記する、コマンドの実行の記録（`.claude/rules/bcuz-usage.md`）。**コミットする**（`.gitignore`の`!/.bcuz/`）。行を足すだけなので、`.gitattributes`の`merge=union`で、マージしても両側の行が残る。コミットの前に`git add .bcuz/history.jsonl`する（`git commit`は`bcuz`を通さない）。秘密をコマンドに書かない（記録に残る）。中のファイルは直接編集しない。`.srwrignore`でテープにも載せない
+- **`.claude/hooks/require-bcuz.sh`**: Bashツールのコマンドを、`bcuz`を通っていなければ実行前に断る`PreToolUse`フック。判定の表は`require-bcuz.test.sh`（`bash .claude/hooks/require-bcuz.test.sh`）。判定を変えたら、テストの表も同じ変更の中で直す
+- **`.srwr/`**: 最初のhook・MCPの呼び出しで、srwrが作る（`srwr init`でも作られる。鍵`key`・`lock`・`active`・`tapes/`・`init-backup/`）。**コミットするのは閉じて圧縮したテープ`tapes/*.tape.jsonl.gz`だけ**。書き込み中の生のテープ`*.tape.jsonl`は`.gitignore`で対象外（閉じると`.gz`に置き換わり、生のままコミットすると「削除＋追加」の差分が出るため）。鍵は共有しない。リポジトリには鍵を入れない（鍵をプロジェクトごとに別にするため）
+- **`.srwrignore`**: テープに記録しないファイル（`.gitignore`と同じ書き方）。生成物や巨大なファイルはここに足す。`.env`・`*.pem`・`*.key`などはsrwrが元から外す
+- **`.devcontainer/devcontainer-lock.json`**: コンテナのビルドで自動で作られる。**コミットする**（この版のfeatureでテストなどが通った証明になる）。featureを新しくしたいときは、lockを消してビルドし直し、新しいlockをコミットする
+- **`.gitignore`のドットファイル**: ルート直下のドットファイル・ドットディレクトリは**許可リスト方式**（`/.*`を無視し、追跡するものだけ`!`で戻す。`.claude/`の中は`/.claude/*`を無視して`settings.json`・`rules/`・`skills/`・`hooks/`だけ戻す）。サンドボックスが作業ディレクトリ直下に出すダミーファイルを`git add -A`で混ぜないため（`.claude/rules/testing.md`）。**追跡するドットファイルを新しく足すときは、`.gitignore`に`!`の行を足すこと**。足さないと`git add`が無視する
+- **VSCodeの設定**: `.devcontainer/devcontainer.json`の`customizations.vscode`に置く（拡張と設定を1か所にまとめる）。`.vscode/`は作らない
+- **シェルスクリプト**: 最小限にする。追跡中のものは`make shellcheck`の対象になる（`.claude/rules/testing.md`）

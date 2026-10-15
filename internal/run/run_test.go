@@ -115,7 +115,7 @@ func TestExecute_cwdHandoff(t *testing.T) {
 		if stderr.Len() != 0 {
 			t.Fatalf("stderr = %q, want empty", stderr.String())
 		}
-		data, err := os.ReadFile(cwdFile) //nolint:gosec // cwdFile is a path this test built itself under t.TempDir()
+		data, err := os.ReadFile(cwdFile)
 		if err != nil {
 			t.Fatalf("reading cwd file: %v", err)
 		}

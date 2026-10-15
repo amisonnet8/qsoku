@@ -16,4 +16,5 @@ docs-examples: (cd //; go test -tags e2e -count=1 -run '^TestDocExamples$' ./e2e
 race: (cd //; CGO_ENABLED=1 go test -race -count=1 ./...)
 trivy: (cd //; trivy fs --config trivy.yaml .)
 shellcheck: (cd //; git ls-files '*.sh' '*.bash' | xargs -r shellcheck)
+hook: (cd //; bash .claude/hooks/require-bcuz.test.sh)
 goreleaser-check: (cd //; goreleaser check && goreleaser release --snapshot --clean --skip=publish)

@@ -19,7 +19,7 @@ func writeTestFile(t *testing.T, content string) string {
 
 func readTestFile(t *testing.T, path string) string {
 	t.Helper()
-	data, err := os.ReadFile(path) //nolint:gosec // path is one writeTestFile just built under t.TempDir()
+	data, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -160,7 +160,7 @@ func TestSetEntry_preservesPermissions(t *testing.T) {
 		t.Skip("POSIX permission bits do not exist on Windows")
 	}
 	path := writeTestFile(t, "root: cd //\n")
-	if err := os.Chmod(path, 0o640); err != nil { //nolint:gosec // deliberately testing that a non-default, group-readable mode on a t.TempDir() fixture survives SetEntry unchanged
+	if err := os.Chmod(path, 0o640); err != nil {
 		t.Fatal(err)
 	}
 
