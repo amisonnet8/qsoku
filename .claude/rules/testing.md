@@ -4,7 +4,7 @@
 
 開発者の手元環境は**Linux（devcontainer）のみ**。実機のWindowsは無いので、Windows固有の挙動（`pwd -W`のパス形式、シグナルの伝わり方など）はCI（`windows-latest`）でしか確かめられない（2026-09-27に対応済み。以前は「Windowsは対象外」としていたが、方針を改めた）。
 
-**CI（`.github/workflows/`）の対象OSはLinux・macOS・Windows**（`check`ジョブのみ。`race`はLinux・macOSのまま、`shellcheck`・`trivy`・`goreleaser`はLinuxのみのまま）。**windows-latestランナーには`make`が無い**（`Makefile`は`sh`前提）ため、`ci.yml`の`check (windows)`・`test (windows)`ステップは、`make check`・`make test`の中身（`go vet`・`golangci-lint run`・`go test`）を直接呼ぶ
+**CI（`.github/workflows/`）の対象OSはLinux・macOS・Windows**（`check`ジョブのみ。`race`はLinux・macOSのまま、`shellcheck`・`trivy`・`goreleaser`はLinuxのみのまま。`shellcheck`のジョブは`make hook`も走らせる）。**windows-latestランナーには`make`が無い**（`Makefile`は`sh`前提）ため、`ci.yml`の`check (windows)`・`test (windows)`ステップは、`make check`・`make test`の中身（`go vet`・`golangci-lint run`・`go test`）を直接呼ぶ
 
 | 対象 | 進め方 |
 | :--- | :--- |
@@ -68,6 +68,7 @@
 
 - `trivy fs`で、依存モジュールの既知の脆弱性（CVE）とライセンスを検査する（`make trivy`）
 - 何を失敗とみなすか（深刻度、禁止するライセンスの種類）は`trivy.yaml`で固定する
+- **Trivy自身の版は固定しない**（`mtqg rule` `8c5d88cf`）。手元は`postCreate.sh`がaptの最新を入れ、CIは`aquasecurity/setup-trivy`の`version: latest`。手元とCIで版が食い違わないようにするため。落ちたら更新する
 - Trivyは脆弱性データベースの取得に通信が要る（devcontainerのBashサンドボックスを使う場合は下記「Bashサンドボックスの落とし穴」参照）
 - シェルスクリプトは最小限にする。込み入った処理はGoで書く
 - `make shellcheck`は`git ls-files '*.sh' '*.bash'`で追跡中のものを列挙してShellCheckにかける

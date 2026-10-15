@@ -31,7 +31,7 @@
 **このPJの`.mtqg/`には、このPJの作業だけを記録する。** 同じコンテナ・同じ会話で頼まれた、別のPJ・別のリポジトリ・道具そのものの作業は、このPJの記録に混ぜない。混ぜると、`mtqg context`がこのPJの現状を示さなくなり、人間もAIも作業を取り違える。
 
 - 例：このPJのAIが、別のPJ（srwr・テンプレート・ほかの兄弟PJ）の修正や調査を頼まれたとき。その作業の記録は、**そのPJ自身の`.mtqg/`**（`cd`してから`mtqg`を動かす）に書く。記録先が無い・迷うときは、記録せずに会話で報告する
-- 例：このPJが使う道具（qsoku・mtqg・srwr・golangci-lint）の不具合を見つけたとき。このPJの動作に影響する範囲（回避策・版の注意）だけを、このPJに`m add`する。道具そのものの不具合の追跡は、道具のリポジトリで行う
+- 例：このPJが使う道具（qsoku・mtqg・srwr・bcuz・golangci-lint・Trivy）の不具合を見つけたとき。このPJの動作に影響する範囲（回避策・版の注意）だけを、このPJに`m add`する。道具そのものの不具合の追跡は、道具のリポジトリで行う
 - 記録する前に確かめる：**「このPJのコード・文書・設定・決まり事の話か」**。違えば、このPJには書かない
 - コミットも同じ。別のPJの変更を、このPJのコミットに混ぜない（`git add`はパスを指定する）
 
@@ -75,7 +75,7 @@
 段階3で報告した「MCP・フックで解くもの」3件のうち、Q&Aの自動記録とmemo/bugの一貫性は、mtqg本体側でフック・MCPサーバーとして実装された。qsoku自身にも配線済み。
 
 - **`SessionStart`／`Stop`フック**（`.claude/settings.json`）：セッションの開始・再開時に`mtqg context`の内容を自動で読み込む。終了時、このセッション中にmtqgへの書き込みが1件も無ければ促す。**フックは「読み込みと記録漏れの確認」だけを機械的に行い、何を記録するかの判断はしない**（mtqg本体の設計、役割分担）
-- **MCPサーバー**（`.mcp.json`、`mtqg mcp`）：`memo_add`・`todo_add`・`qa_ask`・`qa_answer`・`bug_report`・`bug_reply`・`glossary_define`・`rule_add`・各種`done`/`reopen`・`edit`・`context`・`show`・`search`などが`mcp__mtqg__*`ツールとして直接呼べる。シェルコマンド（`Bash`経由の`mtqg q add`等）を介さずに記録できるため、**「対話中の質問・回答もその場で記録する」（上の節）は、これらのMCPツールで行ってよい**（結果は同じ`journal.jsonl`に書かれる）
+- **MCPサーバー**（`.mcp.json`、`mtqg mcp`。`.claude/settings.json`の`enabledMcpjsonServers`で有効にしている）：`memo_add`・`todo_add`・`qa_ask`・`qa_answer`・`bug_report`・`bug_reply`・`glossary_define`・`rule_add`・各種`done`/`reopen`・`edit`・`context`・`show`・`search`などが`mcp__mtqg__*`ツールとして直接呼べる。シェルコマンド（`Bash`経由の`mtqg q add`等）を介さずに記録できるため、**「対話中の質問・回答もその場で記録する」（上の節）は、これらのMCPツールで行ってよい**（結果は同じ`journal.jsonl`に書かれる）
 - 記録者（`author`）は、MCP経由だと接続したクライアント名から自動で決まり、CLI経由だと環境変数（`MTQG_AUTHOR_KIND`・`MTQG_AUTHOR_NAME`、`.claude/settings.json`の`env`に設定済み）から決まる。どちらでも`claude-code`になる
 - `delete`・`undo`・`archive`・`review`・`format`はMCPに公開されていない（破壊的・複雑な操作をAIの判断だけで実行させないため。これらはCLIで行う）
 

@@ -75,6 +75,9 @@ jobs:
       - uses: actions/checkout@v7
       - name: make shellcheck
         run: make shellcheck
+      # The decision table of the hook that forces commands through bcuz (jq is on the runner).
+      - name: make hook
+        run: make hook
 
   trivy:
     runs-on: ubuntu-latest
@@ -82,7 +85,7 @@ jobs:
       - uses: actions/checkout@v7
       - uses: aquasecurity/setup-trivy@v0.3.1
         with:
-          version: v0.71.2
+          version: latest
       - name: make trivy
         run: make trivy
 

@@ -23,3 +23,18 @@
 {"v":1,"ts":"2026-10-15T10:57:28.434Z","why":"コミットにテープを含めるため、今のテープを閉じて圧縮する","cmd":["srwr","tapes","new"],"dir":".","exit":0,"ms":20}
 {"v":1,"ts":"2026-10-15T10:57:28.640Z","why":"ルール共通化と追随の修正、記録類をまとめてステージするため","cmd":["git","add","-A"],"dir":".","exit":0,"ms":9}
 {"v":1,"ts":"2026-10-15T10:57:28.830Z","why":"ステージした内容に余計なファイルが混ざっていないか確かめるため","cmd":["git","status","--short"],"dir":".","exit":0,"ms":7}
+{"v":1,"ts":"2026-10-15T21:47:40.098Z","why":"共通化のためのルール変更の内容を把握する","cmd":["git","diff","--",".claude","CLAUDE.md",".github"],"dir":".","exit":0,"ms":4}
+{"v":1,"ts":"2026-10-15T21:47:40.407Z","why":"mtqgの決まり事の変更を把握する","cmd":["git","diff","--",".mtqg/journal.jsonl"],"dir":".","exit":0,"ms":2}
+{"v":1,"ts":"2026-10-15T21:47:48.362Z","why":"版の固定やCI構成の記述が残っていないか洗い出す","cmd":["git","grep","-n","-E","0\\.71|trivy|Trivy|make hook|5系統|enabledMcpjson|@v[0-9]|コマンド置換","--",".",":!.mtqg",":!.bcuz",":!.srwr"],"dir":".","exit":0,"ms":5}
+{"v":1,"ts":"2026-10-15T21:47:59.136Z","why":"決まり事8c5d88cfの変更前後を比べる","cmd":["mtqg","show","8c5d88cf"],"dir":".","exit":0,"ms":4}
+{"v":1,"ts":"2026-10-15T21:47:59.327Z","why":"フックの断りのメッセージが新しい判定と合っているか見る","cmd":["grep","-n","-E","substitution|sh -c|echo \"",".claude/hooks/require-bcuz.sh"],"dir":".","exit":0,"ms":1}
+{"v":1,"ts":"2026-10-15T21:47:59.509Z","why":"mtqgのMCPサーバーの設定と記述を確かめる","cmd":["grep","-rn","-E","mcp|MCP",".mcp.json",".claude/rules/mtqg-usage.md",".claude/rules/directory-structure.md"],"dir":".","exit":0,"ms":1}
+{"v":1,"ts":"2026-10-15T21:48:02.587Z","why":"フックの判定変更（単一引用符の中を調べない）を確かめる","cmd":["make","hook"],"dir":".","exit":0,"ms":2032}
+{"v":1,"ts":"2026-10-15T21:48:07.629Z","why":"変更されたフックのシェルスクリプトを静的検査する","cmd":["make","shellcheck"],"dir":".","exit":0,"ms":243}
+{"v":1,"ts":"2026-10-15T21:48:08.024Z","why":"決まり事8c5d88cfの変更前の文面を見る","cmd":["git","grep","-h","8c5d88cf","HEAD","--",".mtqg/journal.jsonl"],"dir":".","exit":0,"ms":3}
+{"v":1,"ts":"2026-10-15T21:48:40.901Z","why":"postCreate.shのコメントを直したあとの確認","cmd":["make","shellcheck"],"dir":".","exit":0,"ms":210}
+{"v":1,"ts":"2026-10-15T21:48:41.292Z","why":"コミットの前に、テープに無い変更が無いか確かめる","cmd":["srwr","tapes","check"],"dir":".","exit":1,"ms":10}
+{"v":1,"ts":"2026-10-15T21:49:47.602Z","why":"コミットの前にテープを閉じて圧縮する","cmd":["srwr","tapes","new"],"dir":".","exit":0,"ms":14}
+{"v":1,"ts":"2026-10-15T21:49:47.796Z","why":"コミットの前に記録者の設定を確かめる","cmd":["git","config","user.email"],"dir":".","exit":0,"ms":1}
+{"v":1,"ts":"2026-10-15T21:49:51.171Z","why":"コミットに入れる変更をそろえる","cmd":["git","add",".claude/hooks/require-bcuz.sh",".claude/hooks/require-bcuz.test.sh",".claude/rules/bcuz-usage.md",".claude/rules/mtqg-usage.md",".claude/rules/testing.md",".claude/rules/directory-structure.md",".claude/settings.json",".github/workflows/ci.yml",".devcontainer/postCreate.sh","CLAUDE.md",".mtqg/journal.jsonl",".srwr/tapes",".bcuz/history.jsonl"],"dir":".","exit":0,"ms":4}
+{"v":1,"ts":"2026-10-15T21:49:51.353Z","why":"入れ忘れ・混入が無いか確かめる","cmd":["git","status","--short"],"dir":".","exit":0,"ms":3}

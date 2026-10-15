@@ -110,13 +110,17 @@ qsoku/
                             入れる（サンドボックスが黙って無効になるのを防ぐ）
 ◯ .mcp.json                mtqgとsrwrのMCPサーバー（`mtqg mcp`・`srwr mcp`）の起動設定。
                             mtqgの分は`mtqg init --agent claude-code`が作った（2026-09-25）。
-                            srwrの分は`srwr init`が書くものと同じ（2026-10-15）
+                            srwrの分は`srwr init`が書くものと同じ（2026-10-15）。
+                            どちらも`.claude/settings.json`の`enabledMcpjsonServers`で有効にする
 ◯ .github/workflows/
 ◯ ├── ci.yml                 CI（check・race・shellcheck・trivy・goreleaser
 ◯ │                            （make goreleaser-checkの安全網）の5系統。
 ◯ │                            checkはLinux・macOS・Windowsの3OS、raceは
 ◯ │                            Linux・macOS、shellcheck・trivy・goreleaserは
-◯ │                            Linuxのみ（Windowsは2026-09-27に対象に加えた）
+◯ │                            Linuxのみ（Windowsは2026-09-27に対象に加えた）。
+◯ │                            shellcheckのジョブは`make hook`（bcuzを強制する
+◯ │                            フックの判定の表）も走らせる。Trivyは版を固定しない
+◯ │                            （setup-trivyの`version: latest`）
 ◯ └── release.yml            v*タグのpushだけで動く。goreleaser-actionで実際に
 ◯                            ビルド・GitHub Releaseの公開まで行う
 ◯ .claude/

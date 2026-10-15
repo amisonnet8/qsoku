@@ -87,7 +87,7 @@
 
 - **サンドボックス化**（2026-09-30、mtqg本体の`settings.json`を参考に変更）：ネットワークは許可したドメイン（`proxy.golang.org`・`sum.golang.org`・`mirror.gcr.io`・`github.com`・`api.github.com`）だけに制限され、書き込みは`~/.cache/go-build`・`/go`・`~/.cache/trivy`・`~/.cache/golangci-lint`だけに限られる（`~/.ssh`・`~/.aws`・`~/.config/gh`は読み取りも不可）。このおかげで`curl`・`wget`・`go get`は個別の確認なしで動く。このコンテナのGOPATHは`/go`（`go env GOPATH`）
 - 拒否（deny）：`git push`、`gh pr merge`、`gh release create`（タグを打つのは人間、という`distribution.md`の方針と揃えた）、`Edit`・`Write`・`MultiEdit`・`NotebookEdit`（srwrの厳格モード、下）
-- **`bcuz`を通さないBashコマンドの拒否**：`PreToolUse`フック（`.claude/hooks/require-bcuz.sh`）が、`bcuz`で始まらないコマンド（`git commit`を除く。逆に`bcuz`を通した`git commit`を断る）と、後ろに別のコマンドをつなぐもの（`&&`・`||`・`;`・`&`・改行・コマンド置換）を、実行前に断る。直し方は断りのメッセージと`.claude/rules/bcuz-usage.md`に書いてある
+- **`bcuz`を通さないBashコマンドの拒否**：`PreToolUse`フック（`.claude/hooks/require-bcuz.sh`）が、`bcuz`で始まらないコマンド（`git commit`を除く。逆に`bcuz`を通した`git commit`を断る）と、後ろに別のコマンドをつなぐもの（`&&`・`||`・`;`・`&`・改行・単一引用符の外のコマンド置換）を、実行前に断る。直し方は断りのメッセージと`.claude/rules/bcuz-usage.md`に書いてある
 - 実行前に確認（ask）：`git reset --hard`、`git clean`、`sudo`、`gh pr create`
 
 確認を求められた場合、無理に実行しようとせず、指示を仰ぐこと。サンドボックスの制限（許可ドメイン外のネットワーク・許可外のファイル書き込み）に引っかかった場合は、`.claude/rules/working-with-human.md` 2章の形（原因と、`.claude/settings.json` のどこに何を足すか）で**短く頼む**（許可を広げるかは人間が判断する）。`.claude/settings.json`を変更したいときは、変更案を差分で示すにとどめること（人間が貼るだけで済む形にする）。落とし穴は`.claude/rules/testing.md`「Bashサンドボックスの落とし穴」参照

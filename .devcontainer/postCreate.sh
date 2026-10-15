@@ -20,7 +20,9 @@ sudo apt-get update
 sudo apt-get install -y make wget gnupg lsb-release gcc jq shellcheck fish
 
 # Trivy: known vulnerabilities (CVE) and license compatibility of dependencies.
-# Installed from the official apt repository.
+# Installed from the official apt repository, at its latest version: not pinned,
+# like the tools below, and matching CI's setup-trivy "version: latest"
+# (.github/workflows/ci.yml), so local and CI run the same Trivy.
 wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | gpg --dearmor | sudo tee /usr/share/keyrings/trivy.gpg >/dev/null
 echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main" | sudo tee /etc/apt/sources.list.d/trivy.list >/dev/null
 sudo apt-get update
