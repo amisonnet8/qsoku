@@ -38,3 +38,12 @@
 {"v":1,"ts":"2026-10-15T21:49:47.796Z","why":"コミットの前に記録者の設定を確かめる","cmd":["git","config","user.email"],"dir":".","exit":0,"ms":1}
 {"v":1,"ts":"2026-10-15T21:49:51.171Z","why":"コミットに入れる変更をそろえる","cmd":["git","add",".claude/hooks/require-bcuz.sh",".claude/hooks/require-bcuz.test.sh",".claude/rules/bcuz-usage.md",".claude/rules/mtqg-usage.md",".claude/rules/testing.md",".claude/rules/directory-structure.md",".claude/settings.json",".github/workflows/ci.yml",".devcontainer/postCreate.sh","CLAUDE.md",".mtqg/journal.jsonl",".srwr/tapes",".bcuz/history.jsonl"],"dir":".","exit":0,"ms":4}
 {"v":1,"ts":"2026-10-15T21:49:51.353Z","why":"入れ忘れ・混入が無いか確かめる","cmd":["git","status","--short"],"dir":".","exit":0,"ms":3}
+{"v":1,"ts":"2026-10-15T21:49:53.533Z","why":"直前までのコマンドの記録もコミットに入れる","cmd":["git","add",".bcuz/history.jsonl"],"dir":".","exit":0,"ms":3}
+{"v":1,"ts":"2026-10-15T21:49:59.112Z","why":"コミット後に残りが無いか確かめる","cmd":["git","status","--short"],"dir":".","exit":0,"ms":3}
+{"v":1,"ts":"2026-10-15T22:17:07.442Z","why":"v0.2.0以降の変更でパッチ版が要るかを判断する","cmd":["git","diff","--stat","v0.2.0..HEAD","--",".",":!.mtqg",":!.bcuz",":!.srwr"],"dir":".","exit":0,"ms":8}
+{"v":1,"ts":"2026-10-15T22:17:07.821Z","why":"v0.2.0以降のコミットの流れを見る","cmd":["git","log","--oneline","v0.2.0..HEAD"],"dir":".","exit":0,"ms":3}
+{"v":1,"ts":"2026-10-15T22:17:12.634Z","why":"バイナリやアーカイブの中身に効く差分があるかを見る","cmd":["git","diff","v0.2.0..HEAD","--","README.md",".github/workflows/release.yml","go.mod","cmd",".goreleaser.yaml","LICENSE"],"dir":".","exit":0,"ms":2}
+{"v":1,"ts":"2026-10-15T22:17:12.821Z","why":"テスト以外のGoのファイルに変更が無いか確かめる","cmd":["git","diff","--name-only","v0.2.0..HEAD","--","*.go"],"dir":".","exit":0,"ms":2}
+{"v":1,"ts":"2026-10-15T22:17:16.626Z","why":"仕様の文書の変更が挙動に関わるものかを確かめる","cmd":["git","diff","v0.2.0..HEAD","--","docs/reference"],"dir":".","exit":0,"ms":2}
+{"v":1,"ts":"2026-10-15T22:17:47.228Z","why":"コミットの前に、テープに無い変更が無いか確かめる","cmd":["srwr","tapes","check"],"dir":".","exit":0,"ms":22}
+{"v":1,"ts":"2026-10-15T22:17:47.431Z","why":"コミットに入れるものを確かめる","cmd":["git","status","--short"],"dir":".","exit":0,"ms":3}
