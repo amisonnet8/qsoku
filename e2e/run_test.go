@@ -243,3 +243,27 @@ func TestRootQsokufileParses(t *testing.T) {
 		t.Errorf(".list in repository root: code = %d, stderr = %q", code, stderr)
 	}
 }
+
+// TestVersionEmbeddedByReleaseBuild builds qsoku the way .goreleaser.yaml does
+// (-ldflags "-X main.version=<tag>") and checks that .version prints that
+// tag. If the variable that the ldflags name moves or is renamed, -X sets
+// nothing without any error, and only this test notices.
+func TestVersionEmbeddedByReleaseBuild(t *testing.T) {
+	name := "qsoku"
+	if runtime.GOOS == "windows" {
+		name = "qsoku.exe"
+	}
+	bin := filepath.Join(t.TempDir(), name)
+	build := exec.Command("go", "build", "-ldflags", "-X main.version=v9.8.7", "-o", bin, "github.com/amisonnet8/qsoku/cmd/qsoku")
+	if out, err := build.CombinedOutput(); err != nil {
+		t.Fatalf("cannot build qsoku: %v\n%s", err, out)
+	}
+
+	out, err := exec.Command(bin, ".version").Output()
+	if err != nil {
+		t.Fatalf("qsoku .version: %v", err)
+	}
+	if got := strings.TrimSpace(string(out)); got != "v9.8.7" {
+		t.Errorf("qsoku .version = %q, want %q", got, "v9.8.7")
+	}
+}

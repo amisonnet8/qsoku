@@ -5,7 +5,9 @@
 .mtqg/
 # .bcuz/ is written only by bcuz (.claude/rules/bcuz-usage.md).
 .bcuz/
-# Build output: make build writes ./qsoku, make goreleaser-check writes dist/.
+# Build output: make build writes ./qsoku, make goreleaser-check writes dist/,
+# and goreleaser's before hook writes bin/licenses/ (go run ./tools/licenses).
 /qsoku
 /qsoku.exe
 dist/
+/bin/

@@ -2,6 +2,8 @@
 
 新しいファイルを追加する際は、どこに置くかをここで確かめる。**構成を変えたら、この文書も同じ変更の中で直す。**
 
+**このリポジトリの説明（`.crube/`）も保つ。** ファイル・ディレクトリを足す・動かす・消すときは、同じ変更の中で英語と日本語の説明を直し、コミットの前に両方の言語で`crube status --require all`を通す。やり方（MCPとCLI、`.crube/ignore`の保ち方）は`.claude/rules/crube-usage.md`
+
 **◯は今あるもの、△はまだ無いもの**（実装しながら作る）。名前だけでは中身が分からないものに説明を添える。
 
 ```
@@ -13,7 +15,7 @@ qsoku/
 ◯ .gitattributes          `* text=auto eol=lf`（Windowsでの改行コード変換による誤検知を防ぐ）
 ◯ .golangci.yaml          lintの設定
 ◯ trivy.yaml               依存の脆弱性・ライセンス検査の設定
-◯ .goreleaser.yaml         バイナリ配布の設定（distribution.md）。動くのは人間が
+◯ .goreleaser.yaml         配布物の作り方（goreleaser。distribution.md）。動くのは人間が
 ◯                          v*タグをpushしたとき（.github/workflows/release.yml）だけ。
 ◯                          設定が壊れていないかは.github/workflows/ci.yml の
 ◯                          goreleaserジョブ（make goreleaser-check）が毎pushで確認
@@ -36,6 +38,9 @@ qsoku/
                             （マシンごとのロック・一時ファイル。`.claude/rules/mtqg-usage.md`）
 ◯ .bcuz/                   bcuzの記録（`history.jsonl`）。`postCreate.sh`が`bcuz --init`で作る。
                             **コミットする**（`merge=union`。`.claude/rules/bcuz-usage.md`）
+◯ .crube/                  このリポジトリのファイルの説明（crube。`structure.txt`は英語、
+                            `structure_ja.txt`は日本語、`ignore`は`.gitignore`に合わせて手で保つ）。
+                            **コミットする**（`.claude/rules/crube-usage.md`）
 ◯ .srwr/                   srwrの鍵・ロック・テープ（最初のhook・MCPの呼び出しでできる）。
                             **閉じた`tapes/*.gz`だけコミットする**（`.claude/rules/srwr-usage.md`）
 ◯ docs/
@@ -79,6 +84,8 @@ qsoku/
 ◯                            何かは知らない。居場所の持ち帰り・終了コードの素通しを担う
 ◯                            （`internal/qsokufile`・`internal/cli`のどちらも知らない。
 ◯                            `.golangci.yaml`のdepguardで3層の依存の向きを強制）
+◯ tools/licenses/          配布物に入れる依存のライセンス文を集める道具（goreleaser が
+                            `go run`で動かす。実行ファイルには組み込まれない）
 ◯ e2e/                      本物のバイナリと本物のシェル（bash・zsh・fish・pwsh）で動かす
 ◯                            テスト（`e2e_test.go`が`TestMain`でバイナリを1回ビルド。
 ◯                            Windowsでは`qsoku.exe`）
@@ -93,14 +100,15 @@ qsoku/
 ◯                            `documentPairs`。mtqgの`e2e/examples_test.go`の簡素化版）
 ◯ └── testdata/examples/     ↑の例が使うfixture（言語非依存。英日どちらの文書からも参照）
 ◯ .devcontainer/           devcontainer.json・devcontainer-lock.json（featureの版。コミットする）・
-                            postCreate.sh。srwr・bcuzのインストール（`@latest`）と`bcuz --init`、
-                            golangci-lint（`@latest`）、mtqgのインストール
-                            （v1タグ公開後は`@latest`。2026-09-29）とbash補完（`mtqg
-                            completion bash`）、qsoku自身のインストール（ローカルソース
+                            postCreate.sh。srwr・bcuz・crube・goreleaserのインストール（`@latest`）と
+                            `bcuz --init`、golangci-lint（`@latest`）、mtqgのインストール
+                            （v1タグ公開後は`@latest`。2026-09-29）、qsoku自身のインストール（ローカルソース
                             から`go install ./cmd/qsoku`。mtqg自身のdevcontainerと同じ
-                            やり方。2026-09-29）とシェル連携（`~/.bashrc`に`qsoku .shell
-                            bash`。リポジトリ直下のqsokufileはあくまで見本で実開発はmake
-                            のまま——動作確認・dogfooding目的。2026-09-29）もここ。
+                            やり方。2026-09-29）。`shells=(bash zsh fish pwsh)`の各シェルに、
+                            qsokuのシェル連携（`.bashrc`・`.zshrc`・`config.fish`・pwshの
+                            `$PROFILE`に`qsoku .shell <shell>`。リポジトリ直下のqsokufileは
+                            あくまで見本で実開発はmakeのまま——動作確認・dogfooding目的）と、
+                            bcuz・crube・mtqg・srwrの補完を入れる。
                             gh・pwshはdevcontainer.jsonの公式feature（`github-cli`・
                             `powershell`、2026-10-01にaptの手動インストールから置換）。
                             末尾で`settings.json`の`sandbox.filesystem.allowWrite`の全パスを
@@ -108,10 +116,10 @@ qsoku/
                             bindマウント式で、無いパスを新しく掘れないため。2026-09-30に
                             trivyだけ、2026-10-01に全パスへ一般化）。bwrap・socatが無ければ
                             入れる（サンドボックスが黙って無効になるのを防ぐ）
-◯ .mcp.json                mtqgとsrwrのMCPサーバー（`mtqg mcp`・`srwr mcp`）の起動設定。
-                            mtqgの分は`mtqg init --agent claude-code`が作った（2026-09-25）。
-                            srwrの分は`srwr init`が書くものと同じ（2026-10-15）。
-                            どちらも`.claude/settings.json`の`enabledMcpjsonServers`で有効にする
+◯ .mcp.json                mtqg・srwrとcrube（英語の`crube`・日本語の`crube-ja`）のMCPサーバーの
+                            起動設定。mtqgの分は`mtqg init --agent claude-code`が作った（2026-09-25）。
+                            srwrの分は`srwr init`が書くものと同じ（2026-10-15）。crubeの分は手で
+                            足した。どれも`.claude/settings.json`の`enabledMcpjsonServers`で有効にする
 ◯ .github/workflows/
 ◯ ├── ci.yml                 CI（check・race・shellcheck・trivy・goreleaser
 ◯ │                            （make goreleaser-checkの安全網）の5系統。
@@ -121,8 +129,9 @@ qsoku/
 ◯ │                            shellcheckのジョブは`make hook`（bcuzを強制する
 ◯ │                            フックの判定の表）も走らせる。Trivyは版を固定しない
 ◯ │                            （setup-trivyの`version: latest`）
-◯ └── release.yml            v*タグのpushだけで動く。goreleaser-actionで実際に
-◯                            ビルド・GitHub Releaseの公開まで行う
+◯ │                            release.ymlから`workflow_call`でも呼ばれる
+◯ └── release.yml            v*タグのpushだけで動く。ci.ymlを呼んで検査してから、
+◯                            goreleaserが下書きに添付し、最後に公開する（distribution.md）
 ◯ .claude/
 ◯ ├── settings.json         権限（deny/ask）・サンドボックス（ネットワーク許可ドメイン・
 ◯                            書き込み許可パス。2026-09-30、mtqg本体のsettings.jsonを参考に
@@ -136,9 +145,13 @@ qsoku/
 ◯                            deny、`mcp__srwr__*`のallow、`PostToolUse`の`srwr hook`）と、
 ◯                            bcuzを強制する`PreToolUse`フック（`require-bcuz.sh`）を足した
 ◯ ├── rules/                 このファイルを含む、育てていくルール
+◯ ├── skills/                commit-with-tape：テープを閉じてコミットする手順。mutation-check：
+◯                            壊して確かめる手順と、変異の道具`mutants/`（別の Go モジュール）・
+◯                            仕様の変異の一覧`spec.txt`
 ◯ └── hooks/                 build.sh：srwrの`edit`・`new`で`.go`・`go.mod`・`go.sum`を
 ◯                            変えたあと`make build`する。require-bcuz.sh：`bcuz`を通さない
-◯                            Bashのコマンドを断る（判定の表は`require-bcuz.test.sh`、`make hook`）
+◯                            Bashのコマンドを断る（判定の表は`require-bcuz.test.sh`、`make hook`）。
+◯                            crube-untracked.sh：srwr の new のあとに未説明を知らせる
 ```
 
 ## `docs/`の4つの違い（迷いやすいので明記）
@@ -160,6 +173,10 @@ qsoku/
 
 ## 各ファイル・ディレクトリの補足
 
+- **`tools/licenses/`**: 配布物に同梱する依存のライセンス文を集める（`.claude/rules/distribution.md`）。`go run ./tools/licenses <出力先> <main パッケージ>`。`TestRun`は`./cmd/qsoku`の一覧
+- **`.claude/skills/mutation-check/mutants/`**: 変異の道具。`go.mod`を持つ別のモジュールなので、`make check`（`./...`）の対象に入らない。変えたら、そのディレクトリで整形・vet・テストを通す（Skill の「気をつけること」）
+- **`.mcp.json`**: `mtqg mcp`と`srwr mcp`（MCPサーバー）の配線。`mtqg init --agent claude-code`・`srwr init`が書くものと同じ。その後ろに、crubeのMCPサーバー（`crube mcp --allow-write`。`crube-ja`は`CRUBE_LANG=ja`）を手で足している（`.claude/rules/crube-usage.md`）
+- **`.crube/`**: このリポジトリのファイルとディレクトリの説明（`.claude/rules/crube-usage.md`）。**コミットする**（`.gitignore`の`!/.crube/`）。閉じたテープ（`*.tape.jsonl.gz`）は、説明を付けず`.crube/ignore`で外す（パターンのエントリにすると、最初のテープを閉じるまで何にも当たらず`orphan`になり、無ければ新しいテープが`untracked`になるため）。`ignore`は`.gitignore`を手で写したもの（crube は`.gitignore`を読まない）
 - **`.bcuz/`**: bcuzが`.bcuz/history.jsonl`に追記する、コマンドの実行の記録（`.claude/rules/bcuz-usage.md`）。**コミットする**（`.gitignore`の`!/.bcuz/`）。行を足すだけなので、`.gitattributes`の`merge=union`で、マージしても両側の行が残る。コミットの前に`git add .bcuz/history.jsonl`する（`git commit`は`bcuz`を通さない）。秘密をコマンドに書かない（記録に残る）。中のファイルは直接編集しない。`.srwrignore`でテープにも載せない
 - **`.claude/hooks/require-bcuz.sh`**: Bashツールのコマンドを、`bcuz`を通っていなければ実行前に断る`PreToolUse`フック。判定の表は`require-bcuz.test.sh`（`bash .claude/hooks/require-bcuz.test.sh`）。判定を変えたら、テストの表も同じ変更の中で直す
 - **`.srwr/`**: 最初のhook・MCPの呼び出しで、srwrが作る（`srwr init`でも作られる。鍵`key`・`lock`・`active`・`tapes/`・`init-backup/`）。**コミットするのは閉じて圧縮したテープ`tapes/*.tape.jsonl.gz`だけ**。書き込み中の生のテープ`*.tape.jsonl`は`.gitignore`で対象外（閉じると`.gz`に置き換わり、生のままコミットすると「削除＋追加」の差分が出るため）。鍵は共有しない。リポジトリには鍵を入れない（鍵をプロジェクトごとに別にするため）

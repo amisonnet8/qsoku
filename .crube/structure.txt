@@ -1,0 +1,166 @@
+.bcuz/	Record of the commands run through bcuz (committed)
+	history.jsonl	One JSON line per command: when, why, what and the exit code
+.claude/	Claude Code settings shared in the repository
+	hooks/	Hooks that Claude Code runs around its tools
+		build.sh	After srwr edit or new changes a .go, go.mod or go.sum file, runs make build and reports a failure to Claude
+		crube-untracked.sh	After srwr new creates a file, tells Claude which of its paths have no description, per language
+		require-bcuz.sh	PreToolUse hook that refuses Bash commands not run through bcuz
+		require-bcuz.test.sh	Table of the commands require-bcuz.sh allows and refuses (make hook)
+	rules/	Rules for working in this repository (Japanese); CLAUDE.md says when to read each
+		bcuz-usage.md	How to run Bash commands through bcuz, and keeping secrets out of them
+		crube-usage.md	Using crube: MCP and the CLI, finding places, keeping descriptions in both languages
+		datetime.md	Dates and times: keep UTC, show in the local time zone
+		directory-structure.md	Where each file goes, and the layout of the repository
+		distribution.md	How the project is released: building the archives with goreleaser, and the release flow
+		documentation.md	How to write documents: example values from tools, what history goes in docs/design/
+		mtqg-usage.md	How to record memos, todos, questions, bugs and rules with mtqg
+		naming.md	Naming rules (to be filled in)
+		qsoku-usage.md	This repository is developed with make, not qsoku: the make targets, and the sample qsokufile
+		srwr-usage.md	Editing files only through srwr (strict mode), and closing tapes
+		testing.md	Test policy, and pitfalls of the sandbox and of CI on each OS
+		working-with-human.md	How to ask people: small blockers, checks, and approval of what users see
+	settings.json	Permissions, sandbox and hooks of Claude Code (managed by people)
+	skills/	Skills of Claude Code
+		commit-with-tape/	Skill: close the srwr tape and commit
+			SKILL.md	The steps of the skill
+		mutation-check/	Skill: break the code on purpose to see that the tests notice
+			SKILL.md	The steps of the skill
+			spec.txt	Mutations that break the promises of the project one by one, in the words of the spec (empty at first)
+			mutants/	The tool that makes the mutations and runs the tests (a Go module of its own)
+				go.mod	Module definition, apart from this project
+				main.go	Makes syntactic mutations, or those of a list, one at a time, and puts the files back
+				main_test.go	Tests of the tool
+.devcontainer/	Development container
+	devcontainer-lock.json	Versions of the features the container was built with
+	devcontainer.json	Container definition and VS Code settings
+	postCreate.sh	Installs the tools (Trivy, golangci-lint, mtqg, srwr, bcuz, crube, goreleaser, qsoku itself) and wires bash, zsh, fish and pwsh
+		| The shells are listed in shells=(...). For each: qsoku's shell integration for the sample qsokufile, and the completion of bcuz, crube, mtqg and srwr.
+		| Also makes every sandbox allowWrite path of .claude/settings.json, and installs bwrap and socat if they are missing.
+.github/	GitHub settings
+	workflows/	GitHub Actions workflows
+		ci.yml	CI: check and e2e on Linux, macOS and Windows; race; shellcheck and make hook; Trivy; make goreleaser-check
+			| Windows has no make, so its steps call the commands of make check and make test directly. release.yml calls this workflow too (workflow_call).
+		release.yml	Release on a tag: runs ci.yml, attaches goreleaser's archives to a Release and publishes it
+.mtqg/	Process record kept with mtqg: memos, todos, questions, bugs, glossary and rules
+	.gitattributes	Merges journal.jsonl with merge=union
+	.gitignore	Keeps .local/ out of git
+	SCHEMA.md	Data format of journal.jsonl
+	journal.jsonl	The records, one JSON line each (written only through mtqg)
+	version	Version of the mtqg data format
+.srwr/	srwr: tapes of the file edits made by AI, each with its reason
+	tapes/	Closed tapes (committed); replay them with srwr view
+		| One compressed tape (*.tape.jsonl.gz) for each unit of work.
+		| The tapes are left out by .crube/ignore, so that they need no description.
+.gitattributes	Line endings (LF everywhere) and merge=union for the record files
+.gitignore	Files kept out of git; dot entries in the root are an allowlist
+.golangci.yaml	golangci-lint settings, including depguard for the direction of the three layers of internal/
+.goreleaser.yaml	How the release archives are built: the binaries, the archives with the licenses, and a draft Release
+.mcp.json	MCP servers for Claude Code: mtqg, srwr, and crube in English and Japanese
+.srwrignore	Files srwr does not put on its tapes
+CLAUDE.md	Rules for Claude Code in this repository, and the rule files to read
+LICENSE	MIT license
+Makefile	The entry points for building and checking qsoku (make check, make test and so on)
+README.md	The front page: what qsoku is, a demo, examples and how to install it
+README_ja.md	The Japanese front page
+cmd/	The commands of the module
+	qsoku/	The qsoku command
+		main.go	Entry point: hands its arguments and the version set by the release build to internal/cli
+docs/	Documents
+	assets/	Images that the README uses
+		demo.gif	A recorded terminal session: // takes a command back to the root of the repository
+		logo.svg	The logo, a hand-written SVG with its own dark mode
+	design/	Why qsoku is designed the way it is (Japanese)
+		README.md	What this directory is for, and its index
+		note.md	The first design note, as written: what qsoku is, the rules of //
+	examples/	A walk-through for first-time users, and qsokufiles to copy
+		README.md	The walk-through, from .init to shell integration and completion, and the examples
+		README_ja.md	The Japanese walk-through
+		go/	Example for a Go project
+			qsokufile	Shortcuts for a Go project
+		monorepo/	Example for a monorepo with several packages
+			qsokufile	Shortcuts that move into the packages with //
+			packages/	The packages of the example
+				api/	A package of the example
+					.keep	Keeps the empty directory in git
+				web/	A package of the example
+					.keep	Keeps the empty directory in git
+		node/	Example for a Node.js project
+			qsokufile	Shortcuts for a Node.js project
+	reference/	The specification (English is the original; *_ja.md is the Japanese one)
+		README.md	Where the specification lives, and how to mark examples that e2e runs
+		README_ja.md	Japanese version of README.md
+		cli.md	The command line: how names are looked up, the dot commands, shell integration, exit codes
+		cli_ja.md	Japanese version of cli.md
+		qsokufile.md	The qsokufile format: names, commands, //, how the file is found
+		qsokufile_ja.md	Japanese version of qsokufile.md
+e2e/	Tests with the real qsoku binary and real shells (build tag e2e, make test)
+	e2e_test.go	TestMain: builds the binary once for all the tests
+	examples_test.go	Runs the examples of the documents and compares their output (make docs-examples writes it)
+	run_test.go	Runs the binary directly: exit codes, signals, //, QSOKU_CWD_FILE, the version of a release build
+		| Also checks that the qsokufiles of docs/examples/ and of the root can be parsed (qsoku .list only).
+	shell_test.go	Shell integration and completion in bash, zsh, fish and pwsh
+	testdata/	Fixtures of the e2e tests
+		examples/	The directories that the examples of the documents run in
+			basic/	A small qsokufile with an argument and //
+				qsokufile	Two entries: hello with $1, and root with //
+				src/	A subdirectory to run qsoku from
+					.keep	Keeps the empty directory in git
+			broken/	A qsokufile with a syntax error
+				qsokufile	A line with no colon
+			dup/	A qsokufile that defines a name twice
+				qsokufile	Two entries named build
+			slashes/	Where // is replaced and where it is not
+				main.go	A file with // in it, for the grep entry
+				qsokufile	// at the start of a word, in a URL and in quotes
+			tour/	The qsokufile of the walk-through of docs/examples/
+				qsokufile	build, test and run
+				src/	A subdirectory to run qsoku from
+					.keep	Keeps the empty directory in git
+go.mod	Go module (no dependencies yet, so no go.sum)
+internal/	The implementation (not importable from outside the module)
+	cli/	The command line: looks up and runs names, and the dot commands, one file each
+		add.go	.add: adds or replaces an entry
+		add_test.go	Tests of .add
+		cli.go	Run: the entry point; dispatches the dot commands, and runs other names
+		cli_test.go	Tests of Run and exit codes
+		edit.go	.edit: opens the qsokufile with $EDITOR
+		edit_test.go	Tests of .edit
+		help.go	.help and qsoku with no arguments: usage and the defined names
+		help_test.go	Tests of .help
+		init.go	.init: creates a qsokufile
+		init_test.go	Tests of .init
+		list.go	.list and .names: the defined names, for people and for completion
+		list_test.go	Tests of .list and .names
+		rm.go	.rm: removes an entry
+		rm_test.go	Tests of .rm
+		shell.go	.shell: prints the shell integration for bash, zsh, fish or pwsh
+		shell_test.go	Tests of .shell
+		version.go	.version: the version set by the release build, else the build information
+		version_test.go	Tests of the version
+		where.go	.where: the directory of the qsokufile in use
+		where_test.go	Tests of .where
+		shells/	Shell scripts embedded with go:embed: the qsoku function and completion, one per shell
+			qsoku.bash	For bash
+			qsoku.fish	For fish
+			qsoku.ps1	For pwsh (PowerShell 7+)
+			qsoku.zsh	For zsh
+	qsokufile/	Finding, parsing and writing a qsokufile, and replacing //; knows nothing of cli or run
+		find.go	Find: looks for the qsokufile from the current directory up
+		find_test.go	Tests of Find
+		load.go	Load: Find and Parse together
+		qsokufile.go	Parse and Lookup: the entries of a qsokufile
+		qsokufile_test.go	Tests of Parse and Lookup
+		subst.go	Substitute and SubstituteArg: replace // outside quotes, at the start of a word
+		subst_test.go	Tests of the replacement of //
+		write.go	SetEntry and RemoveEntry: change only the lines of one entry, keeping comments and order
+		write_test.go	Tests of SetEntry and RemoveEntry
+	run/	Starts sh for a command; knows nothing of qsokufile or cli
+		run.go	Execute: runs sh, passes the exit code through, writes the working directory for the carry-back
+		run_test.go	Tests of Execute
+qsokufile	A sample qsokufile that copies the main make targets (this repository itself is developed with make)
+trivy.yaml	Trivy settings: what counts as a vulnerability or license failure
+tools/	Tools for building the project (not built into its command)
+	licenses/	Gathers the license texts of the dependencies for the release archives
+		| go run ./tools/licenses <dir> <main package>; goreleaser runs it before building. Fails if a module has no license file.
+		main.go	Finds the modules linked into the command with go list -deps and copies their licenses
+		main_test.go	Tests; TestRun lists the licenses of qsoku itself, and fails when a dependency is added or dropped

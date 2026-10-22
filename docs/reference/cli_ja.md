@@ -78,7 +78,7 @@ hello, everyone
 | `qsoku .names` | 名前だけを1行ずつ一覧する——それ以外は何も出さない、常に（[シェル補完](#シェル補完)参照） |
 | `qsoku .edit` | 使われている`qsokufile`を`$EDITOR`で開く。未設定なら`nano`に落とす。`nano`も`PATH`に無ければ、それ以上推測せずエラーにする（終了コード1）。`$EDITOR`の値は引用符を付けずに`sh`のコマンドへ埋め込む（Windowsでの絶対パス指定にどう影響するかは[Windowsでは](#windowsでは)参照）。Windowsでは`nano`が`PATH`に無いことが多いので、`$EDITOR`（pwshなら`$env:EDITOR`）を明示的に設定するのが現実的 |
 | `qsoku .where` | 使われている`qsokufile`が置いてあるディレクトリの絶対パスを表示する（`//`・`QSOKU_ROOT`が展開される先） |
-| `qsoku .version` | qsoku自身のバージョンを`runtime/debug.ReadBuildInfo`から表示する（[distribution.md](../../.claude/rules/distribution.md)の設計メモを参照——これにより`-ldflags`なしの`go install`だけでも意味のあるバージョンが出る） |
+| `qsoku .version` | qsoku自身のバージョンを表示する。配布物のバイナリなら埋め込まれたタグ、そうでなければ`runtime/debug.ReadBuildInfo`の値（[distribution.md](../../.claude/rules/distribution.md)の設計メモを参照——これにより`-ldflags`なしの`go install`だけでも意味のあるバージョンが出る）。どちらも同じ形（`v0.1.0`）のタグを出す |
 | `qsoku .shell <shell>` | 指定したシェル（`bash`・`zsh`・`fish`・`pwsh`）向けに、下記の`qsoku`関数を定義するシェルコードを`eval`用に表示する（pwshには`eval`が無いので`Invoke-Expression`）。未知の`<shell>`はコマンドラインの誤り（終了コード2） |
 | `qsoku .help` | 使い方と、定義されている名前の一覧を表示する。**引数なしで**`qsoku`とだけ打った場合も同じものを表示する（`git`・`git --help`と同じ考え方。オプションのつづりは要らない） |
 

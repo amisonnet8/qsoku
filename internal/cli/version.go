@@ -2,11 +2,11 @@ package cli
 
 import "runtime/debug"
 
-// version is set at release build time (-ldflags
-// "-X github.com/amisonnet8/qsoku/internal/cli.version={{.Tag}}", by
-// .goreleaser.yaml). Without it, the version comes from the build
-// information (distribution.md).
-var version string
+// Version is the version set at release build time, handed over by package
+// main (its own version, which .goreleaser.yaml sets with
+// -ldflags "-X main.version={{ .Tag }}"). Without it, the version comes from
+// the build information (distribution.md).
+var Version string
 
 // buildVersion reports qsoku's own version: the version set at build time
 // (a GoReleaser release build), else the module version from the build
@@ -16,8 +16,8 @@ var version string
 // into, so the build information is the fallback for that path, not the
 // primary source overall; distribution.md).
 func buildVersion() string {
-	if version != "" {
-		return version
+	if Version != "" {
+		return Version
 	}
 	info, ok := debug.ReadBuildInfo()
 	if !ok {

@@ -1,38 +1,56 @@
+# The release archives of qsoku (.claude/rules/distribution.md). On a tag,
+# .github/workflows/release.yml runs this, which attaches the archives to a
+# draft Release, and then publishes the Release. Locally: make goreleaser-check.
 version: 2
 
 project_name: qsoku
 
+before:
+  hooks:
+    # The license texts of what is built into qsoku, put into every archive.
+    - go run ./tools/licenses bin/licenses ./cmd/qsoku
+
 builds:
-  - id: qsoku
-    main: ./cmd/qsoku
+  - main: ./cmd/qsoku
     binary: qsoku
     env:
       - CGO_ENABLED=0
-    goos:
-      - linux
-      - darwin
-      - windows
-    goarch:
-      - amd64
-      - arm64
+    goos: [linux, darwin, windows]
+    goarch: [amd64, arm64]
+    flags:
+      - -trimpath
+    # The tag as it is (v0.1.0), the same as go install shows.
     ldflags:
-      - -s -w -X github.com/amisonnet8/qsoku/internal/cli.version={{.Tag}}
+      - -s -w -X main.version={{ .Tag }}
+    mod_timestamp: "{{ .CommitTimestamp }}"
 
 archives:
-  - id: qsoku
-    formats: [tar.gz]
-    # Windows users expect a .zip, not a .tar.gz (distribution.md).
+  - formats: [tar.gz]
     format_overrides:
       - goos: windows
         formats: [zip]
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    files:
+      - LICENSE
+      - README.md
+      - README_ja.md
+      # The directory itself, not a glob: with a glob that matches one file
+      # only (a project with no dependencies has just go/LICENSE), goreleaser
+      # drops the parent directories and the archive gets licenses/LICENSE.
+      - src: bin/licenses
+        dst: licenses
 
 checksum:
-  name_template: "checksums.txt"
+  name_template: checksums.txt
+
+snapshot:
+  version_template: "{{ incpatch .Version }}-snapshot"
 
 changelog:
   sort: asc
 
+# A draft, which release.yml publishes once everything is attached. The draft
+# left by a failed run is replaced by the next run for the tag.
 release:
-  github:
-    owner: amisonnet8
-    name: qsoku
+  draft: true
+  replace_existing_draft: true

@@ -1,0 +1,166 @@
+.bcuz/	bcuz を通して動かしたコマンドの記録（コミットする）
+	history.jsonl	1コマンド1行の JSON：いつ・なぜ・何を・終了コード
+.claude/	リポジトリで共有する Claude Code の設定
+	hooks/	Claude Code が道具の前後に動かすフック
+		build.sh	srwr の edit・new で .go・go.mod・go.sum を変えたあと make build を動かし、失敗を Claude に返す
+		crube-untracked.sh	srwr の new でファイルを作ったあと、説明の無いパスを言語ごとに Claude に知らせる
+		require-bcuz.sh	bcuz を通さない Bash のコマンドを断る PreToolUse フック
+		require-bcuz.test.sh	require-bcuz.sh が通す・断るコマンドの表（make hook）
+	rules/	このリポジトリで作業するときのルール（日本語）。いつ読むかは CLAUDE.md にある
+		bcuz-usage.md	Bash のコマンドを bcuz で動かす方法と、秘密をコマンドに書かないこと
+		crube-usage.md	crube の使い方：MCP と CLI、場所の探し方、両方の言語の説明の保ち方
+		datetime.md	日時の扱い：UTC で持ち、表示だけ利用者のタイムゾーンに直す
+		directory-structure.md	ファイルの置き場所と、リポジトリの構成
+		distribution.md	配布の方法：goreleaser での配布物の作り方と、リリースの流れ
+		documentation.md	文書の書き方：例の値は道具で求める、docs/design/ に書く経緯の線引き
+		mtqg-usage.md	mtqg でメモ・todo・質問・不具合・決まり事を記録する方法
+		naming.md	命名規則（決まったら書く）
+		qsoku-usage.md	このリポジトリの開発は qsoku でなく make：make の名前の一覧と、見本の qsokufile
+		srwr-usage.md	ファイルは srwr だけで変える（厳格モード）こと、テープの閉じ方
+		testing.md	テスト方針と、サンドボックス・OS ごとの CI の落とし穴
+		working-with-human.md	人間への頼み方：小さなつまずき、確認、見え方の了承
+	settings.json	Claude Code の許可・サンドボックス・フック（人間が管理する）
+	skills/	Claude Code のスキル
+		commit-with-tape/	スキル：srwr のテープを閉じてコミットする
+			SKILL.md	スキルの手順
+		mutation-check/	スキル：実装をわざと壊して、テストが気づくか確かめる
+			SKILL.md	スキルの手順
+			spec.txt	プロジェクトの仕様の約束を1つずつ壊す変異の一覧（仕様の言葉で書く。最初は空）
+			mutants/	変異を入れてテストを回す道具（独立した Go モジュール）
+				go.mod	モジュールの定義（このプロジェクトとは別）
+				main.go	構文の変異、または一覧の変異を1つずつ入れ、ファイルを元に戻す
+				main_test.go	道具のテスト
+.devcontainer/	開発用のコンテナ
+	devcontainer-lock.json	コンテナを作ったときの feature の版
+	devcontainer.json	コンテナの定義と VS Code の設定
+	postCreate.sh	道具（Trivy・golangci-lint・mtqg・srwr・bcuz・crube・goreleaser・qsoku 自身）を入れ、bash・zsh・fish・pwsh を配線する
+		| シェルは shells=(...) で決める。各シェルに、見本の qsokufile 向けの qsoku のシェル連携と、bcuz・crube・mtqg・srwr の補完を入れる。
+		| .claude/settings.json のサンドボックスの allowWrite のパスを先に作り、bwrap・socat が無ければ入れる。
+.github/	GitHub の設定
+	workflows/	GitHub Actions のワークフロー
+		ci.yml	CI：Linux・macOS・Windows の check と e2e、race、shellcheck と make hook、Trivy、make goreleaser-check
+			| Windows には make が無いので、make check・make test の中身を直接呼ぶ。release.yml からも呼ばれる（workflow_call）。
+		release.yml	タグで動くリリース。ci.yml を通してから、goreleaser の配布物を Release に添付して公開する
+.mtqg/	mtqg の作業記録：メモ・todo・質問・不具合・用語・決まり事
+	.gitattributes	journal.jsonl を merge=union でマージする
+	.gitignore	.local/ を git に入れない
+	SCHEMA.md	journal.jsonl のデータ形式
+	journal.jsonl	記録そのもの。1件1行の JSON（mtqg からだけ書く）
+	version	mtqg のデータ形式の版
+.srwr/	srwr：AI によるファイル編集のテープ（操作ごとに理由つき）
+	tapes/	閉じたテープ（コミットする）。srwr view で再生できる
+		| 作業のまとまりごとに1本のテープ（圧縮済みの *.tape.jsonl.gz）。
+		| テープは .crube/ignore で crube の対象から外してあり、説明は要らない。
+.gitattributes	改行（すべて LF）と、記録のファイルの merge=union
+.gitignore	git に入れないもの。ルート直下のドットで始まる名前は許可リスト方式
+.golangci.yaml	golangci-lint の設定。internal/ の3層の依存の向きを depguard で強制する
+.goreleaser.yaml	配布物の作り方：実行ファイル、ライセンスつきのアーカイブ、下書きの Release
+.mcp.json	Claude Code に mtqg・srwr と、crube（英語・日本語）の MCP サーバーをつなぐ設定
+.srwrignore	srwr がテープに記録しないファイル
+CLAUDE.md	このリポジトリでの Claude Code のルールと、読むべきルールファイルの案内
+LICENSE	MIT ライセンス
+Makefile	qsoku のビルド・検査の入口（make check・make test など）
+README.md	看板：qsoku とは何か、デモ、実行例、入れ方
+README_ja.md	日本語の看板
+cmd/	モジュールのコマンド
+	qsoku/	qsoku コマンド
+		main.go	エントリポイント。引数と、リリースのビルドが埋めた版を internal/cli に渡すだけ
+docs/	文書
+	assets/	README が使う画像
+		demo.gif	本物のターミナル操作の録画：// でリポジトリのルートに戻って動く様子
+		logo.svg	ロゴ。手書きの SVG で、ダークモードを埋め込んである
+	design/	なぜこの設計なのかの記録（日本語）
+		README.md	このディレクトリの位置づけと索引
+		note.md	最初の設計メモ（原文のまま）：qsoku とは何か、// の規則
+	examples/	初めての人向けの入門と、コピーして使える qsokufile
+		README.md	入門（.init からシェル連携・補完まで）と実例（英語）
+		README_ja.md	日本語の入門と実例
+		go/	Go のプロジェクトの例
+			qsokufile	Go のプロジェクト向けの近道
+		monorepo/	複数のパッケージを持つ monorepo の例
+			qsokufile	// でパッケージへ移る近道
+			packages/	例のパッケージ
+				api/	例のパッケージ
+					.keep	空のディレクトリを git に残す
+				web/	例のパッケージ
+					.keep	空のディレクトリを git に残す
+		node/	Node.js のプロジェクトの例
+			qsokufile	Node.js のプロジェクト向けの近道
+	reference/	仕様（英語が正、*_ja.md が日本語版）
+		README.md	仕様の置き場所と、e2e が動かす実行例の印の書き方
+		README_ja.md	README.md の日本語版
+		cli.md	コマンドライン：名前の引き方、管理用コマンド、シェル連携、終了コード
+		cli_ja.md	cli.md の日本語版
+		qsokufile.md	qsokufile の書式：名前、コマンド、//、探し方
+		qsokufile_ja.md	qsokufile.md の日本語版
+e2e/	本物の qsoku バイナリと本物のシェルでのテスト（タグ e2e、make test）
+	e2e_test.go	TestMain：全テストのためにバイナリを1回ビルドする
+	examples_test.go	文書の実行例を動かして出力を突き合わせる（make docs-examples が書き込む）
+	run_test.go	バイナリを直接動かす：終了コード、シグナル、//、QSOKU_CWD_FILE、リリースのビルドの版
+		| docs/examples/ とルートの qsokufile が解析できることも確かめる（qsoku .list だけ）。
+	shell_test.go	bash・zsh・fish・pwsh でのシェル連携と補完
+	testdata/	e2e のテストの fixture
+		examples/	文書の実行例が動くディレクトリ
+			basic/	引数と // を使う小さな qsokufile
+				qsokufile	2つの項目：$1 を使う helloと、// を使う root
+				src/	qsoku を動かす下のディレクトリ
+					.keep	空のディレクトリを git に残す
+			broken/	書式の誤りがある qsokufile
+				qsokufile	コロンの無い行を含む
+			dup/	同じ名前を2回定義する qsokufile
+				qsokufile	build という項目が2つ
+			slashes/	// が置き換わる場所と置き換わらない場所
+				main.go	grep の項目が探す // を含むファイル
+				qsokufile	単語の頭・URL・引用符の中の //
+			tour/	docs/examples/ の入門の qsokufile
+				qsokufile	build・test・run
+				src/	qsoku を動かす下のディレクトリ
+					.keep	空のディレクトリを git に残す
+go.mod	Go モジュール（依存がまだ無いので go.sum も無い）
+internal/	実装本体（モジュールの外から import できない）
+	cli/	コマンドライン：名前を引いて実行する。管理用コマンドは1コマンド1ファイル
+		add.go	.add：項目を足す・置き換える
+		add_test.go	.add のテスト
+		cli.go	Run：入口。管理用コマンドを振り分け、それ以外の名前は実行する
+		cli_test.go	Run と終了コードのテスト
+		edit.go	.edit：qsokufile を $EDITOR で開く
+		edit_test.go	.edit のテスト
+		help.go	.help と引数なしの qsoku：使い方と定義済みの名前
+		help_test.go	.help のテスト
+		init.go	.init：qsokufile を作る
+		init_test.go	.init のテスト
+		list.go	.list と .names：定義済みの名前（人向けと補完向け）
+		list_test.go	.list と .names のテスト
+		rm.go	.rm：項目を消す
+		rm_test.go	.rm のテスト
+		shell.go	.shell：bash・zsh・fish・pwsh 向けのシェル連携を出す
+		shell_test.go	.shell のテスト
+		version.go	.version：リリースのビルドが埋めた版、無ければビルド情報の版
+		version_test.go	版のテスト
+		where.go	.where：使われている qsokufile のディレクトリ
+		where_test.go	.where のテスト
+		shells/	go:embed で埋め込むシェルのスクリプト：qsoku 関数と補完をシェルごとに1本
+			qsoku.bash	bash 向け
+			qsoku.fish	fish 向け
+			qsoku.ps1	pwsh（PowerShell 7+）向け
+			qsoku.zsh	zsh 向け
+	qsokufile/	qsokufile の探索・解析・書き込みと // の置き換え。cli・run を知らない
+		find.go	Find：今のディレクトリから上へ qsokufile を探す
+		find_test.go	Find のテスト
+		load.go	Load：Find と Parse をまとめたもの
+		qsokufile.go	Parse と Lookup：qsokufile の項目
+		qsokufile_test.go	Parse と Lookup のテスト
+		subst.go	Substitute と SubstituteArg：引用符の外・単語の頭の // を置き換える
+		subst_test.go	// の置き換えのテスト
+		write.go	SetEntry と RemoveEntry：1つの項目の行だけを書き換え、コメントと並びは崩さない
+		write_test.go	SetEntry と RemoveEntry のテスト
+	run/	コマンドのために sh を起動するだけの層。qsokufile・cli を知らない
+		run.go	Execute：sh を動かし、終了コードを素通しし、居場所の持ち帰りのために今のディレクトリを書き出す
+		run_test.go	Execute のテスト
+qsokufile	Makefile の主な名前を写した見本の qsokufile（このリポジトリ自身の開発は make）
+trivy.yaml	Trivy の設定：何を脆弱性・ライセンスの失敗とみなすか
+tools/	プロジェクトを作るための道具（実行ファイルには組み込まれない）
+	licenses/	配布物に入れる依存のライセンス文を集める
+		| go run ./tools/licenses <dir> <main パッケージ>。goreleaser がビルドの前に動かす。ライセンスのファイルが無いモジュールがあれば失敗する。
+		main.go	実行ファイルに組み込まれるモジュールを go list -deps で求め、ライセンス文を写す
+		main_test.go	テスト。TestRun は qsoku 自身のライセンスの一覧で、依存を足す・外すと落ちる
