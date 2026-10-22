@@ -102,3 +102,7 @@
 {"v":1,"ts":"2026-10-22T17:02:04.472Z","why":"変異のコミットの前に、テープに無い変更が無いか確かめる","cmd":["srwr","tapes","check"],"dir":".","exit":0,"ms":12}
 {"v":1,"ts":"2026-10-22T17:02:09.095Z","why":"変異のコミットに入れるため、テープを閉じて圧縮する","cmd":["srwr","tapes","new"],"dir":".","exit":0,"ms":77}
 {"v":1,"ts":"2026-10-22T17:02:09.349Z","why":"変異のコミットに入るものを確かめる","cmd":["git","status","--short"],"dir":".","exit":0,"ms":3}
+{"v":1,"ts":"2026-10-22T17:02:12.621Z","why":"変異の一覧・足したテスト・記録・テープをコミット対象にする","cmd":["git","add",".bcuz/history.jsonl",".mtqg/journal.jsonl",".srwr/tapes",".claude/rules/testing.md",".claude/skills/mutation-check/spec.txt","internal"],"dir":".","exit":0,"ms":5}
+{"v":1,"ts":"2026-10-22T19:48:53.644Z","why":"リリースが要るかを判断するため、v0.2.0から利用者に届くものの差分を見る","cmd":["git","diff","--stat","v0.2.0..HEAD","--","cmd","internal","go.mod",".goreleaser.yaml","docs","README.md","README_ja.md"],"dir":".","exit":0,"ms":7}
+{"v":1,"ts":"2026-10-22T19:50:50.503Z","why":"リリース不要の判断の記録をコミットする前に、変わったものを確かめる","cmd":["git","status","--short"],"dir":".","exit":0,"ms":4}
+{"v":1,"ts":"2026-10-22T19:50:53.976Z","why":"記録のコミットの前に、テープに無い変更が無いか確かめる","cmd":["srwr","tapes","check"],"dir":".","exit":0,"ms":39}
