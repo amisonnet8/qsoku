@@ -142,3 +142,8 @@
 {"v":1,"ts":"2026-10-22T23:10:34.093Z","why":"bash-completionの遅延読み込みなので、補完のファイルがあるかと、読み込めば登録されるかを確かめる","cmd":["bash","-ic","ls ~/.local/share/bash-completion/completions/ ~/.config/fish/completions/; for t in bcuz crube mtqg srwr; do _completion_loader $t; done; complete -p bcuz crube mtqg srwr | cut -c1-60"],"dir":".","exit":0,"ms":50}
 {"v":1,"ts":"2026-10-22T23:10:50.443Z","why":"リビルド後の確認のコミットの前に、テープに無い変更が無いか確かめる","cmd":["srwr","tapes","check"],"dir":".","exit":0,"ms":8}
 {"v":1,"ts":"2026-10-22T23:10:55.418Z","why":"リビルド後の確認のコミットに入れるため、テープを閉じて圧縮する","cmd":["srwr","tapes","new"],"dir":".","exit":0,"ms":13}
+{"v":1,"ts":"2026-10-22T23:10:55.606Z","why":"リビルド後の確認の記述・記録・テープをコミット対象にする","cmd":["git","add",".bcuz/history.jsonl",".mtqg/journal.jsonl",".srwr/tapes",".claude/rules/testing.md"],"dir":".","exit":0,"ms":8}
+{"v":1,"ts":"2026-10-22T23:10:58.684Z","why":"コミットに入るものを確かめる","cmd":["git","status","--short"],"dir":".","exit":0,"ms":4}
+{"v":1,"ts":"2026-10-22T23:11:38.018Z","why":"前回のリリース不要の判断以降に、利用者に届くもの（バイナリ・配布物・文書）が変わったかを見る","cmd":["git","diff","--stat","2e74011..HEAD"],"dir":".","exit":0,"ms":7}
+{"v":1,"ts":"2026-10-22T23:11:38.194Z","why":"最新のタグがv0.2.0のままかを確かめる","cmd":["git","describe","--tags","--abbrev=0"],"dir":".","exit":0,"ms":2}
+{"v":1,"ts":"2026-10-22T23:11:45.619Z","why":"リリース不要の判断の記録をコミットする前に、テープに無い変更が無いか確かめる","cmd":["srwr","tapes","check"],"dir":".","exit":0,"ms":34}
