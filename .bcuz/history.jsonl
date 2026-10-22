@@ -128,3 +128,17 @@
 {"v":1,"ts":"2026-10-22T23:08:13.578Z","why":"セッション最初のコミットの前に、作者のメールを確かめる","cmd":["git","config","user.email"],"dir":".","exit":0,"ms":1}
 {"v":1,"ts":"2026-10-22T23:08:18.435Z","why":"共通ルール追従のコミットに入れるため、テープを閉じて圧縮する","cmd":["srwr","tapes","new"],"dir":".","exit":0,"ms":14}
 {"v":1,"ts":"2026-10-22T23:08:18.623Z","why":"共通ルール追従のコミットに入るものを確かめる","cmd":["git","status","--short"],"dir":".","exit":0,"ms":4}
+{"v":1,"ts":"2026-10-22T23:08:21.943Z","why":"共通ルール追従の変更・記録・テープをコミット対象にする","cmd":["git","add",".bcuz/history.jsonl",".mtqg/journal.jsonl",".srwr/tapes",".claude/rules/distribution.md",".claude/rules/testing.md",".crube/structure.txt",".crube/structure_ja.txt",".devcontainer/postCreate.sh","tools/licenses/main_test.go"],"dir":".","exit":0,"ms":5}
+{"v":1,"ts":"2026-10-22T23:09:47.827Z","why":"リビルド後に、定常で使う道具がそろっているか版を見る","cmd":["sh","-c","for c in \"go version\" \"mtqg --version\" \"srwr --version\" \"bcuz --version\" \"crube --version\" \"golangci-lint --version\" \"trivy --version\" \"shellcheck --version\" \"jq --version\" \"qsoku .version\" \"bwrap --version\" \"socat -V\" \"zsh --version\" \"fish --version\" \"pwsh --version\" \"gh --version\" \"vhs --version\"; do printf \"== %s: \" \"$c\"; $c 2>&1 | grep -m1 -iE \"version|[0-9]+\\.[0-9]+\" || echo MISSING; done"],"dir":".","exit":0,"ms":266}
+{"v":1,"ts":"2026-10-22T23:09:48.266Z","why":"リビルド後に、本物のシェル4つでe2eが通るか確かめる","cmd":["make","test"],"dir":".","exit":0,"ms":2359}
+{"v":1,"ts":"2026-10-22T23:09:50.756Z","why":"リビルド後に、bcuzを強制するフックの判定表が通るか（jqがあるか）確かめる","cmd":["make","hook"],"dir":".","exit":0,"ms":1878}
+{"v":1,"ts":"2026-10-22T23:09:52.763Z","why":"リビルド後に、srwrの設定が揃っているか（書き換え無しで終わるか）確かめる","cmd":["srwr","init"],"dir":".","exit":0,"ms":2}
+{"v":1,"ts":"2026-10-22T23:10:02.978Z","why":"e2eで本物のシェルが飛ばされていないか（Skipが無いか）確かめる","cmd":["sh","-c","go test -tags e2e -count=1 -v ./e2e/... 2>&1 | grep -E -- \"--- SKIP|SKIP:\" | head -20; echo \"skip-check done\""],"dir":".","exit":0,"ms":2416}
+{"v":1,"ts":"2026-10-22T23:10:05.522Z","why":"リビルド後に、Trivyが脆弱性DBを取得して検査を終えられるか確かめる","cmd":["make","trivy"],"dir":".","exit":0,"ms":7172}
+{"v":1,"ts":"2026-10-22T23:10:12.829Z","why":"リビルド後に、-raceのビルド（cgo）が動くかを1パッケージで軽く確かめる","cmd":["env","CGO_ENABLED=1","go","test","-race","-count=1","./internal/run/"],"dir":".","exit":0,"ms":6990}
+{"v":1,"ts":"2026-10-22T23:10:19.949Z","why":"リビルド後に、mtqgが動いて記録を読めるか確かめる","cmd":["mtqg","version"],"dir":".","exit":0,"ms":2}
+{"v":1,"ts":"2026-10-22T23:10:20.086Z","why":"postCreate.shが入れたqsokuのシェル連携と補完がbashで効いているか確かめる","cmd":["bash","-ic","type -t qsoku; complete -p qsoku bcuz crube mtqg srwr 2>&1 | cut -c1-80"],"dir":".","exit":0,"ms":37}
+{"v":1,"ts":"2026-10-22T23:10:25.883Z","why":"bcuzなどの補完が未登録に見えたので、postCreate.shがどこへ入れるかを見る","cmd":["grep","-n","-i","-E","complet",".devcontainer/postCreate.sh"],"dir":".","exit":0,"ms":1}
+{"v":1,"ts":"2026-10-22T23:10:34.093Z","why":"bash-completionの遅延読み込みなので、補完のファイルがあるかと、読み込めば登録されるかを確かめる","cmd":["bash","-ic","ls ~/.local/share/bash-completion/completions/ ~/.config/fish/completions/; for t in bcuz crube mtqg srwr; do _completion_loader $t; done; complete -p bcuz crube mtqg srwr | cut -c1-60"],"dir":".","exit":0,"ms":50}
+{"v":1,"ts":"2026-10-22T23:10:50.443Z","why":"リビルド後の確認のコミットの前に、テープに無い変更が無いか確かめる","cmd":["srwr","tapes","check"],"dir":".","exit":0,"ms":8}
+{"v":1,"ts":"2026-10-22T23:10:55.418Z","why":"リビルド後の確認のコミットに入れるため、テープを閉じて圧縮する","cmd":["srwr","tapes","new"],"dir":".","exit":0,"ms":13}
