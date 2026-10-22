@@ -43,6 +43,17 @@ func TestExecute_stdout(t *testing.T) {
 	}
 }
 
+func TestExecute_stdin(t *testing.T) {
+	var stdout, stderr bytes.Buffer
+	_, err := Execute("cat", t.TempDir(), nil, strings.NewReader("from stdin\n"), &stdout, &stderr)
+	if err != nil {
+		t.Fatalf("Execute() error: %v", err)
+	}
+	if got := stdout.String(); got != "from stdin\n" {
+		t.Errorf("stdout = %q, want %q", got, "from stdin\n")
+	}
+}
+
 func TestExecute_root(t *testing.T) {
 	root := t.TempDir()
 	var stdout, stderr bytes.Buffer
@@ -137,6 +148,15 @@ func TestExecute_cwdHandoff(t *testing.T) {
 	// command, here a nested sh -c that itself exits 3.
 	t.Run("no parens, failure: location is still brought back", func(t *testing.T) {
 		got := readCwdFile(t, "cd "+targetSh+`; sh -c "exit 3"`, 3)
+		if !pathsEqual(got, targetSh) {
+			t.Errorf("cwd = %q, want %q", got, targetSh)
+		}
+	})
+
+	// The trailer is joined with a newline: joined with ';', it would be part
+	// of this comment, and the cwd file would never be written.
+	t.Run("a trailing comment does not swallow the trailer", func(t *testing.T) {
+		got := readCwdFile(t, "cd "+targetSh+" # a comment", 0)
 		if !pathsEqual(got, targetSh) {
 			t.Errorf("cwd = %q, want %q", got, targetSh)
 		}

@@ -16,10 +16,16 @@ var Version string
 // into, so the build information is the fallback for that path, not the
 // primary source overall; distribution.md).
 func buildVersion() string {
-	if Version != "" {
-		return Version
+	return versionFrom(Version, debug.ReadBuildInfo)
+}
+
+// versionFrom is buildVersion with the build information passed in, so the
+// tests can give it each kind (the test binary's own has no tag).
+func versionFrom(set string, read func() (*debug.BuildInfo, bool)) string {
+	if set != "" {
+		return set
 	}
-	info, ok := debug.ReadBuildInfo()
+	info, ok := read()
 	if !ok {
 		return "dev"
 	}

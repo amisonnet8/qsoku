@@ -3,7 +3,9 @@ package cli
 import (
 	"bytes"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"runtime"
 	"testing"
 )
 
@@ -46,6 +48,61 @@ func TestRun_edit(t *testing.T) {
 		}
 
 		want := "root: cd //\nedited-by-fake-editor\n"
+		if got := readTestFile(t, filepath.Join(dir, "qsokufile")); got != want {
+			t.Errorf("file = %q, want %q", got, want)
+		}
+	})
+
+	// $1 is the path itself, so a directory with a space in its name still
+	// reaches the editor as one argument.
+	t.Run("a path with a space reaches the editor whole", func(t *testing.T) {
+		dir := filepath.Join(t.TempDir(), "a b")
+		if err := os.Mkdir(dir, 0o700); err != nil {
+			t.Fatal(err)
+		}
+		writeQsokufile(t, dir, "root: cd //\n")
+		t.Chdir(dir)
+		t.Setenv("EDITOR", fakeEditor(t))
+
+		var stdout, stderr bytes.Buffer
+		if got := Run([]string{".edit"}, nil, &stdout, &stderr); got != 0 {
+			t.Fatalf("Run(.edit) = %d, want 0; stderr: %s", got, stderr.String())
+		}
+		want := "root: cd //\nedited-by-fake-editor\n"
+		if got := readTestFile(t, filepath.Join(dir, "qsokufile")); got != want {
+			t.Errorf("file = %q, want %q", got, want)
+		}
+	})
+
+	// PATH holds only a fake nano and sh: a real editor is never started,
+	// and one other than nano is not found.
+	t.Run("no EDITOR falls back to nano", func(t *testing.T) {
+		if runtime.GOOS == "windows" {
+			t.Skip("Git for Windows' sh.exe needs the DLLs beside it, so it cannot be linked into a PATH of its own")
+		}
+		sh, err := exec.LookPath("sh")
+		if err != nil {
+			t.Fatal(err)
+		}
+		bin := t.TempDir()
+		if err := os.Symlink(sh, filepath.Join(bin, "sh")); err != nil {
+			t.Fatal(err)
+		}
+		script := "#!" + sh + "\necho edited-by-fake-nano >> \"$1\"\n"
+		if err := os.WriteFile(filepath.Join(bin, "nano"), []byte(script), 0o700); err != nil {
+			t.Fatal(err)
+		}
+		dir := t.TempDir()
+		writeQsokufile(t, dir, "root: cd //\n")
+		t.Chdir(dir)
+		t.Setenv("EDITOR", "")
+		t.Setenv("PATH", bin)
+
+		var stdout, stderr bytes.Buffer
+		if got := Run([]string{".edit"}, nil, &stdout, &stderr); got != 0 {
+			t.Fatalf("Run(.edit) = %d, want 0; stderr: %s", got, stderr.String())
+		}
+		want := "root: cd //\nedited-by-fake-nano\n"
 		if got := readTestFile(t, filepath.Join(dir, "qsokufile")); got != want {
 			t.Errorf("file = %q, want %q", got, want)
 		}

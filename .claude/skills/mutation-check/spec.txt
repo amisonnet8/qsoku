@@ -5,3 +5,55 @@
 #
 # 例（crube の一覧から。照合の「完全一致をパターンより優先する」という約束を壊す）：
 # 照合: 完全一致をパターンより優先しない | internal/match/match.go | ⇥⇥if e.Name == exact {⏎⇥⇥⇥return e | ⇥⇥if false && e.Name == exact {⏎⇥⇥⇥return e
+
+# // の置き換え（docs/reference/qsokufile.md「//: the qsokufile's location」）
+//: 単語の頭でなくても置き換える | internal/qsokufile/subst.go | case c == '/' && atWordStart && i+1 | case c == '/' && i+1
+//: 単一引用符の中でも置き換える | internal/qsokufile/subst.go | ⇥⇥⇥state = single | ⇥⇥⇥state = normal
+//: 二重引用符の中でも置き換える | internal/qsokufile/subst.go | ⇥⇥⇥state = double | ⇥⇥⇥state = normal
+//: 引用符の外のバックスラッシュが次の文字を逃がさない | internal/qsokufile/subst.go | ⇥⇥case c == '\\':⏎⇥⇥⇥b.WriteByte(c)⏎⇥⇥⇥escape = true | ⇥⇥case c == '\\':⏎⇥⇥⇥b.WriteByte(c)⏎⇥⇥⇥escape = false
+//: 単語の頭の # から後ろ（コメント）も置き換える | internal/qsokufile/subst.go | case c == '#' && atWordStart: | case false && c == '#' && atWordStart:
+//: ; のあとを単語の頭としない | internal/qsokufile/subst.go | c == ' ' || c == '\t' || c == ';' || | c == ' ' || c == '\t' ||
+//: ( のあとを単語の頭としない | internal/qsokufile/subst.go | || c == '|' || c == '(': | || c == '|':
+//: QSOKU_ROOT を引用符で囲まない（空白を含むパスで割れる） | internal/qsokufile/subst.go | const rootVar = `"$QSOKU_ROOT"/` | const rootVar = `$QSOKU_ROOT/`
+引数の //: 引数の頭でなくても置き換える | internal/qsokufile/subst.go | if !strings.HasPrefix(arg, "//") { | if !strings.Contains(arg, "//") {
+引数の //: 引数を置き換えずに渡す | internal/cli/cli.go | subArgs[i] = qsokufile.SubstituteArg(a, root) | subArgs[i] = a
+
+# 探し方（docs/reference/qsokufile.md「Location and lookup」）
+探索: qsokufile という名前のディレクトリを見つけたものとする | internal/qsokufile/find.go | case err == nil && !info.IsDir(): | case err == nil && (!info.IsDir() || true):
+探索: 上のディレクトリを探さない | internal/qsokufile/find.go | ⇥⇥dir = parent | ⇥⇥return "", ErrNotFound
+# 区切りを / にそろえないのは、Linux では同じ意味（filepath.ToSlash は Windows でだけ変える）。CI の Windows の e2e が見る
+# 探索: 見つけたパスの区切りを / にそろえない | internal/qsokufile/find.go | return filepath.ToSlash(candidate), nil | return candidate, nil
+
+# 書式と名前（docs/reference/qsokufile.md「Format」「Names」）
+書式: # で始まる行をコメントとしない | internal/qsokufile/qsokufile.go | if line == "" || strings.HasPrefix(line, "#") { | if line == "" {
+書式: : の無い行を誤りとしない | internal/qsokufile/qsokufile.go | ⇥⇥if i < 0 {⏎⇥⇥⇥return nil, &ParseError{ | ⇥⇥if i < 0 {⏎⇥⇥⇥continue⏎⇥⇥⇥return nil, &ParseError{
+書式: コマンドの前の空白を残す | internal/qsokufile/qsokufile.go | command := strings.TrimLeft(line[i+1:], " \t") | command := line[i+1:]
+名前: 同じ名前の2回目を誤りとしない | internal/qsokufile/qsokufile.go | if first, ok := seen[name]; ok { | if first, ok := seen[name]; false && ok {
+名前: . で始まる名前を許す | internal/qsokufile/qsokufile.go | if name == "" || name[0] == '.' { | if name == "" {
+名前: 使えない文字を許す | internal/qsokufile/qsokufile.go | ⇥⇥if !isNameByte(name[i]) { | ⇥⇥if false && !isNameByte(name[i]) {
+
+# 実行（docs/reference/cli.md「Running a name」「Environment passed to the command」「Exit codes」）
+実行: コマンドの終了コードを素通ししない | internal/run/run.go | return exitErr.ExitCode(), nil | return 1, nil
+実行: シグナルで止まったとき 128+n にしない | internal/run/run.go | return 128 + int(ws.Signal()), nil | return int(ws.Signal()), nil
+実行: QSOKU_ROOT を渡さない | internal/run/run.go | cmd.Env = append(os.Environ(), "QSOKU_ROOT="+root) | cmd.Env = os.Environ()
+実行: $0 を qsoku にしない（引数が $1 からずれる） | internal/run/run.go | []string{"-c", script, "qsoku"} | []string{"-c", script}
+実行: 標準入力を渡さない | internal/run/run.go | cmd.Stdin = stdin | cmd.Stdin = nil
+実行: 未知の . で始まる名前を、誤りにせず名前として探す | internal/cli/cli.go | if args[0] != "" && args[0][0] == '.' { | if false {
+実行: 定義されていない名前の終了コードを 2 にしない | internal/cli/cli.go | is not defined in %s\n", name, f.Path)⏎⇥⇥return exitCommandLine | is not defined in %s\n", name, f.Path)⏎⇥⇥return exitNotFound
+
+# 居場所の持ち帰り（docs/reference/cli.md「Bringing the working directory back」）
+持ち帰り: コマンドの終了コードでなく pwd の終了コードで終わる | internal/run/run.go | pwd > \"$QSOKU_CWD_FILE\"; exit $__status | pwd > \"$QSOKU_CWD_FILE\"; exit $?
+持ち帰り: コマンドと改行でなく ; でつなぐ（行末の # コメントに飲まれる） | internal/run/run.go | const trailer = "\n__status | const trailer = "; __status
+持ち帰り: QSOKU_CWD_FILE が無くても書き出す | internal/run/run.go | if _, ok := os.LookupEnv("QSOKU_CWD_FILE"); ok { | if _, ok := os.LookupEnv("QSOKU_CWD_FILE"); ok || true {
+持ち帰り: bash の関数が居場所へ移らない | internal/cli/shells/qsoku.bash | && cd "$dir" | && :
+持ち帰り: bash の関数がコマンドの終了コードを返さない | internal/cli/shells/qsoku.bash | ⏎  return $status⏎ | ⏎  return 0⏎
+
+# 管理用コマンド（docs/reference/cli.md「Management commands」）
+.init: すでにある qsokufile を上書きする | internal/cli/init.go | if _, err := os.Stat(path); err == nil {⏎⇥⇥_, _ = fmt.Fprintf(stderr, "qsoku: %s already exists\n", displayPath)⏎⇥⇥return exitNotFound⏎⇥} else if !os.IsNotExist(err) { | if _, err := os.Stat(path); false {⏎⇥⇥_, _ = fmt.Fprintf(stderr, "qsoku: %s already exists\n", displayPath)⏎⇥⇥return exitNotFound⏎⇥} else if err != nil && !os.IsNotExist(err) {
+.add: すでにある名前を、同じ位置でなく末尾に置き換える | internal/qsokufile/write.go | ⇥⇥lines[entry.Line-1] = newLine | ⇥⇥lines = append(lines[:entry.Line-1], lines[entry.Line:]...)⏎⇥⇥lines = appendLine(lines, newLine)
+.add: 末尾に足すとき、改行を1つにそろえない | internal/qsokufile/write.go | ⇥⇥lines[len(lines)-1] = line⏎⇥⇥return append(lines, "") | ⇥⇥return append(lines, line, "")
+# os.WriteFile は、すでにあるファイルの権限を変えない（渡した権限は作るときだけ使う）。SetEntry・RemoveEntry は必ず既にあるファイルを書くので、同じ意味
+# .add・.rm: ファイルの権限を保たない | internal/qsokufile/write.go | []byte(strings.Join(lines, "\n")), mode) | []byte(strings.Join(lines, "\n")), 0o644)
+.rm: 消す行の次の行も消す | internal/qsokufile/write.go | lines = append(lines[:entry.Line-1], lines[entry.Line:]...) | lines = append(lines[:entry.Line-1], lines[entry.Line+1:]...)
+.edit: $EDITOR が無いとき nano に落とさない | internal/cli/edit.go | ⇥⇥editor = "nano" | ⇥⇥editor = "vi"
+.edit: パスを $1 でなくコマンドに埋め込む（空白を含むパスで割れる） | internal/cli/edit.go | command := editor + ` "$1"` | command := editor + " " + path

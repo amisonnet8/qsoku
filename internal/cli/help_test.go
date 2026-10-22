@@ -36,6 +36,18 @@ func TestRun_help(t *testing.T) {
 		}
 	})
 
+	t.Run("an empty qsokufile adds no list", func(t *testing.T) {
+		dir := t.TempDir()
+		writeQsokufile(t, dir, "")
+		t.Chdir(dir)
+
+		var stdout, stderr bytes.Buffer
+		Run([]string{".help"}, nil, &stdout, &stderr)
+		if got := stdout.String(); got != usage {
+			t.Errorf("help output = %q, want the usage only", got)
+		}
+	})
+
 	t.Run("never fails, even with a broken qsokufile", func(t *testing.T) {
 		dir := t.TempDir()
 		writeQsokufile(t, dir, "not valid\n")

@@ -89,6 +89,24 @@ func TestFind(t *testing.T) {
 		}
 	})
 
+	// The subtest above cannot say what is above t.TempDir(); this one puts
+	// a real qsokufile right above the directory named qsokufile, so the walk
+	// has to go on past it and find that file.
+	t.Run("a directory named qsokufile is passed over to the file above", func(t *testing.T) {
+		root := t.TempDir()
+		child := filepath.Join(root, "child")
+		mustMkdirAll(t, filepath.Join(child, fileName))
+		mustWriteFile(t, filepath.Join(root, fileName), "root: cd //\n")
+
+		got, err := Find(child)
+		if err != nil {
+			t.Fatalf("Find() error = %v", err)
+		}
+		if want := filepath.ToSlash(filepath.Join(root, fileName)); got != want {
+			t.Errorf("Find() = %q, want %q", got, want)
+		}
+	})
+
 	t.Run("not found", func(t *testing.T) {
 		root := t.TempDir()
 		nested := filepath.Join(root, "x", "y")

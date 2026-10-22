@@ -50,6 +50,22 @@ func TestParse(t *testing.T) {
 			want:  []Entry{{Name: "root", Command: "cd //", Line: 1}},
 		},
 		{
+			name:  "no space after the colon",
+			input: "a:cmd\n",
+			want:  []Entry{{Name: "a", Command: "cmd", Line: 1}},
+		},
+		{
+			// The first and last of each range of letters and digits.
+			name:  "the edges of the name characters",
+			input: "aAzZ09._-: x\n",
+			want:  []Entry{{Name: "aAzZ09._-", Command: "x", Line: 1}},
+		},
+		{
+			name:    "an invalid first character",
+			input:   "@b: x\n",
+			wantErr: `invalid name "@b"`,
+		},
+		{
 			name:    "no colon",
 			input:   "not a valid line\n",
 			wantErr: "no ':'",

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -17,13 +18,19 @@ func TestRun_version(t *testing.T) {
 	}
 }
 
+// TestRun_unknownDotCommand runs where no qsokufile is found: an unknown
+// .foo is a command-line error (2) before any qsokufile is looked for, while
+// looking it up as a name would end with "no qsokufile found" (1). Run from
+// a directory with a qsokufile, both ways end with 2.
 func TestRun_unknownDotCommand(t *testing.T) {
+	t.Chdir(t.TempDir())
+
 	var stdout, stderr bytes.Buffer
 	if got := Run([]string{".foo"}, nil, &stdout, &stderr); got != 2 {
 		t.Errorf("Run(.foo) = %d, want 2", got)
 	}
-	if stderr.Len() == 0 {
-		t.Error("Run(.foo) wrote nothing to stderr")
+	if want := `qsoku: unknown command ".foo"`; !strings.Contains(stderr.String(), want) {
+		t.Errorf("stderr = %q, want it to contain %q", stderr.String(), want)
 	}
 }
 
