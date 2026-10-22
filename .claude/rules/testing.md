@@ -57,7 +57,7 @@
   - `internal/qsokufile/subst.go`の、引用符の外の`\`のあとの`atWordStart = false`（次の文字は必ずエスケープの枝が読み、そこで`false`に戻す）
   - Linuxでは同じになるもの：`run.go`の`runtime.GOOS == "windows"`の反転（Windows向けの`{ pwd -W 2>/dev/null || pwd; }`はLinuxのshでも`pwd`に落ちる）、`find.go`の`filepath.ToSlash`を外す変異（spec.txtでコメントにした）。どちらもCIのWindowsのe2eが見る
   - `os.WriteFile`に渡す権限（spec.txtでコメントにした）：すでにあるファイルの権限は変えないので、`SetEntry`・`RemoveEntry`では効かない
-- **テストが届かないまま残した変異**：`tools/licenses/main.go`の、`main()`の引数の検査と、依存モジュールごとの枝（ライセンスのファイルが無い・写せない、`go list`の失敗、モジュールの場所が空）。qsokuには依存が無く、`TestRun`ではモジュールごとの枝が一度も通らない。この道具はテンプレート共通のものなので、テストを足すならテンプレート側で足す
+- **テストが届かないまま残した変異**（2026-10-23に回したもの）：`tools/licenses/main.go`の、エラーのときだけ通る3つの枝（依存モジュールのライセンスのファイルを写す失敗、`go list`の失敗、モジュールの場所が空＝ダウンロードされていない）。`main()`の引数の検査・終了コード、ライセンスのファイルが無いときの失敗、モジュールのライセンスを写すこと、3つのOSを調べることは、共通ルールで足された`TestRunDependencies`・`TestRunNoLicense`・`TestCommand`が捕まえる（構文の変異は33件中31件killed・生き残り0、2件は変異として成り立たない）。この道具とテストはテンプレート共通のもの（`TestRun`のほかは、どのプロジェクトでも同じ）なので、テストを足すならテンプレート側で足す
 
 ## mtqg固有の検証項目（qsokuに置き換えたもの）
 
@@ -133,6 +133,7 @@
 - **`uses: owner/repo@TAG`はタグ名と厳密に一致しないと失敗する。** `v`の有無を見落としやすい。書く前に実際のタグ名を確かめる
 - **Windowsには実行ビットの概念がない。** `os.Chmod`後に実行ビットを確かめるテストは、`runtime.GOOS != "windows"`でガードする
 - **実行権限の無いファイルで「起動できない（126）」を作るテストは、Windowsでは「見つからない（127）」になる。** 拡張子の無い名前（`script`・`build.sh`）は`PATHEXT`に合わず、コマンドとして探されないため。Windowsでは`.exe`の名前で、中身が実行形式でないファイルにすると、起動に失敗して126になる
+- **テストの中で`go build -o`して起動するバイナリは、Windowsでは名前に`.exe`を付ける**（付けないと`executable file not found in %PATH%`。拡張子の無い名前は`PATHEXT`に合わない。`tools/licenses`の`TestCommand`で、CI の Windows でだけ落ちた）
 - **出力に出るパスと比べるテストは、一時ディレクトリを`filepath.EvalSymlinks`で解決してから比べる。** 同じディレクトリでも、macOSは`/var`→`/private/var`のシンボリックリンク、Windowsは8.3の短縮名（`RUNNER~1`）と長い名前が食い違う。`t.TempDir()`の値のまま比べると、macOS・WindowsのCIだけで落ちる
 - **Windowsでは、開いたままのファイルを置き換え（`rename`）られないことがあり、開いたハンドルのあるディレクトリは消せない。** 一時ファイル経由の置き換えや、失敗したときの後片付け（`os.RemoveAll`）の前に、先に`Close`する。Windowsのランナーでだけ落ちる
 - **Windowsの`os.Symlink`は、リンクの宛先の`/`を`\`にして保存する。** `os.Readlink`は`releases\v2`を返す。宛先を見せる・比べるときは`filepath.ToSlash`で`/`にそろえる。テストの宛先は、区切りを含むもの（`src/auth`）にする。区切りの無い宛先（`src`）では、この食い違いを捕まえられない（crube の`show`の`link`で、CI の Windows でだけ落ちた）
