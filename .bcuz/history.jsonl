@@ -147,3 +147,21 @@
 {"v":1,"ts":"2026-10-22T23:11:38.018Z","why":"前回のリリース不要の判断以降に、利用者に届くもの（バイナリ・配布物・文書）が変わったかを見る","cmd":["git","diff","--stat","2e74011..HEAD"],"dir":".","exit":0,"ms":7}
 {"v":1,"ts":"2026-10-22T23:11:38.194Z","why":"最新のタグがv0.2.0のままかを確かめる","cmd":["git","describe","--tags","--abbrev=0"],"dir":".","exit":0,"ms":2}
 {"v":1,"ts":"2026-10-22T23:11:45.619Z","why":"リリース不要の判断の記録をコミットする前に、テープに無い変更が無いか確かめる","cmd":["srwr","tapes","check"],"dir":".","exit":0,"ms":34}
+{"v":1,"ts":"2026-10-23T00:34:33.078Z","why":"共通ルール変更の中身を把握するため","cmd":["git","status","--short"],"dir":".","exit":0,"ms":4}
+{"v":1,"ts":"2026-10-23T00:34:33.426Z","why":"共通ルール変更の中身を把握するため","cmd":["git","diff"],"dir":".","exit":0,"ms":2}
+{"v":1,"ts":"2026-10-23T00:34:38.933Z","why":"共通ルールで足されたテストが、今の実装で通るかを見る","cmd":["go","test","./tools/licenses/","-run","TestRun","-count=1"],"dir":".","exit":0,"ms":1619}
+{"v":1,"ts":"2026-10-23T00:34:49.483Z","why":"新しいテストに合わせて直すべき記述を探す","cmd":["git","grep","-n","-E","TestRunNoLicense|TestRunDependencies|RemoveAll|tools/licenses"],"dir":".","exit":0,"ms":4}
+{"v":1,"ts":"2026-10-23T00:35:07.155Z","why":"変異の写しの作り方を手順どおりにするため","cmd":["grep","-n","-A12","手順1\\|## 1",".claude/skills/mutation-check/SKILL.md"],"dir":".","exit":1,"ms":1}
+{"v":1,"ts":"2026-10-23T00:35:09.622Z","why":"変異の写しの作り方を手順どおりにするため","cmd":["sed","-n","1,60p",".claude/skills/mutation-check/SKILL.md"],"dir":".","exit":0,"ms":1}
+{"v":1,"ts":"2026-10-23T00:35:13.200Z","why":"前の出力を消す約束を壊す写しを作る","cmd":["sh","-c","rm -rf \"$TMPDIR/mut\" && mkdir -p \"$TMPDIR/mut/repo\" && git ls-files -z --cached --others --exclude-standard | xargs -0 tar -cf - --ignore-failed-read | tar -x -C \"$TMPDIR/mut/repo\""],"dir":".","exit":0,"ms":15}
+{"v":1,"ts":"2026-10-23T00:35:13.348Z","why":"変異の道具を建てる","cmd":["go","-C",".claude/skills/mutation-check/mutants","build","-o","/tmp/claude-1000/mut/mutants","."],"dir":".","exit":0,"ms":157}
+{"v":1,"ts":"2026-10-23T00:35:17.513Z","why":"足されたテストが、前の出力を消さない変異を捕まえるか確かめる","cmd":["sh","-c","cd \"$TMPDIR/mut/repo\" && printf \"%s\\n\" \"前の出力を消さない | tools/licenses/main.go | if err := os.RemoveAll(dir); err != nil { | if err := error(nil); err != nil {\" \"前の出力を消す失敗を無視する | tools/licenses/main.go | os.RemoveAll(dir); err != nil { | os.RemoveAll(dir); false {\" > ../rm-spec.txt && \"$TMPDIR/mut/mutants\" -spec ../rm-spec.txt -- go test -count=1 ./tools/licenses/ 2>&1"],"dir":".","exit":1,"ms":2437}
+{"v":1,"ts":"2026-10-23T00:35:27.506Z","why":"足される前のテストでは、前の出力を消さない変異が生き残っていたかを確かめる","cmd":["sh","-c","cd \"$TMPDIR/mut/repo\" && git -C /workspaces/qsoku show HEAD:tools/licenses/main_test.go > tools/licenses/main_test.go && \"$TMPDIR/mut/mutants\" -spec ../rm-spec.txt -only 消さない -- go test -count=1 ./tools/licenses/ 2>&1"],"dir":".","exit":1,"ms":1435}
+{"v":1,"ts":"2026-10-23T00:35:44.277Z","why":"足されたテストを含めて、vet・lint・単体テストが通るか確かめる","cmd":["make","check"],"dir":".","exit":0,"ms":3491}
+{"v":1,"ts":"2026-10-23T00:35:47.904Z","why":"出力先の作り直しが実際の配布物の作り方でも動くか確かめる","cmd":["make","goreleaser-check"],"dir":".","exit":0,"ms":6704}
+{"v":1,"ts":"2026-10-23T00:36:05.909Z","why":"licensesのテスト追従のコミットの前に、英語の説明の漏れを確かめる","cmd":["crube","status","--require","all"],"dir":".","exit":0,"ms":7}
+{"v":1,"ts":"2026-10-23T00:36:06.106Z","why":"licensesのテスト追従のコミットの前に、日本語の説明の漏れを確かめる","cmd":["env","CRUBE_LANG=ja","crube","status","--require","all"],"dir":".","exit":0,"ms":6}
+{"v":1,"ts":"2026-10-23T00:36:06.292Z","why":"licensesのテスト追従のコミットの前に、テープに無い変更が無いか確かめる","cmd":["srwr","tapes","check"],"dir":".","exit":1,"ms":8}
+{"v":1,"ts":"2026-10-23T00:36:06.439Z","why":"コミットの作者がnoreplyの設定か確かめる","cmd":["git","config","user.email"],"dir":".","exit":0,"ms":1}
+{"v":1,"ts":"2026-10-23T00:36:10.572Z","why":"licensesのテスト追従のコミットに入れるため、テープを閉じて圧縮する","cmd":["srwr","tapes","new"],"dir":".","exit":0,"ms":13}
+{"v":1,"ts":"2026-10-23T00:36:12.808Z","why":"licensesのテスト追従のコミットに入るものを確かめる","cmd":["git","status","--short"],"dir":".","exit":0,"ms":4}

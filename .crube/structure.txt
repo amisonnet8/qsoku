@@ -164,4 +164,4 @@ tools/	Tools for building the project (not built into its command)
 		| go run ./tools/licenses <dir> <main package>; goreleaser runs it before building. Fails if a module has no license file.
 		main.go	Finds the modules linked into the command with go list -deps and copies their licenses
 		main_test.go	Tests; TestRun lists the licenses of qsoku itself, and fails when a dependency is added or dropped
-			| The other tests are shared by every project: modules of their own making (replace, no network), a module with no license, and the built command.
+			| The other tests are shared by every project: modules of their own making (replace, no network), a module with no license, the output directory made again from scratch, and the built command.

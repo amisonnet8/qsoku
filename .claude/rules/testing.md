@@ -57,7 +57,7 @@
   - `internal/qsokufile/subst.go`の、引用符の外の`\`のあとの`atWordStart = false`（次の文字は必ずエスケープの枝が読み、そこで`false`に戻す）
   - Linuxでは同じになるもの：`run.go`の`runtime.GOOS == "windows"`の反転（Windows向けの`{ pwd -W 2>/dev/null || pwd; }`はLinuxのshでも`pwd`に落ちる）、`find.go`の`filepath.ToSlash`を外す変異（spec.txtでコメントにした）。どちらもCIのWindowsのe2eが見る
   - `os.WriteFile`に渡す権限（spec.txtでコメントにした）：すでにあるファイルの権限は変えないので、`SetEntry`・`RemoveEntry`では効かない
-- **テストが届かないまま残した変異**（2026-10-23に回したもの）：`tools/licenses/main.go`の、エラーのときだけ通る3つの枝（依存モジュールのライセンスのファイルを写す失敗、`go list`の失敗、モジュールの場所が空＝ダウンロードされていない）。`main()`の引数の検査・終了コード、ライセンスのファイルが無いときの失敗、モジュールのライセンスを写すこと、3つのOSを調べることは、共通ルールで足された`TestRunDependencies`・`TestRunNoLicense`・`TestCommand`が捕まえる（構文の変異は33件中31件killed・生き残り0、2件は変異として成り立たない）。この道具とテストはテンプレート共通のもの（`TestRun`のほかは、どのプロジェクトでも同じ）なので、テストを足すならテンプレート側で足す
+- **テストが届かないまま残した変異**（2026-10-23に回したもの）：`tools/licenses/main.go`の、エラーのときだけ通る4つの枝（前の出力先を消す失敗、依存モジュールのライセンスのファイルを写す失敗、`go list`の失敗、モジュールの場所が空＝ダウンロードされていない）。`main()`の引数の検査・終了コード、ライセンスのファイルが無いときの失敗、モジュールのライセンスを写すこと、3つのOSを調べること、出力先を作り直すこと（落とした依存のライセンスを残さない）は、共通ルールで足された`TestRunDependencies`・`TestRunNoLicense`・`TestRunRemovesEarlierOutput`・`TestCommand`が捕まえる（構文の変異は33件中31件killed・生き残り0、2件は変異として成り立たない。出力先を消さない変異は、`TestRunRemovesEarlierOutput`が足されるまで生き残っていた）。この道具とテストはテンプレート共通のもの（`TestRun`のほかは、どのプロジェクトでも同じ）なので、テストを足すならテンプレート側で足す
 
 ## mtqg固有の検証項目（qsokuに置き換えたもの）
 
